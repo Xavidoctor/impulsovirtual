@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { CopyEmailButton } from "@/components/CopyEmailButton";
 
 type NavbarProps = {
   brand: string;
@@ -15,6 +14,10 @@ type NavbarProps = {
 };
 
 export function Navbar({ brand, links, email, copyEmailLabel, contactWhatsappLabel, whatsappUrl }: NavbarProps) {
+  void email;
+  void copyEmailLabel;
+  void contactWhatsappLabel;
+  void whatsappUrl;
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -52,22 +55,13 @@ export function Navbar({ brand, links, email, copyEmailLabel, contactWhatsappLab
         </div>
 
         <div className="hidden items-center gap-5 md:flex">
-          <CopyEmailButton
-            email={email}
-            label={copyEmailLabel}
-            className={`focus-ring text-[11px] uppercase tracking-[0.2em] transition-colors ${
-              scrolled ? "text-muted hover:text-foreground" : "text-white/72 hover:text-white"
-            }`}
-          />
           <Link
-            href={whatsappUrl}
-            target="_blank"
-            rel="noreferrer"
+            href="#contacto"
             className={`focus-ring text-[11px] uppercase tracking-[0.2em] transition-opacity ${
               scrolled ? "text-foreground hover:opacity-70" : "text-white/92 hover:opacity-80"
             }`}
           >
-            {contactWhatsappLabel}
+            Contacto
           </Link>
         </div>
 
@@ -100,9 +94,8 @@ export function Navbar({ brand, links, email, copyEmailLabel, contactWhatsappLab
               </div>
 
               <div className="flex flex-col gap-3 border-t border-border pt-5">
-                <CopyEmailButton email={email} label={copyEmailLabel} className="w-fit text-sm text-muted" />
-                <Link href={whatsappUrl} target="_blank" rel="noreferrer" className="w-fit text-sm text-foreground" onClick={() => setOpen(false)}>
-                  {contactWhatsappLabel}
+                <Link href="#contacto" className="w-fit text-sm text-foreground" onClick={() => setOpen(false)}>
+                  Contacto
                 </Link>
               </div>
             </div>

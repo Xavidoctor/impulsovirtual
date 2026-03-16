@@ -7,12 +7,14 @@ import { MotionShowreelSection } from "@/components/MotionShowreelSection";
 import { Navbar } from "@/components/Navbar";
 import { VisualGallery } from "@/components/VisualGallery";
 import { WorksSection } from "@/components/WorksSection";
-import { featuredProjects } from "@/content/projects";
-import { getContentByLocale, getWhatsappUrl } from "@/content/site-content";
+import { draftMode } from "next/headers";
+import { getPublicContent } from "@/src/lib/cms/public-content";
 
-export default function HomePage() {
-  const content = getContentByLocale();
-  const whatsappUrl = getWhatsappUrl();
+export default async function HomePage() {
+  const draft = await draftMode();
+  const { content, featuredProjects, whatsappUrl } = await getPublicContent({
+    draftEnabled: draft.isEnabled,
+  });
 
   return (
     <>
@@ -37,7 +39,7 @@ export default function HomePage() {
         <WorksSection
           heading={content.works.homeHeading}
           intro={content.works.homeIntro}
-          items={featuredProjects.slice(0, 3)}
+          items={featuredProjects}
           sectionId="proyectos"
         />
 

@@ -1,20 +1,28 @@
 import type { Metadata } from "next";
+import { draftMode } from "next/headers";
 import { ContactSection } from "@/components/ContactSection";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { WorksSection } from "@/components/WorksSection";
-import { projects } from "@/content/projects";
-import { getContentByLocale, getWhatsappUrl } from "@/content/site-content";
+import { getPublicContent } from "@/src/lib/cms/public-content";
 
-const content = getContentByLocale();
+export async function generateMetadata(): Promise<Metadata> {
+  const draft = await draftMode();
+  const { content } = await getPublicContent({
+    draftEnabled: draft.isEnabled,
+  });
 
-export const metadata: Metadata = {
-  title: `${content.works.pageHeading} | Nacho Mas Design`,
-  description: content.works.pageIntro
-};
+  return {
+    title: `${content.works.pageHeading} | Nacho Mas Design`,
+    description: content.works.pageIntro,
+  };
+}
 
-export default function WorksPage() {
-  const whatsappUrl = getWhatsappUrl();
+export default async function WorksPage() {
+  const draft = await draftMode();
+  const { content, projects, whatsappUrl } = await getPublicContent({
+    draftEnabled: draft.isEnabled,
+  });
 
   return (
     <>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { draftMode } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ContactSection } from "@/components/ContactSection";
@@ -6,20 +7,22 @@ import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { ProjectDetailHero } from "@/components/ProjectDetailHero";
 import { ProjectGallery } from "@/components/ProjectGallery";
-import { getProjectBySlug, projects } from "@/content/projects";
-import { getContentByLocale, getWhatsappUrl } from "@/content/site-content";
+import { getPublicContent } from "@/src/lib/cms/public-content";
 
 type ProjectPageProps = {
   params: Promise<{ slug: string }>;
 };
 
 export function generateStaticParams() {
-  return projects.map((project) => ({ slug: project.slug }));
+  return getPublicContent({ draftEnabled: false }).then(({ projects }) =>
+    projects.map((project) => ({ slug: project.slug })),
+  );
 }
 
 export async function generateMetadata({ params }: ProjectPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const project = getProjectBySlug(slug);
+  const { projects } = await getPublicContent({ draftEnabled: false });
+  const project = projects.find((item) => item.slug === slug);
 
   if (!project) {
     return {
@@ -40,12 +43,13 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
 
 export default async function ProjectDetailPage({ params }: ProjectPageProps) {
   const { slug } = await params;
-  const project = getProjectBySlug(slug);
+  const draft = await draftMode();
+  const { content, projects, whatsappUrl } = await getPublicContent({
+    draftEnabled: draft.isEnabled,
+  });
+  const project = projects.find((item) => item.slug === slug);
 
   if (!project) notFound();
-
-  const content = getContentByLocale();
-  const whatsappUrl = getWhatsappUrl();
 
   return (
     <>

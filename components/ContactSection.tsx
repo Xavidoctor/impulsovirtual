@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { motion } from "motion/react";
-import { CopyEmailButton } from "@/components/CopyEmailButton";
 import { ContactForm } from "@/components/ContactForm";
 
 type ContactSectionProps = {
@@ -26,6 +25,8 @@ export function ContactSection({
   whatsappUrl,
   socials
 }: ContactSectionProps) {
+  void contactLabel;
+  void copyEmailLabel;
   return (
     <section className="section-padding pb-16 pt-20 md:pt-28" id="contacto">
       <motion.div
@@ -42,10 +43,6 @@ export function ContactSection({
           <p className="text-sm text-foreground">{email}</p>
 
           <div className="flex flex-col gap-4 text-xs uppercase tracking-[0.18em]">
-            <CopyEmailButton email={email} label={copyEmailLabel} className="focus-ring w-fit text-foreground transition-opacity hover:opacity-60" />
-            <Link href={`mailto:${email}`} className="focus-ring w-fit text-foreground transition-opacity hover:opacity-60">
-              {contactLabel}
-            </Link>
             <Link href={whatsappUrl} target="_blank" rel="noreferrer" className="focus-ring w-fit text-foreground transition-opacity hover:opacity-60">
               {whatsappLabel}
             </Link>

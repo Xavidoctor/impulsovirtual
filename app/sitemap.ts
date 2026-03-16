@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
-import { projects } from "@/content/projects";
+import { getPublicContent } from "@/src/lib/cms/public-content";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://nachomasdesign.com";
+  const { projects } = await getPublicContent({ draftEnabled: false });
 
   const baseRoutes: MetadataRoute.Sitemap = [
     {
