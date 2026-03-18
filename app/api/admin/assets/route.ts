@@ -19,6 +19,83 @@ import {
   assetListQuerySchema,
 } from "@/src/lib/validators/assets-schema";
 
+function inferMimeTypeFromPublicUrl(kind: "image" | "video", publicUrl: string) {
+  const lower = publicUrl.toLowerCase();
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+  if (lower.endsWith(".png")) return "image/png";
+  if (lower.endsWith(".webp")) return "image/webp";
+  if (lower.endsWith(".avif")) return "image/avif";
+  if (lower.endsWith(".svg")) return "image/svg+xml";
+  if (lower.endsWith(".mp4")) return "video/mp4";
+  if (lower.endsWith(".webm")) return "video/webm";
+  return kind === "image" ? "image/jpeg" : "video/mp4";
+}
+
+function inferFilename(storageKey: string, publicUrl: string) {
+  const fromStorage = storageKey.split("/").pop()?.trim();
+  if (fromStorage) return fromStorage;
+
+  try {
+    const parsed = new URL(publicUrl);
+    const fromUrl = parsed.pathname.split("/").pop()?.trim();
+    if (fromUrl) return fromUrl;
+  } catch {
+    // Ignore invalid URL and fallback.
+  }
+
+  return "asset";
+}
+
+async function hydrateCmsAssetsFromProjectMedia(params: {
+  supabase: Parameters<typeof listCmsAssets>[0];
+  userId: string;
+}) {
+  const { data: projectMedia, error: mediaError } = await params.supabase
+    .from("project_media")
+    .select("kind, storage_key, public_url, alt_text, width, height, duration_seconds")
+    .order("created_at", { ascending: false })
+    .limit(800);
+
+  if (mediaError || !projectMedia?.length) {
+    if (mediaError) {
+      console.error("project_media hydration read failed", mediaError.message);
+    }
+    return;
+  }
+
+  const uniqueByPublicUrl = new Map<string, (typeof projectMedia)[number]>();
+  projectMedia.forEach((item) => {
+    if (!uniqueByPublicUrl.has(item.public_url)) {
+      uniqueByPublicUrl.set(item.public_url, item);
+    }
+  });
+
+  const rows = Array.from(uniqueByPublicUrl.values()).map((item) => ({
+    filename: inferFilename(item.storage_key, item.public_url),
+    kind: item.kind,
+    storage_key: item.storage_key,
+    public_url: item.public_url,
+    content_type: inferMimeTypeFromPublicUrl(item.kind, item.public_url),
+    file_size: null,
+    width: item.width ?? null,
+    height: item.height ?? null,
+    duration_seconds: item.duration_seconds ?? null,
+    alt_text: item.alt_text ?? null,
+    tags: [],
+    created_by: params.userId,
+  }));
+
+  if (!rows.length) return;
+
+  const { error: upsertError } = await params.supabase
+    .from("cms_assets")
+    .upsert(rows, { onConflict: "public_url", ignoreDuplicates: true });
+
+  if (upsertError) {
+    console.error("cms_assets hydration upsert failed", upsertError.message);
+  }
+}
+
 export async function GET(request: NextRequest) {
   const auth = await requireEditorApi();
   if (!auth.ok) {
@@ -29,6 +106,11 @@ export async function GET(request: NextRequest) {
     search: request.nextUrl.searchParams.get("search") ?? undefined,
     kind: request.nextUrl.searchParams.get("kind") ?? undefined,
     limit: request.nextUrl.searchParams.get("limit") ?? undefined,
+  });
+
+  await hydrateCmsAssetsFromProjectMedia({
+    supabase: auth.context.supabase,
+    userId: auth.context.userId,
   });
 
   const { data, error } = await listCmsAssets(auth.context.supabase, query);

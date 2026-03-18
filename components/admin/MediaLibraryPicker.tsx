@@ -75,9 +75,11 @@ export function MediaLibraryPicker({
     if (!abierto) {
       return;
     }
+    setKindFilter(tipoPermitido === "all" ? "all" : tipoPermitido);
+    setSelectedIds([]);
     void loadAssets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [abierto, effectiveKind]);
+  }, [abierto, effectiveKind, tipoPermitido]);
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
