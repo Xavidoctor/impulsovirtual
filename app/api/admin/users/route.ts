@@ -62,7 +62,11 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Usuario no encontrado." }, { status: 404 });
     }
 
-    if (payload.id === userId && payload.isActive === false) {
+    const isSelf =
+      payload.id === userId ||
+      (before as { user_id?: string | null }).user_id === userId;
+
+    if (isSelf && payload.isActive === false) {
       return NextResponse.json(
         { error: "No puedes desactivar tu propio acceso." },
         { status: 422 },

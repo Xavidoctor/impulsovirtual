@@ -8,7 +8,16 @@ import {
 } from "@/src/lib/validators/media-schema";
 
 export const assetKindSchema = z.enum(["image", "video"]);
-export const assetScopeSchema = z.enum(["project", "section", "setting", "general"]);
+export const assetScopeSchema = z.enum([
+  "project",
+  "section",
+  "setting",
+  "general",
+  "blog",
+  "brand",
+  "site",
+  "proposals",
+]);
 
 const urlSchema = z
   .string()

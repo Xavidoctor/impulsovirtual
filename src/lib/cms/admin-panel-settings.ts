@@ -1,8 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { Database, Tables } from "@/src/types/database.types";
+import { brandConfig } from "@/content/brand";
+import type { Database } from "@/src/types/database.types";
 
-export const DEFAULT_CONTACT_NOTIFICATION_EMAIL = "ignaciomasgomis@gmail.com";
+export const DEFAULT_CONTACT_NOTIFICATION_EMAIL = brandConfig.contact.email;
 
 export type AdminPanelSettings = {
   contact_notification_email: string;
@@ -25,7 +26,7 @@ export const defaultAdminPanelSettings: AdminPanelSettings = {
   contact_notification_email: DEFAULT_CONTACT_NOTIFICATION_EMAIL,
   contact_notifications_enabled: true,
   contact_auto_reply_enabled: false,
-  contact_auto_reply_subject: "Gracias por escribir a Nacho Mas Design",
+  contact_auto_reply_subject: `Gracias por escribir a ${brandConfig.name}`,
   contact_auto_reply_body:
     "Hemos recibido tu mensaje y te responderemos lo antes posible.",
   alerts_enabled: true,
@@ -111,19 +112,20 @@ export function normalizeAdminPanelSettings(value: unknown): AdminPanelSettings 
   };
 }
 
-export function getAdminPanelSettingsFromRows(rows: Array<Tables<"site_settings">>) {
-  const target = rows.find((row) => row.key === "admin_panel");
-  return normalizeAdminPanelSettings(target?.value_json);
-}
-
 export async function getAdminPanelSettings(
   supabase: SupabaseClient<Database>,
 ): Promise<AdminPanelSettings> {
-  const { data } = await supabase
-    .from("site_settings")
-    .select("value_json")
-    .eq("key", "admin_panel")
+  const db = supabase as unknown as { from: (table: string) => any };
+
+  const { data: panelSettings } = await db
+    .from("admin_panel_settings")
+    .select("*")
+    .order("updated_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
-  return normalizeAdminPanelSettings(data?.value_json);
+  if (panelSettings) {
+    return normalizeAdminPanelSettings(panelSettings);
+  }
+  return normalizeAdminPanelSettings(undefined);
 }

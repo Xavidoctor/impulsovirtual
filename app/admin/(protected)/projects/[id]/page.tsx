@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
 import { ProjectEditor } from "@/components/admin/ProjectEditor";
-import { getProjectById, listProjectMedia } from "@/src/lib/cms/queries";
 import { requireEditorPage } from "@/src/lib/auth/require-page-role";
+import { getProjectById } from "@/src/lib/domain/projects";
 
 type AdminProjectDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -14,14 +14,25 @@ export default async function AdminProjectDetailPage({
   const { id } = await params;
   const { supabase } = await requireEditorPage();
 
-  const [{ data: project }, { data: media }] = await Promise.all([
-    getProjectById(supabase, id),
-    listProjectMedia(supabase, id),
+  const [project, mediaResult] = await Promise.all([
+    getProjectById(id, { includeMedia: false }, supabase),
+    supabase
+      .from("project_media")
+      .select("*")
+      .eq("project_id", id)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true }),
   ]);
 
   if (!project) {
     notFound();
   }
 
-  return <ProjectEditor projectId={id} initialProject={project} initialMedia={media ?? []} />;
+  return (
+    <ProjectEditor
+      projectId={id}
+      initialProject={project}
+      initialMedia={mediaResult.data ?? []}
+    />
+  );
 }

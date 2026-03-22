@@ -1,5 +1,5 @@
 {
-  "name": "nachomasdesign",
+  "name": "impulso-virtual",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -28,7 +28,7 @@
     "eslint": "^9.12.0",
     "eslint-config-next": "^15.0.0",
     "postcss": "^8.4.47",
-    "supabase": "^2.78.1",
+    "supabase": "^2.83.0",
     "tailwindcss": "^3.4.13",
     "typescript": "^5.6.2"
   },

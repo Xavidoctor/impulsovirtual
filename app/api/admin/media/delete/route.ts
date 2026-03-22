@@ -7,7 +7,7 @@ import {
   deleteProjectMediaById,
   getProjectMediaById,
   getProjectMediaByStorageKey,
-} from "@/src/lib/cms/queries";
+} from "@/src/lib/domain/media-library";
 import { deleteFromR2 } from "@/src/lib/r2/presign";
 import { mediaDeleteSchema } from "@/src/lib/validators/media-schema";
 
@@ -21,11 +21,9 @@ export async function POST(request: NextRequest) {
     const payload = mediaDeleteSchema.parse(await request.json());
     const { supabase, userId } = auth.context;
 
-    const target = payload.id
-      ? await getProjectMediaById(supabase, payload.id)
-      : await getProjectMediaByStorageKey(supabase, payload.storageKey!);
-
-    const media = target.data;
+    const media = payload.id
+      ? await getProjectMediaById(payload.id, supabase)
+      : await getProjectMediaByStorageKey(payload.storageKey!, supabase);
     if (!media) {
       return NextResponse.json({ error: "Media no encontrada." }, { status: 404 });
     }
@@ -45,8 +43,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { error } = await deleteProjectMediaById(supabase, media.id);
-    if (error) {
+    const deleted = await deleteProjectMediaById(media.id, supabase);
+    if (!deleted) {
       return NextResponse.json({ error: "No se pudo eliminar el recurso del proyecto." }, { status: 400 });
     }
 

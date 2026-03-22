@@ -1,4 +1,5 @@
 @import url("https://api.fontshare.com/v2/css?f[]=switzer@300,400,500,600,700&display=swap");
+@import url("https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,6 +7,17 @@
 
 :root {
   color-scheme: dark;
+  --bg-0: #07090a;
+  --bg-1: #0d1012;
+  --bg-2: #13181b;
+  --ink-0: #f2f4f3;
+  --ink-1: #d6dbd9;
+  --ink-2: #9aa5a2;
+  --line-0: rgba(255, 255, 255, 0.07);
+  --line-1: rgba(255, 255, 255, 0.12);
+  --accent: #87d8c9;
+  --accent-strong: #9be9db;
+  --accent-soft: rgba(135, 216, 201, 0.14);
 }
 
 html {
@@ -13,44 +25,132 @@ html {
 }
 
 body {
-  @apply bg-background text-foreground antialiased;
+  @apply text-foreground antialiased;
   font-family: "Switzer", sans-serif;
+  background-image:
+    radial-gradient(1200px 620px at 12% -8%, rgba(135, 216, 201, 0.14), transparent 55%),
+    radial-gradient(800px 500px at 96% 12%, rgba(135, 216, 201, 0.08), transparent 60%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+}
+
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at center, black 20%, transparent 85%);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Clash Display", "Switzer", sans-serif;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+a,
+button,
+input,
+textarea,
+select,
+details,
+summary {
+  @apply transition-colors duration-200;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink-0);
 }
 
 .section-padding {
-  @apply py-20 md:py-28;
+  @apply py-16 md:py-24 lg:py-28;
 }
 
 .container-width {
-  @apply mx-auto w-full max-w-[1680px] px-4 sm:px-6 md:px-10 lg:px-14 xl:px-20 2xl:px-24;
+  @apply mx-auto w-full max-w-[1360px] px-4 sm:px-6 md:px-8 lg:px-12;
 }
 
 .focus-ring {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#060808];
 }
 
 .editorial-kicker {
-  @apply text-[11px] uppercase tracking-[0.24em] text-muted;
+  @apply text-[11px] uppercase tracking-[0.28em] text-muted;
 }
 
 .section-divider {
   @apply border-t border-border;
 }
 
-.hero-marquee-mask {
-  overflow: hidden;
-  white-space: nowrap;
+.page-intro {
+  @apply space-y-4 border-t border-border pt-8 md:space-y-5 md:pt-10;
 }
 
-.hero-marquee-track {
-  display: flex;
-  width: max-content;
-  will-change: transform;
+.hero-title {
+  @apply text-4xl leading-[0.96] text-foreground sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl;
 }
 
-.hero-marquee-group {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  padding-right: 0;
+.section-title {
+  @apply text-3xl leading-[0.97] text-foreground sm:text-4xl md:text-5xl lg:text-6xl;
+}
+
+.section-copy {
+  @apply max-w-3xl text-[15px] leading-relaxed text-muted md:text-lg;
+}
+
+.premium-panel {
+  @apply relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0f1315]/65 shadow-[0_26px_80px_-42px_rgba(0,0,0,0.9)];
+}
+
+.premium-panel::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(150deg, rgba(135, 216, 201, 0.11), transparent 34%);
+}
+
+.premium-card {
+  @apply rounded-xl border border-white/[0.08] bg-[#11161a]/70 shadow-[0_20px_56px_-42px_rgba(0,0,0,0.95)];
+}
+
+.elevate-hover {
+  @apply transition-transform duration-300 hover:-translate-y-1;
+}
+
+.btn-primary {
+  @apply inline-flex min-h-10 items-center justify-center rounded-full border border-transparent bg-accent px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#07211d] transition-all duration-300 hover:brightness-110;
+}
+
+.btn-secondary {
+  @apply inline-flex min-h-10 items-center justify-center rounded-full border border-white/15 bg-white/[0.02] px-5 py-2.5 text-[11px] font-medium uppercase tracking-[0.18em] text-foreground transition-all duration-300 hover:border-white/30 hover:bg-white/[0.06];
+}
+
+.subtle-divider {
+  @apply h-px w-full bg-gradient-to-r from-transparent via-white/15 to-transparent;
+}
+
+.lift-link {
+  @apply inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted hover:text-foreground;
+}
+
+.surface-input {
+  @apply min-h-11 w-full rounded-xl border border-white/10 bg-[#0b1114]/80 px-4 py-3 text-sm text-foreground placeholder:text-muted/70 focus:border-accent/60;
+}
+
+.noise-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.11;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
 }

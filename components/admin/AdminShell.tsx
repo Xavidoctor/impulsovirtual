@@ -15,7 +15,7 @@ export function AdminShell({ email, role, children }: AdminShellProps) {
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[240px_1fr]">
         <aside className="border-b border-white/10 px-4 py-5 lg:border-b-0 lg:border-r">
           <div className="mb-6 px-2">
-            <p className="font-display text-2xl tracking-wide">NMD</p>
+            <p className="font-display text-2xl tracking-wide">IV</p>
             <p className="text-xs uppercase tracking-[0.16em] text-neutral-500">
               Panel de control
             </p>

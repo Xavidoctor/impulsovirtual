@@ -10,17 +10,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#101010",
-        foreground: "#f2f2ef",
-        muted: "#a2a29d",
-        border: "#2b2b2b",
-        card: "#131313",
-        accent: "#d0d0ca",
-        accentSoft: "#191919"
+        background: "#07090a",
+        foreground: "#f2f4f3",
+        muted: "#9aa5a2",
+        border: "#1f272b",
+        card: "#0f1315",
+        accent: "#87d8c9",
+        accentSoft: "#10201d"
       },
       fontFamily: {
         sans: ["Switzer", "sans-serif"],
-        display: ["var(--font-antonio)", "sans-serif"]
+        display: ["Clash Display", "Switzer", "sans-serif"]
       }
     }
   },

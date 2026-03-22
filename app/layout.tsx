@@ -1,45 +1,37 @@
 import type { Metadata } from "next";
-import { Antonio } from "next/font/google";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import "./globals.css";
-import { siteConfig } from "@/content/site-content";
-import { getPublicContent } from "@/src/lib/cms/public-content";
+import { brandConfig, getSiteUrl } from "@/content/brand";
+import { getPublicSiteContext } from "@/src/lib/domain/public-site";
 
-const antonio = Antonio({
-  subsets: ["latin"],
-  variable: "--font-antonio",
-  weight: "700",
-  display: "swap"
-});
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://nachomasdesign.com";
+const siteUrl = getSiteUrl();
 
 export async function generateMetadata(): Promise<Metadata> {
-  const data = await getPublicContent({ draftEnabled: false });
-  const seoTitle = data.seoGlobal.title || data.content.metadata.title;
-  const seoDescription = data.seoGlobal.description || data.content.metadata.description;
-  const ogImage = data.seoGlobal.ogImage || "/og-cover.svg";
+  const site = await getPublicSiteContext();
+  const seoTitle = site.seo.title;
+  const seoDescription = site.seo.description;
+  const ogImage = site.seo.ogImage || brandConfig.ogImagePath;
 
   return {
     metadataBase: new URL(siteUrl),
-    title: seoTitle,
-    description: seoDescription,
-    alternates: {
-      canonical: "/",
+    title: {
+      default: seoTitle,
+      template: `%s | ${site.brandName}`,
     },
+    description: seoDescription,
     openGraph: {
       title: seoTitle,
       description: seoDescription,
       url: siteUrl,
-      siteName: siteConfig.brandName,
-      locale: "es_ES",
+      siteName: site.brandName,
+      locale: brandConfig.localeTag,
       type: "website",
       images: [
         {
           url: ogImage,
           width: 1200,
           height: 630,
-          alt: "Portfolio de Nacho Mas Design",
+          alt: `${site.brandName} - ${seoDescription}`,
         },
       ],
     },
@@ -48,6 +40,13 @@ export async function generateMetadata(): Promise<Metadata> {
       title: seoTitle,
       description: seoDescription,
       images: [ogImage],
+    },
+    icons: {
+      icon: [
+        { url: "/icon.svg", type: "image/svg+xml" },
+        { url: brandConfig.logoPath, type: "image/png" },
+      ],
+      apple: brandConfig.logoPath,
     },
   };
 }
@@ -59,7 +58,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${antonio.variable} font-sans`}>
+      <body className="font-sans">
         <AnalyticsTracker />
         {children}
       </body>

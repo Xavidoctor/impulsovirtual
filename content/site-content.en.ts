@@ -1,12 +1,13 @@
 import type { SiteContent } from "@/types/content";
 import { contentEs } from "@/content/site-content";
+import { brandConfig } from "@/content/brand";
 
 // Placeholder de estructura para futura traduccion completa.
 export const contentEn: SiteContent = {
   ...contentEs,
   metadata: {
-    title: "Nacho Mas Design | 3D, product and visual design portfolio",
+    title: `${brandConfig.name} | Premium digital services`,
     description:
-      "Creative studio focused on 3D modeling, product design and visual systems for contemporary brands."
+      "Premium digital studio focused on strategy, web experiences and growth systems for modern brands."
   }
 };

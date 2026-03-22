@@ -1,6 +1,8 @@
-export const DEFAULT_WHATSAPP_NUMBER = "34650304969";
+import { brandConfig } from "@/content/brand";
+
+export const DEFAULT_WHATSAPP_NUMBER = brandConfig.contact.whatsappNumber;
 
 export const WHATSAPP_PREFILLED_MESSAGE =
-  "Hola Nacho, he visto tu portfolio en nachomasdesign.com y me gustaria hablar contigo sobre un proyecto.";
+  brandConfig.contact.whatsappPrefilledMessage;
 
 export const CONTACT_FORM_MIN_MESSAGE = 20;

@@ -10,9 +10,16 @@ type WorksSectionProps = {
   intro: string;
   items: PortfolioProject[];
   sectionId?: string;
+  basePath?: string;
 };
 
-export function WorksSection({ heading, intro, items, sectionId }: WorksSectionProps) {
+export function WorksSection({
+  heading,
+  intro,
+  items,
+  sectionId,
+  basePath = "/proyectos",
+}: WorksSectionProps) {
   return (
     <section id={sectionId} className="section-padding pt-16 md:pt-24">
       <div className="container-width">
@@ -35,13 +42,13 @@ export function WorksSection({ heading, intro, items, sectionId }: WorksSectionP
                 <p className="editorial-kicker">{item.category}</p>
                 <h3 className="font-display text-4xl uppercase leading-[0.96] tracking-[0.02em] text-foreground md:text-6xl">{item.title}</h3>
                 <p className="max-w-md text-sm leading-relaxed text-muted">{item.shortDescription}</p>
-                <Link href={`/works/${item.slug}`} className="focus-ring inline-flex text-xs uppercase tracking-[0.2em] text-foreground transition-opacity hover:opacity-65">
+                <Link href={`${basePath}/${item.slug}`} className="focus-ring inline-flex text-xs uppercase tracking-[0.2em] text-foreground transition-opacity hover:opacity-65">
                   Ver proyecto
                 </Link>
               </div>
 
               <Link
-                href={`/works/${item.slug}`}
+                href={`${basePath}/${item.slug}`}
                 className={`relative aspect-[16/10] overflow-hidden lg:col-span-8 ${index % 2 === 1 ? "lg:order-1" : ""}`}
               >
                 <Image

@@ -5,7 +5,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "media.nachomasdesign.com",
+        hostname: "media.impulsovirtual.com",
       },
     ],
   },

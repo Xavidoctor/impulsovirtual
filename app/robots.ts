@@ -1,13 +1,18 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/content/brand";
 
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://nachomasdesign.com";
+  const siteUrl = getSiteUrl();
 
   return {
-    rules: {
-      userAgent: "*",
-      allow: "/"
-    },
-    sitemap: `${siteUrl}/sitemap.xml`
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/admin", "/admin/", "/api/", "/_next/"],
+      },
+    ],
+    host: siteUrl,
+    sitemap: `${siteUrl}/sitemap.xml`,
   };
 }

@@ -3,7 +3,7 @@ import { ZodError } from "zod";
 
 import { requireEditorApi } from "@/src/lib/auth/require-api-role";
 import { writeAuditLog } from "@/src/lib/cms/audit";
-import { getProjectById } from "@/src/lib/cms/queries";
+import { getProjectById } from "@/src/lib/domain/projects";
 import { buildProjectMediaStorageKey } from "@/src/lib/r2/keys";
 import { buildPublicR2Url, createR2PresignedPutUrl } from "@/src/lib/r2/presign";
 import { mediaPresignSchema } from "@/src/lib/validators/media-schema";
@@ -16,15 +16,18 @@ export async function POST(request: NextRequest) {
 
   try {
     const payload = mediaPresignSchema.parse(await request.json());
+    let projectSlug: string | undefined;
 
     if (payload.projectId) {
-      const { data: project } = await getProjectById(auth.context.supabase, payload.projectId);
+      const project = await getProjectById(payload.projectId, undefined, auth.context.supabase);
       if (!project) {
         return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
       }
+      projectSlug = project.slug;
     }
 
     const storageKey = buildProjectMediaStorageKey({
+      projectSlug,
       projectId: payload.projectId,
       kind: payload.kind,
       filename: payload.filename,

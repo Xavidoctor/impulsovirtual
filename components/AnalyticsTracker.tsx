@@ -34,7 +34,7 @@ export function AnalyticsTracker() {
     const path = query ? `${pathname}?${query}` : pathname;
     sendEvent({ eventType: "page_view", path });
 
-    if (pathname.startsWith("/works/")) {
+    if (pathname.startsWith("/proyectos/") || pathname.startsWith("/works/")) {
       sendEvent({
         eventType: "project_view",
         path,

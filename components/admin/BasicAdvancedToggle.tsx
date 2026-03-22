@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 
 export type DashboardMode = "basico" | "avanzado";
-export const DASHBOARD_MODE_STORAGE_KEY = "nmd_admin_dashboard_mode";
+export const DASHBOARD_MODE_STORAGE_KEY = "iv_admin_dashboard_mode";
+export const DASHBOARD_MODE_EVENT = "iv-dashboard-mode";
 
 function readMode(): DashboardMode {
   if (typeof window === "undefined") return "basico";
@@ -32,7 +33,7 @@ export function BasicAdvancedToggle({
     setMode(next);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(DASHBOARD_MODE_STORAGE_KEY, next);
-      window.dispatchEvent(new CustomEvent("nmd-dashboard-mode", { detail: next }));
+      window.dispatchEvent(new CustomEvent(DASHBOARD_MODE_EVENT, { detail: next }));
     }
     onChange?.(next);
   }

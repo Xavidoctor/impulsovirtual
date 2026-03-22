@@ -10,7 +10,13 @@ import {
   getProjectMediaByPublicUrl,
   getProjectMediaByStorageKey,
   listCmsAssets,
-} from "@/src/lib/cms/queries";
+  upsertCmsAssetsByPublicUrl,
+} from "@/src/lib/domain/media-library";
+import {
+  inferAssetBucketName,
+  inferAssetCollectionFromStorageKey,
+  inferAssetStorageProvider,
+} from "@/src/lib/media/cms-assets";
 import { getR2Config } from "@/src/lib/r2/client";
 import { deleteFromR2 } from "@/src/lib/r2/presign";
 import {
@@ -18,6 +24,7 @@ import {
   assetDeleteSchema,
   assetListQuerySchema,
 } from "@/src/lib/validators/assets-schema";
+import type { DomainSupabaseClient } from "@/src/lib/domain/client";
 
 function inferMimeTypeFromPublicUrl(kind: "image" | "video", publicUrl: string) {
   const lower = publicUrl.toLowerCase();
@@ -29,6 +36,23 @@ function inferMimeTypeFromPublicUrl(kind: "image" | "video", publicUrl: string) 
   if (lower.endsWith(".mp4")) return "video/mp4";
   if (lower.endsWith(".webm")) return "video/webm";
   return kind === "image" ? "image/jpeg" : "video/mp4";
+}
+
+function isMediaKind(value: string): value is "image" | "video" {
+  return value === "image" || value === "video";
+}
+
+function normalizeMediaKind(rawKind: string, publicUrl: string): "image" | "video" {
+  if (isMediaKind(rawKind)) {
+    return rawKind;
+  }
+
+  const lower = publicUrl.toLowerCase();
+  if (lower.endsWith(".mp4") || lower.endsWith(".webm")) {
+    return "video";
+  }
+
+  return "image";
 }
 
 function inferFilename(storageKey: string, publicUrl: string) {
@@ -47,7 +71,7 @@ function inferFilename(storageKey: string, publicUrl: string) {
 }
 
 async function hydrateCmsAssetsFromProjectMedia(params: {
-  supabase: Parameters<typeof listCmsAssets>[0];
+  supabase: DomainSupabaseClient;
   userId: string;
 }) {
   const { data: projectMedia, error: mediaError } = await params.supabase
@@ -70,29 +94,34 @@ async function hydrateCmsAssetsFromProjectMedia(params: {
     }
   });
 
-  const rows = Array.from(uniqueByPublicUrl.values()).map((item) => ({
-    filename: inferFilename(item.storage_key, item.public_url),
-    kind: item.kind,
-    storage_key: item.storage_key,
-    public_url: item.public_url,
-    content_type: inferMimeTypeFromPublicUrl(item.kind, item.public_url),
-    file_size: null,
-    width: item.width ?? null,
-    height: item.height ?? null,
-    duration_seconds: item.duration_seconds ?? null,
-    alt_text: item.alt_text ?? null,
-    tags: [],
-    created_by: params.userId,
-  }));
+  const rows = Array.from(uniqueByPublicUrl.values()).map((item) => {
+    const kind = normalizeMediaKind(item.kind, item.public_url);
+
+    return {
+      logical_collection: inferAssetCollectionFromStorageKey(item.storage_key),
+      storage_provider: inferAssetStorageProvider(item.storage_key, item.public_url),
+      bucket_name: inferAssetBucketName(inferAssetStorageProvider(item.storage_key, item.public_url)),
+      filename: inferFilename(item.storage_key, item.public_url),
+      kind,
+      storage_key: item.storage_key,
+      public_url: item.public_url,
+      content_type: inferMimeTypeFromPublicUrl(kind, item.public_url),
+      file_size: null,
+      width: item.width ?? null,
+      height: item.height ?? null,
+      duration_seconds: item.duration_seconds ?? null,
+      alt_text: item.alt_text ?? null,
+      caption: null,
+      tags: [],
+      created_by: params.userId,
+    };
+  });
 
   if (!rows.length) return;
 
-  const { error: upsertError } = await params.supabase
-    .from("cms_assets")
-    .upsert(rows, { onConflict: "public_url", ignoreDuplicates: true });
-
-  if (upsertError) {
-    console.error("cms_assets hydration upsert failed", upsertError.message);
+  const upserted = await upsertCmsAssetsByPublicUrl(rows, params.supabase);
+  if (!upserted) {
+    console.error("cms_assets hydration upsert failed");
   }
 }
 
@@ -113,15 +142,9 @@ export async function GET(request: NextRequest) {
     userId: auth.context.userId,
   });
 
-  const { data, error } = await listCmsAssets(auth.context.supabase, query);
-  if (error) {
-    return NextResponse.json(
-      { error: "No se pudo cargar la biblioteca de recursos." },
-      { status: 400 },
-    );
-  }
+  const data = await listCmsAssets(query, auth.context.supabase);
 
-  return NextResponse.json({ data: data ?? [] });
+  return NextResponse.json({ data });
 }
 
 export async function POST(request: NextRequest) {
@@ -155,7 +178,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data, error } = await createOrUpdateCmsAsset(supabase, {
+    const data = await createOrUpdateCmsAsset({
+      logical_collection: inferAssetCollectionFromStorageKey(payload.storageKey),
+      storage_provider: inferAssetStorageProvider(payload.storageKey, payload.publicUrl),
+      bucket_name: inferAssetBucketName(
+        inferAssetStorageProvider(payload.storageKey, payload.publicUrl),
+      ),
       filename: payload.filename,
       kind: payload.kind,
       storage_key: payload.storageKey,
@@ -166,11 +194,11 @@ export async function POST(request: NextRequest) {
       height: payload.height ?? null,
       duration_seconds: payload.durationSeconds ?? null,
       alt_text: payload.altText ?? null,
+      caption: null,
       tags: payload.tags ?? [],
       created_by: userId,
-    });
-
-    if (error) {
+    }, supabase);
+    if (!data) {
       return NextResponse.json(
         { error: "No se pudo registrar el recurso en la biblioteca." },
         { status: 400 },
@@ -212,21 +240,14 @@ export async function DELETE(request: NextRequest) {
     const payload = assetDeleteSchema.parse(await request.json());
     const { supabase, userId } = auth.context;
 
-    const { data: asset, error: loadError } = await getCmsAssetById(supabase, payload.id);
-    if (loadError) {
-      return NextResponse.json(
-        { error: "No se pudo cargar el recurso para eliminarlo." },
-        { status: 400 },
-      );
-    }
-
+    const asset = await getCmsAssetById(payload.id, supabase);
     if (!asset) {
       return NextResponse.json({ error: "Recurso no encontrado." }, { status: 404 });
     }
 
-    const [{ data: byStorage }, { data: byUrl }] = await Promise.all([
-      getProjectMediaByStorageKey(supabase, asset.storage_key),
-      getProjectMediaByPublicUrl(supabase, asset.public_url),
+    const [byStorage, byUrl] = await Promise.all([
+      getProjectMediaByStorageKey(asset.storage_key, supabase),
+      getProjectMediaByPublicUrl(asset.public_url, supabase),
     ]);
 
     if (byStorage || (byUrl?.length ?? 0) > 0) {
@@ -247,8 +268,8 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
-    const { error: deleteError } = await deleteCmsAssetById(supabase, asset.id);
-    if (deleteError) {
+    const deleted = await deleteCmsAssetById(asset.id, supabase);
+    if (!deleted) {
       return NextResponse.json(
         { error: "No se pudo eliminar el recurso de la biblioteca." },
         { status: 400 },

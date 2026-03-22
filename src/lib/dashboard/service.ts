@@ -15,12 +15,17 @@ import { fetchVercelUsage } from "@/src/lib/dashboard/providers/vercel";
 import { getR2UsageSummary } from "@/src/lib/r2/usage";
 import type { DashboardPayload, DashboardPeriod } from "@/src/lib/dashboard/types";
 import type { Database, Tables, TablesInsert } from "@/src/types/database.types";
+import type { LeadEntity } from "@/src/types/entities";
 
 type AnalyticsEventRow = Tables<"analytics_events">;
-type LeadRow = Tables<"contact_leads">;
+type LeadRow = Pick<LeadEntity, "id" | "created_at">;
 type UsageSnapshotRow = Tables<"platform_usage_snapshots">;
 type DailyRollupRow = Tables<"analytics_daily_rollups">;
 type MonthlyRollupRow = Tables<"analytics_monthly_rollups">;
+
+function domainDb(supabase: SupabaseClient<Database>) {
+  return supabase as unknown as { from: (table: string) => any };
+}
 
 type MetricCard = {
   value: number;
@@ -125,7 +130,7 @@ function buildRange(period: DashboardPeriod) {
 }
 
 function getSlugFromPath(path: string) {
-  if (!path.startsWith("/works/")) return "";
+  if (!path.startsWith("/works/") && !path.startsWith("/proyectos/")) return "";
   const parts = path.split("/");
   return parts[2] ?? "";
 }
@@ -412,24 +417,18 @@ export async function syncUsageSnapshots(
   const rollupFromDate = new Date(now.getTime() - 400 * dayMs)
     .toISOString()
     .slice(0, 10);
+  const db = domainDb(supabase);
 
-  const [emailDay, emailMonth, emailErrors, assetsCount, assetsSum] =
+  const [emailDay, emailMonth, assetsCount, assetsSum] =
     await Promise.all([
-      supabase
-        .from("contact_leads")
+      db
+        .from("leads")
         .select("id", { count: "exact", head: true })
-        .gte("created_at", startOfToday.toISOString())
-        .eq("email_notification_status", "enviado"),
-      supabase
-        .from("contact_leads")
+        .gte("created_at", startOfToday.toISOString()),
+      db
+        .from("leads")
         .select("id", { count: "exact", head: true })
-        .gte("created_at", startOfMonth.toISOString())
-        .eq("email_notification_status", "enviado"),
-      supabase
-        .from("contact_leads")
-        .select("id", { count: "exact", head: true })
-        .gte("created_at", startOfMonth.toISOString())
-        .eq("email_notification_status", "error"),
+        .gte("created_at", startOfMonth.toISOString()),
       supabase.from("cms_assets").select("id", { count: "exact", head: true }),
       supabase.from("cms_assets").select("file_size"),
     ]);
@@ -495,7 +494,7 @@ export async function syncUsageSnapshots(
     {
       platform: "email",
       metric_key: "emails_errors_month",
-      metric_value: Number(emailErrors.count ?? 0),
+      metric_value: 0,
       metric_unit: "emails",
       period_start: startOfMonth.toISOString(),
       period_end: now.toISOString(),
@@ -693,6 +692,7 @@ export async function getDashboardData(
   supabase: SupabaseClient<Database>,
   period: DashboardPeriod,
 ): Promise<DashboardPayload> {
+  const db = domainDb(supabase);
   const range = buildRange(period);
   const useDailyRollups = period === "6m";
   const useMonthlyRollups = period === "12m";
@@ -713,13 +713,13 @@ export async function getDashboardData(
         .select("*")
         .gte("created_at", range.prevStart.toISOString())
         .lte("created_at", range.prevEnd.toISOString()),
-      supabase
-        .from("contact_leads")
+      db
+        .from("leads")
         .select("*")
         .gte("created_at", range.start.toISOString())
         .lte("created_at", range.end.toISOString()),
-      supabase
-        .from("contact_leads")
+      db
+        .from("leads")
         .select("*")
         .gte("created_at", range.prevStart.toISOString())
         .lte("created_at", range.prevEnd.toISOString()),

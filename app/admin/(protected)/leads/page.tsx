@@ -1,13 +1,10 @@
 import { LeadsManager } from "@/components/admin/LeadsManager";
-import { requireAdminPage } from "@/src/lib/auth/require-page-role";
+import { requireEditorPage } from "@/src/lib/auth/require-page-role";
+import { listLeads } from "@/src/lib/domain/leads";
 
 export default async function AdminLeadsPage() {
-  const { supabase } = await requireAdminPage();
-  const { data } = await supabase
-    .from("contact_leads")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(250);
+  const { supabase } = await requireEditorPage();
+  const data = await listLeads({ limit: 250 }, supabase);
 
-  return <LeadsManager initialLeads={data ?? []} />;
+  return <LeadsManager initialLeads={data} />;
 }

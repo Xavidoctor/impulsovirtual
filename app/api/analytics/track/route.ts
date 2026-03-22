@@ -5,8 +5,8 @@ import { ZodError } from "zod";
 import { createSupabaseAdminClient } from "@/src/lib/supabase/admin";
 import { analyticsTrackPayloadSchema } from "@/src/lib/validators/analytics-schema";
 
-const SESSION_COOKIE = "nmd_session_id";
-const VISITOR_COOKIE = "nmd_visitor_id";
+const SESSION_COOKIE = "iv_session_id";
+const VISITOR_COOKIE = "iv_visitor_id";
 
 function hashIp(value: string) {
   if (!value) return null;

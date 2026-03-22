@@ -3,7 +3,10 @@ import { ZodError } from "zod";
 
 import { requireEditorApi } from "@/src/lib/auth/require-api-role";
 import { writeAuditLog } from "@/src/lib/cms/audit";
-import { getProjectMediaById, updateProjectMediaById } from "@/src/lib/cms/queries";
+import {
+  getProjectMediaById,
+  updateProjectMediaById,
+} from "@/src/lib/domain/media-library";
 import { mediaUpdateSchema } from "@/src/lib/validators/media-schema";
 
 export async function POST(request: NextRequest) {
@@ -16,14 +19,7 @@ export async function POST(request: NextRequest) {
     const payload = mediaUpdateSchema.parse(await request.json());
     const { supabase, userId } = auth.context;
 
-    const { data: before, error: beforeError } = await getProjectMediaById(supabase, payload.id);
-    if (beforeError) {
-      return NextResponse.json(
-        { error: "No se pudo cargar el recurso para actualizarlo." },
-        { status: 400 },
-      );
-    }
-
+    const before = await getProjectMediaById(payload.id, supabase);
     if (!before) {
       return NextResponse.json({ error: "Recurso no encontrado." }, { status: 404 });
     }
@@ -61,8 +57,8 @@ export async function POST(request: NextRequest) {
       updatePayload.sort_order = payload.sortOrder;
     }
 
-    const { data, error } = await updateProjectMediaById(supabase, payload.id, updatePayload);
-    if (error) {
+    const data = await updateProjectMediaById(payload.id, updatePayload, supabase);
+    if (!data) {
       return NextResponse.json(
         { error: "No se pudieron guardar los cambios del recurso." },
         { status: 400 },

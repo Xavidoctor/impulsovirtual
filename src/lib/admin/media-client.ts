@@ -3,7 +3,15 @@
 import type { Tables } from "@/src/types/database.types";
 
 export type AssetKind = "image" | "video";
-export type AssetScope = "project" | "section" | "setting" | "general";
+export type AssetScope =
+  | "project"
+  | "section"
+  | "setting"
+  | "general"
+  | "blog"
+  | "brand"
+  | "site"
+  | "proposals";
 
 export const IMAGE_MIME_TYPES = new Set([
   "image/jpeg",

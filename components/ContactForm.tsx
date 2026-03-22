@@ -27,6 +27,7 @@ export function ContactForm() {
   const [status, setStatus] = useState<FormState>("idle");
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const isSubmitting = status === "loading";
 
   useEffect(() => {
     void fetch("/api/analytics/track", {
@@ -42,10 +43,16 @@ export function ContactForm() {
 
   const update = (field: keyof ContactFormValues, value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }));
+    if (status !== "idle") {
+      setStatus("idle");
+      setError("");
+      setSuccessMessage("");
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setStatus("idle");
     setError("");
     setSuccessMessage("");
 
@@ -78,7 +85,7 @@ export function ContactForm() {
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payloadBody)
+        body: JSON.stringify(payloadBody),
       });
 
       const payload = await response.json();
@@ -90,7 +97,8 @@ export function ContactForm() {
 
       setStatus("success");
       setSuccessMessage(
-        payload.warning || "Mensaje enviado correctamente. Te responderemos lo antes posible.",
+        payload.warning ||
+          "Mensaje enviado correctamente. Te responderemos lo antes posible.",
       );
       setValues(initialValues);
       void fetch("/api/analytics/track", {
@@ -109,85 +117,114 @@ export function ContactForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="mt-10 border-t border-border/70 pt-8">
-      <div className="grid gap-6 md:grid-cols-2">
+    <form onSubmit={handleSubmit} noValidate className="space-y-6" aria-busy={isSubmitting}>
+      <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.16em] text-muted">Nombre</span>
+          <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Nombre</span>
           <input
             required
+            autoComplete="name"
+            disabled={isSubmitting}
             value={values.name}
             onChange={(event) => update("name", event.target.value)}
-            className="focus-ring w-full border-b border-border/70 bg-transparent pb-3 text-sm text-foreground"
+            className="focus-ring surface-input"
+            placeholder="Tu nombre"
           />
         </label>
 
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.16em] text-muted">Email</span>
+          <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Email</span>
           <input
             type="email"
             required
+            autoComplete="email"
+            disabled={isSubmitting}
             value={values.email}
             onChange={(event) => update("email", event.target.value)}
-            className="focus-ring w-full border-b border-border/70 bg-transparent pb-3 text-sm text-foreground"
+            className="focus-ring surface-input"
+            placeholder="nombre@empresa.com"
           />
         </label>
 
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.16em] text-muted">Empresa</span>
+          <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Empresa</span>
           <input
+            disabled={isSubmitting}
+            autoComplete="organization"
             value={values.company}
             onChange={(event) => update("company", event.target.value)}
-            className="focus-ring w-full border-b border-border/70 bg-transparent pb-3 text-sm text-foreground"
+            className="focus-ring surface-input"
+            placeholder="Nombre de empresa"
           />
         </label>
 
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.16em] text-muted">Teléfono (opcional)</span>
+          <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Telefono</span>
           <input
+            disabled={isSubmitting}
+            autoComplete="tel"
             value={values.phone}
             onChange={(event) => update("phone", event.target.value)}
-            className="focus-ring w-full border-b border-border/70 bg-transparent pb-3 text-sm text-foreground"
-          />
-        </label>
-
-        <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.16em] text-muted">Servicio</span>
-          <input
-            required
-            value={values.service}
-            onChange={(event) => update("service", event.target.value)}
-            className="focus-ring w-full border-b border-border/70 bg-transparent pb-3 text-sm text-foreground"
+            className="focus-ring surface-input"
+            placeholder="Opcional"
           />
         </label>
       </div>
 
-      <label className="hidden" aria-hidden="true">
-        <span>Website</span>
-        <input tabIndex={-1} autoComplete="off" value={values.website} onChange={(event) => update("website", event.target.value)} />
-      </label>
-
-      <label className="mt-8 block space-y-2">
-        <span className="text-xs uppercase tracking-[0.16em] text-muted">Mensaje</span>
-        <textarea
-          rows={5}
+      <label className="space-y-2 block">
+        <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Servicio</span>
+        <input
           required
-          minLength={CONTACT_FORM_MIN_MESSAGE}
-          value={values.message}
-          onChange={(event) => update("message", event.target.value)}
-          className="focus-ring w-full border-b border-border/70 bg-transparent pb-3 text-sm text-foreground"
+          disabled={isSubmitting}
+          value={values.service}
+          onChange={(event) => update("service", event.target.value)}
+          className="focus-ring surface-input"
+          placeholder="Diseno web premium, estrategia digital..."
         />
       </label>
 
-      <button
-        type="submit"
-        disabled={status === "loading"}
-        className="focus-ring mt-8 text-xs uppercase tracking-[0.18em] text-foreground transition-opacity hover:opacity-60 disabled:opacity-40"
-      >
-        {status === "loading" ? "Enviando..." : "Enviar mensaje"}
-      </button>
+      <label className="hidden" aria-hidden="true">
+        <span>Website</span>
+        <input
+          tabIndex={-1}
+          autoComplete="off"
+          value={values.website}
+          onChange={(event) => update("website", event.target.value)}
+        />
+      </label>
 
-      {status === "success" ? <p className="mt-5 text-sm text-foreground">{successMessage}</p> : null}
-      {status === "error" && error ? <p className="mt-5 text-sm text-red-400">{error}</p> : null}
+      <label className="space-y-2 block">
+        <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Mensaje</span>
+        <textarea
+          rows={6}
+          required
+          minLength={CONTACT_FORM_MIN_MESSAGE}
+          disabled={isSubmitting}
+          value={values.message}
+          onChange={(event) => update("message", event.target.value)}
+          className="focus-ring surface-input min-h-[9rem] resize-y"
+          placeholder="Describe objetivo, contexto y necesidades prioritarias."
+        />
+      </label>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="submit" disabled={isSubmitting} className="focus-ring btn-primary disabled:opacity-55">
+          {isSubmitting ? "Enviando mensaje..." : "Enviar mensaje"}
+        </button>
+        <p className="text-xs text-muted">Respuesta habitual en menos de 24h laborables.</p>
+      </div>
+
+      {status === "success" ? (
+        <p className="rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-foreground" role="status" aria-live="polite">
+          {successMessage}
+        </p>
+      ) : null}
+
+      {status === "error" && error ? (
+        <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200" role="status" aria-live="polite">
+          {error}
+        </p>
+      ) : null}
     </form>
   );
 }

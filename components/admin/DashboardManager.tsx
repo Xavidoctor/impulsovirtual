@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   BasicAdvancedToggle,
+  DASHBOARD_MODE_EVENT,
   DASHBOARD_MODE_STORAGE_KEY,
   type DashboardMode,
 } from "@/components/admin/BasicAdvancedToggle";
@@ -95,10 +96,10 @@ export function DashboardManager({ initialData }: { initialData: DashboardPayloa
       setMode(toMode());
     }
     window.addEventListener("storage", onModeChange);
-    window.addEventListener("nmd-dashboard-mode", onModeChange as EventListener);
+    window.addEventListener(DASHBOARD_MODE_EVENT, onModeChange as EventListener);
     return () => {
       window.removeEventListener("storage", onModeChange);
-      window.removeEventListener("nmd-dashboard-mode", onModeChange as EventListener);
+      window.removeEventListener(DASHBOARD_MODE_EVENT, onModeChange as EventListener);
     };
   }, []);
 

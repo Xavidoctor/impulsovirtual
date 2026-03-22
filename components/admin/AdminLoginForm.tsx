@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { brandConfig } from "@/content/brand";
 import { createSupabaseBrowserClient } from "@/src/lib/supabase/client";
 
 export function AdminLoginForm() {
@@ -46,7 +47,7 @@ export function AdminLoginForm() {
       <div className="space-y-2">
         <h1 className="font-display text-4xl tracking-wide">Iniciar sesión</h1>
         <p className="text-sm text-neutral-400">
-          Acceso al panel de gestión de contenido de Nacho Mas Design.
+          {`Acceso al panel de gestion de contenido de ${brandConfig.name}.`}
         </p>
       </div>
 

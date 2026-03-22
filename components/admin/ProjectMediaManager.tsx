@@ -80,15 +80,37 @@ function formatDate(value: string) {
   return new Date(value).toLocaleString("es-ES");
 }
 
-function roleLabel(role: MediaRole) {
-  if (role === "cover") return "Portada";
-  if (role === "hero") return "Principal";
-  if (role === "gallery") return "Galería";
+function isMediaRole(value: string): value is MediaRole {
+  return value === "cover" || value === "hero" || value === "gallery" || value === "detail";
+}
+
+function normalizeMediaRole(value: string): MediaRole {
+  if (isMediaRole(value)) return value;
+  return "gallery";
+}
+
+function roleLabel(role: string) {
+  const normalized = normalizeMediaRole(role);
+  if (normalized === "cover") return "Portada";
+  if (normalized === "hero") return "Principal";
+  if (normalized === "gallery") return "Galería";
   return "Detalle";
 }
 
-function kindLabel(kind: MediaKind) {
-  return kind === "image" ? "Imagen" : "Vídeo";
+function isMediaKind(value: string): value is MediaKind {
+  return value === "image" || value === "video";
+}
+
+function normalizeMediaKind(value: string, publicUrl: string): MediaKind {
+  if (isMediaKind(value)) return value;
+  const lower = publicUrl.toLowerCase();
+  if (lower.endsWith(".mp4") || lower.endsWith(".webm")) return "video";
+  return "image";
+}
+
+function kindLabel(kind: string, publicUrl = "") {
+  const normalized = normalizeMediaKind(kind, publicUrl);
+  return normalized === "image" ? "Imagen" : "Vídeo";
 }
 
 function uploadStateLabel(state: UploadState) {
@@ -729,7 +751,7 @@ export function ProjectMediaManager({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             projectId,
-            kind: item.asset.kind,
+            kind: normalizeMediaKind(item.asset.kind, item.asset.public_url),
             role: item.role,
             storageKey: item.asset.storage_key,
             publicUrl: item.asset.public_url,
@@ -988,6 +1010,7 @@ export function ProjectMediaManager({
           <div className="grid gap-3 lg:grid-cols-2">
             {librarySelection.map((item) => {
               const needsAlt = item.role === "cover" || item.role === "hero";
+              const assetKind = normalizeMediaKind(item.asset.kind, item.asset.public_url);
               return (
                 <article
                   key={item.id}
@@ -996,7 +1019,7 @@ export function ProjectMediaManager({
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="truncate text-sm font-medium text-white">{item.asset.filename}</p>
-                      <p className="text-xs text-neutral-400">{kindLabel(item.asset.kind)}</p>
+                      <p className="text-xs text-neutral-400">{kindLabel(assetKind)}</p>
                     </div>
                     <button
                       type="button"
@@ -1007,7 +1030,7 @@ export function ProjectMediaManager({
                     </button>
                   </div>
                   <div className="overflow-hidden rounded-md border border-white/10 bg-black/40">
-                    {item.asset.kind === "image" ? (
+                    {assetKind === "image" ? (
                       <img
                         src={item.asset.public_url}
                         alt={item.altText || item.asset.filename}
@@ -1314,12 +1337,13 @@ export function ProjectMediaManager({
               const isSavingItem = Boolean(savingMediaIdMap[item.id]);
               const isDirtyItem = Boolean(dirtyMediaIdMap[item.id]);
               const needsAlt = item.role === "cover" || item.role === "hero";
+              const mediaKind = normalizeMediaKind(item.kind, item.public_url);
 
               return (
                 <article key={item.id} draggable onDragStart={() => setDraggedMediaId(item.id)} onDragEnd={() => setDraggedMediaId(null)} onDragOver={(event) => event.preventDefault()} onDrop={() => onDropSavedRow(item.id)} className="space-y-3 rounded-lg border border-white/10 bg-black/35 p-3 md:cursor-grab">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-medium text-white">{kindLabel(item.kind)} · Posición {index + 1}</p>
+                      <p className="text-sm font-medium text-white">{kindLabel(mediaKind)} · Posición {index + 1}</p>
                       <p className="text-xs text-neutral-400">{sourceLabel(item.storage_key)} · Creado {formatDate(item.created_at)}</p>
                     </div>
                     <span className="rounded-full border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.12em] text-neutral-300">{roleLabel(item.role)}</span>
@@ -1327,7 +1351,7 @@ export function ProjectMediaManager({
                   <p className="hidden text-[11px] text-neutral-500 md:block">Puedes arrastrar esta tarjeta para reordenar.</p>
 
                   <div className="overflow-hidden rounded-md border border-white/10 bg-black/40">
-                    {item.kind === "image" ? <img src={item.public_url} alt={item.alt_text ?? "Recurso del proyecto"} className="h-44 w-full object-cover" /> : <video src={item.public_url} controls className="h-44 w-full object-cover" />}
+                    {mediaKind === "image" ? <img src={item.public_url} alt={item.alt_text ?? "Recurso del proyecto"} className="h-44 w-full object-cover" /> : <video src={item.public_url} controls className="h-44 w-full object-cover" />}
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">

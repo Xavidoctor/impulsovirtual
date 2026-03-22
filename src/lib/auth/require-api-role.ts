@@ -37,11 +37,25 @@ export async function requireApiRole(
     };
   }
 
-  const { data: profile, error } = await supabase
+  const db = supabase as unknown as { from: (table: string) => any };
+  let profileResult = await db
     .from("admin_profiles")
     .select("id, role, is_active")
-    .eq("id", user.id)
+    .or(`id.eq.${user.id},user_id.eq.${user.id}`)
     .maybeSingle();
+
+  if (profileResult.error) {
+    profileResult = await supabase
+      .from("admin_profiles")
+      .select("id, role, is_active")
+      .eq("id", user.id)
+      .maybeSingle();
+  }
+
+  const { data: profile, error } = profileResult as {
+    data: { id: string; role: AdminRole; is_active: boolean } | null;
+    error: { message?: string } | null;
+  };
 
   if (error || !profile || !profile.is_active) {
     return {

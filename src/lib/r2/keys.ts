@@ -22,6 +22,7 @@ function cleanSegment(value: string) {
 }
 
 export function buildProjectMediaStorageKey(params: {
+  projectSlug?: string;
   projectId?: string;
   kind: "image" | "video";
   filename: string;
@@ -29,7 +30,7 @@ export function buildProjectMediaStorageKey(params: {
   const safeFilename = cleanFilename(params.filename) || "asset";
   const datePart = new Date().toISOString().slice(0, 10);
   const randomPart = crypto.randomUUID().slice(0, 8);
-  const projectPart = params.projectId ?? "unassigned";
+  const projectPart = cleanSegment(params.projectSlug ?? params.projectId ?? "unassigned") || "unassigned";
 
   return `projects/${projectPart}/${params.kind}/${datePart}-${randomPart}-${safeFilename}`;
 }
@@ -37,7 +38,15 @@ export function buildProjectMediaStorageKey(params: {
 export function buildCmsAssetStorageKey(params: {
   kind: "image" | "video";
   filename: string;
-  scope?: "project" | "section" | "setting" | "general";
+  scope?:
+    | "project"
+    | "section"
+    | "setting"
+    | "general"
+    | "blog"
+    | "brand"
+    | "site"
+    | "proposals";
   pageKey?: string;
   sectionKey?: string;
   settingKey?: string;
@@ -48,23 +57,33 @@ export function buildCmsAssetStorageKey(params: {
   const randomPart = crypto.randomUUID().slice(0, 8);
   const scope = params.scope ?? "general";
 
-  if (scope === "section") {
-    const pageKey = cleanSegment(params.pageKey ?? "home") || "home";
-    const sectionKey = cleanSegment(params.sectionKey ?? "section") || "section";
-    return `cms/sections/${pageKey}/${sectionKey}/${params.kind}/${datePart}-${randomPart}-${safeFilename}`;
-  }
-
-  if (scope === "setting") {
-    const settingKey = cleanSegment(params.settingKey ?? "general") || "general";
-    return `cms/settings/${settingKey}/${params.kind}/${datePart}-${randomPart}-${safeFilename}`;
-  }
-
   if (scope === "project") {
     const folder = cleanSegment(params.folder ?? "general") || "general";
-    return `cms/projects/${folder}/${params.kind}/${datePart}-${randomPart}-${safeFilename}`;
+    return `projects/${folder}/${params.kind}/${datePart}-${randomPart}-${safeFilename}`;
   }
 
-  return `cms/library/${params.kind}/${datePart}-${randomPart}-${safeFilename}`;
+  if (scope === "blog") {
+    const folder = cleanSegment(params.folder ?? "general") || "general";
+    return `blog/${folder}/${params.kind}/${datePart}-${randomPart}-${safeFilename}`;
+  }
+
+  if (scope === "brand") {
+    const folder = cleanSegment(params.folder ?? "general") || "general";
+    return `brand/${folder}/${params.kind}/${datePart}-${randomPart}-${safeFilename}`;
+  }
+
+  if (scope === "proposals") {
+    const folder = cleanSegment(params.folder ?? "general") || "general";
+    return `proposals/${folder}/${params.kind}/${datePart}-${randomPart}-${safeFilename}`;
+  }
+
+  if (scope === "section" || scope === "setting" || scope === "site") {
+    const pageKey = cleanSegment(params.pageKey ?? params.settingKey ?? params.folder ?? "general") || "general";
+    const sectionKey = cleanSegment(params.sectionKey ?? "content") || "content";
+    return `site/${pageKey}/${sectionKey}/${params.kind}/${datePart}-${randomPart}-${safeFilename}`;
+  }
+
+  return `site/library/${params.kind}/${datePart}-${randomPart}-${safeFilename}`;
 }
 
 function slugifyText(value: string) {

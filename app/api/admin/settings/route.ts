@@ -1,47 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
 
 import { requireAdminApi } from "@/src/lib/auth/require-api-role";
 import { writeAuditLog } from "@/src/lib/cms/audit";
-import { listSettings, upsertSetting } from "@/src/lib/cms/queries";
-import { parseSettingValue, settingUpsertSchema } from "@/src/lib/validators/settings-schema";
-
-async function handleUpsert(request: NextRequest) {
-  const auth = await requireAdminApi();
-  if (!auth.ok) {
-    return auth.response;
-  }
-
-  const payload = settingUpsertSchema.parse(await request.json());
-  const parsedValue = parseSettingValue(payload.key, payload.valueJson);
-  const { supabase, userId } = auth.context;
-
-  const { data: before } = await supabase
-    .from("site_settings")
-    .select("*")
-    .eq("key", payload.key)
-    .maybeSingle();
-
-  const { data, error } = await upsertSetting(supabase, {
-    key: payload.key,
-    value_json: parsedValue,
-    updated_by: userId,
-  });
-
-  if (error) {
-    return NextResponse.json({ error: "No se pudo guardar el ajuste." }, { status: 400 });
-  }
-
-  await writeAuditLog(supabase, {
-    actor_id: userId,
-    action: "setting.upserted",
-    entity_type: "site_setting",
-    entity_id: payload.key,
-    before_json: before,
-    after_json: data,
-  });
-
-  return NextResponse.json({ data });
-}
+import {
+  getAdminPanelSettings,
+  getSiteSettings,
+  upsertAdminPanelSettings,
+  upsertSiteSettings,
+} from "@/src/lib/domain/settings";
+import { adminSettingsUpdateSchema } from "@/src/lib/validators/site-settings-schema";
 
 export async function GET() {
   const auth = await requireAdminApi();
@@ -49,18 +17,80 @@ export async function GET() {
     return auth.response;
   }
 
-  const { data, error } = await listSettings(auth.context.supabase);
-  if (error) {
-    return NextResponse.json({ error: "No se pudieron cargar los ajustes." }, { status: 400 });
-  }
+  const [site, adminPanel] = await Promise.all([
+    getSiteSettings(auth.context.supabase),
+    getAdminPanelSettings(auth.context.supabase),
+  ]);
 
-  return NextResponse.json({ data });
-}
-
-export async function POST(request: NextRequest) {
-  return handleUpsert(request);
+  return NextResponse.json({
+    data: {
+      site,
+      admin_panel: adminPanel,
+    },
+  });
 }
 
 export async function PUT(request: NextRequest) {
-  return handleUpsert(request);
+  const auth = await requireAdminApi();
+  if (!auth.ok) {
+    return auth.response;
+  }
+
+  try {
+    const payload = adminSettingsUpdateSchema.parse(await request.json());
+    const { supabase, userId } = auth.context;
+
+    const [beforeSite, beforePanel] = await Promise.all([
+      getSiteSettings(supabase),
+      getAdminPanelSettings(supabase),
+    ]);
+
+    const site = await upsertSiteSettings(payload.site, supabase);
+    if (!site) {
+      return NextResponse.json({ error: "No se pudo guardar site_settings." }, { status: 400 });
+    }
+
+    let adminPanel = beforePanel;
+    if (payload.admin_panel) {
+      const next = await upsertAdminPanelSettings(payload.admin_panel, supabase);
+      if (!next) {
+        return NextResponse.json(
+          { error: "No se pudo guardar admin_panel_settings." },
+          { status: 400 },
+        );
+      }
+      adminPanel = next;
+    }
+
+    await writeAuditLog(supabase, {
+      actor_id: userId,
+      action: "settings.updated",
+      entity_type: "settings",
+      entity_id: site.id,
+      before_json: {
+        site: beforeSite,
+        admin_panel: beforePanel,
+      },
+      after_json: {
+        site,
+        admin_panel: adminPanel,
+      },
+    });
+
+    return NextResponse.json({
+      data: {
+        site,
+        admin_panel: adminPanel,
+      },
+    });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: "Datos de ajustes no válidos.", details: error.flatten() },
+        { status: 422 },
+      );
+    }
+
+    return NextResponse.json({ error: "Error interno al guardar ajustes." }, { status: 500 });
+  }
 }

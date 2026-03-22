@@ -1,4 +1,14 @@
 export type PortfolioProject = {
+  companyLogoUrl?: string;
+  status?: "completed" | "in_progress";
+  progressPercentage?: number;
+  progressLabel?: string;
+  progressNote?: string;
+  projectOrientation?: string;
+  whatWasDone?: string;
+  servicesApplied?: string[];
+  previewMode?: "embed" | "image" | "external_only";
+  previewImageUrl?: string;
   slug: string;
   title: string;
   category: string;
@@ -6,6 +16,7 @@ export type PortfolioProject = {
   fullDescription: string;
   coverImage: string;
   heroImage?: string;
+  websiteUrl?: string;
   gallery: string[];
   year?: string;
   services: string[];

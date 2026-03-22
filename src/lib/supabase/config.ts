@@ -16,13 +16,10 @@ export function getSupabasePublicEnv() {
 }
 
 export function getSupabaseServiceRoleKey() {
-  const serviceRoleKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!serviceRoleKey) {
-    throw new Error(
-      "Missing SUPABASE_SERVICE_ROLE_KEY environment variable (or SUPABASE_SECRET_KEY legacy fallback).",
-    );
+    throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY environment variable.");
   }
 
   return serviceRoleKey;

@@ -1,6 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
-  <rect width="1200" height="630" fill="#101010"/>
-  <rect x="70" y="70" width="1060" height="490" rx="20" fill="#0f0f0f" stroke="#2b2b2b"/>
-  <text x="120" y="315" fill="#F2F2EF" font-size="78" font-family="Arial, sans-serif">NACHOMASDESIGN</text>
-  <text x="120" y="368" fill="#A2A29D" font-size="28" font-family="Arial, sans-serif">3D Modeling / Product Design / Graphic Design</text>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F172A"/>
+      <stop offset="1" stop-color="#1E293B"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="70" y="70" width="1060" height="490" rx="24" fill="#0B1220" stroke="#334155"/>
+  <text x="120" y="300" fill="#F8FAFC" font-size="84" font-family="Arial, sans-serif">IMPULSO VIRTUAL</text>
+  <text x="120" y="360" fill="#CBD5E1" font-size="30" font-family="Arial, sans-serif">Estrategia digital / Diseno web / Automatizacion</text>
 </svg>

@@ -22,8 +22,28 @@ function formatDate(value: string) {
   return new Date(value).toLocaleString("es-ES");
 }
 
+function isAssetKind(value: string): value is "image" | "video" {
+  return value === "image" || value === "video";
+}
+
+function normalizeAssetKind(value: string, publicUrl: string): "image" | "video" {
+  if (isAssetKind(value)) return value;
+  const lower = publicUrl.toLowerCase();
+  if (lower.endsWith(".mp4") || lower.endsWith(".webm")) return "video";
+  return "image";
+}
+
 function kindLabel(kind: "image" | "video") {
   return kind === "image" ? "Imagen" : "Vídeo";
+}
+
+function collectionLabel(collection: string) {
+  if (collection === "projects") return "Projects";
+  if (collection === "blog") return "Blog";
+  if (collection === "brand") return "Brand";
+  if (collection === "site") return "Site";
+  if (collection === "proposals") return "Proposals";
+  return "General";
 }
 
 export function MediaLibraryPicker({
@@ -165,6 +185,7 @@ export function MediaLibraryPicker({
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {items.map((item) => {
                 const isSelected = selectedIds.includes(item.id);
+                const assetKind = normalizeAssetKind(item.kind, item.public_url);
                 return (
                   <button
                     key={item.id}
@@ -177,7 +198,7 @@ export function MediaLibraryPicker({
                     }`}
                   >
                     <div className="overflow-hidden rounded-md border border-white/10 bg-black/40">
-                      {item.kind === "image" ? (
+                      {assetKind === "image" ? (
                         <img
                           src={item.public_url}
                           alt={item.alt_text ?? item.filename}
@@ -195,7 +216,10 @@ export function MediaLibraryPicker({
                     <div className="space-y-1">
                       <p className="truncate text-sm font-medium text-white">{item.filename}</p>
                       <p className="text-xs text-neutral-400">
-                        {kindLabel(item.kind)} · {formatDate(item.created_at)}
+                        {kindLabel(assetKind)} · {formatDate(item.created_at)}
+                      </p>
+                      <p className="text-[11px] uppercase tracking-[0.12em] text-neutral-500">
+                        {collectionLabel(item.logical_collection)} · {item.storage_provider}
                       </p>
                     </div>
                   </button>

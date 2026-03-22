@@ -1,21 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
 
 import { requireEditorApi } from "@/src/lib/auth/require-api-role";
 import { writeAuditLog } from "@/src/lib/cms/audit";
 import {
-  createProject,
   deleteProjectById,
   getProjectById,
-  listProjectMedia,
   listProjects,
-  updateProject,
-} from "@/src/lib/cms/queries";
+  createProject,
+  updateProjectById,
+} from "@/src/lib/domain/projects";
 import {
+  projectListQuerySchema,
   projectCreateSchema,
-  projectDeleteSchema,
-  projectGetQuerySchema,
   projectUpdateSchema,
+  projectDeleteSchema,
 } from "@/src/lib/validators/project-schema";
+
+function resolvePublishedAt(isPublished: boolean, publishedAt: string | null | undefined) {
+  if (!isPublished) return null;
+  if (publishedAt) return publishedAt;
+  return new Date().toISOString();
+}
 
 export async function GET(request: NextRequest) {
   const auth = await requireEditorApi();
@@ -23,40 +29,50 @@ export async function GET(request: NextRequest) {
     return auth.response;
   }
 
-  const query = projectGetQuerySchema.parse({
+  const query = projectListQuerySchema.parse({
     id: request.nextUrl.searchParams.get("id") ?? undefined,
-    status: request.nextUrl.searchParams.get("status") ?? undefined,
     search: request.nextUrl.searchParams.get("search") ?? undefined,
+    includeUnpublished:
+      request.nextUrl.searchParams.get("includeUnpublished") ?? undefined,
   });
 
   if (query.id) {
-    const [{ data: project, error: projectError }, { data: media, error: mediaError }] =
+    const [project, mediaResult] =
       await Promise.all([
-        getProjectById(auth.context.supabase, query.id),
-        listProjectMedia(auth.context.supabase, query.id),
+        getProjectById(query.id, { includeMedia: false }, auth.context.supabase),
+        auth.context.supabase
+          .from("project_media")
+          .select("*")
+          .eq("project_id", query.id)
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true }),
       ]);
 
-    if (projectError) {
-      return NextResponse.json({ error: "No se pudo cargar el proyecto." }, { status: 400 });
+    if (!project) {
+      return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
     }
 
-    if (mediaError) {
-      return NextResponse.json({ error: "No se pudo cargar la media del proyecto." }, { status: 400 });
-    }
-
-    return NextResponse.json({ data: project, media: media ?? [] });
+    return NextResponse.json({ data: project, media: mediaResult.data ?? [] });
   }
 
-  const { data, error } = await listProjects(auth.context.supabase, {
-    status: query.status,
-    search: query.search,
-  });
+  const data = await listProjects(
+    {
+      includeUnpublished: query.includeUnpublished ?? true,
+      includeMedia: false,
+    },
+    auth.context.supabase,
+  );
 
-  if (error) {
-    return NextResponse.json({ error: "No se pudieron cargar los proyectos." }, { status: 400 });
-  }
+  const search = query.search?.trim().toLowerCase();
+  const filtered = search
+    ? data.filter((project) =>
+        `${project.title} ${project.slug} ${project.client_name ?? ""} ${project.excerpt ?? ""}`
+          .toLowerCase()
+          .includes(search),
+      )
+    : data;
 
-  return NextResponse.json({ data: data ?? [] });
+  return NextResponse.json({ data: filtered });
 }
 
 export async function POST(request: NextRequest) {
@@ -65,38 +81,65 @@ export async function POST(request: NextRequest) {
     return auth.response;
   }
 
-  const payload = projectCreateSchema.parse(await request.json());
+  try {
+    const payload = projectCreateSchema.parse(await request.json());
+    const data = await createProject(
+      {
+        slug: payload.slug,
+        title: payload.title,
+        client_name: payload.client_name ?? null,
+        excerpt: payload.excerpt ?? "",
+        description: payload.description ?? null,
+        challenge: payload.challenge ?? null,
+        solution: payload.solution ?? null,
+        results: payload.results ?? null,
+        cover_image_url: payload.cover_image_url ?? null,
+        company_logo_url: payload.company_logo_url ?? null,
+        website_url: payload.live_url ?? payload.website_url ?? null,
+        live_url: payload.live_url ?? payload.website_url ?? null,
+        featured: payload.featured,
+        status: payload.status,
+        progress_percentage:
+          payload.status === "in_progress" ? payload.progress_percentage ?? null : null,
+        progress_label: payload.status === "in_progress" ? payload.progress_label ?? null : null,
+        progress_note: payload.status === "in_progress" ? payload.progress_note ?? null : null,
+        project_orientation: payload.project_orientation ?? null,
+        what_was_done: payload.what_was_done ?? null,
+        services_applied: payload.services_applied ?? [],
+        preview_mode: payload.preview_mode,
+        preview_image_url: payload.preview_image_url ?? null,
+        is_published: payload.is_published,
+        published_at: resolvePublishedAt(payload.is_published, payload.published_at),
+        seo_title: payload.seo_title ?? null,
+        seo_description: payload.seo_description ?? null,
+      },
+      auth.context.supabase,
+    );
 
-  const { data, error } = await createProject(auth.context.supabase, {
-    slug: payload.slug.toLowerCase(),
-    title: payload.title,
-    subtitle: payload.subtitle ?? null,
-    excerpt: payload.excerpt ?? null,
-    body_markdown: payload.bodyMarkdown ?? null,
-    year: payload.year ?? null,
-    client_name: payload.clientName ?? null,
-    category: payload.category ?? null,
-    featured: payload.featured,
-    status: payload.status,
-    seo_json: payload.seoJson,
-    published_at: payload.publishedAt ?? null,
-    updated_by: auth.context.userId,
-  });
+    if (!data) {
+      return NextResponse.json({ error: "No se pudo crear el proyecto." }, { status: 400 });
+    }
 
-  if (error) {
-    return NextResponse.json({ error: "No se pudo crear el proyecto." }, { status: 400 });
+    await writeAuditLog(auth.context.supabase, {
+      actor_id: auth.context.userId,
+      action: "project.created",
+      entity_type: "project",
+      entity_id: data.id,
+      before_json: null,
+      after_json: data,
+    });
+
+    return NextResponse.json({ data }, { status: 201 });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: "Datos de proyecto no válidos.", details: error.flatten() },
+        { status: 422 },
+      );
+    }
+
+    return NextResponse.json({ error: "Error interno al crear el proyecto." }, { status: 500 });
   }
-
-  await writeAuditLog(auth.context.supabase, {
-    actor_id: auth.context.userId,
-    action: "project.created",
-    entity_type: "project",
-    entity_id: data.id,
-    before_json: null,
-    after_json: data,
-  });
-
-  return NextResponse.json({ data }, { status: 201 });
 }
 
 export async function PUT(request: NextRequest) {
@@ -105,40 +148,72 @@ export async function PUT(request: NextRequest) {
     return auth.response;
   }
 
-  const payload = projectUpdateSchema.parse(await request.json());
+  try {
+    const payload = projectUpdateSchema.parse(await request.json());
 
-  const { data: before } = await getProjectById(auth.context.supabase, payload.id);
+    const before = await getProjectById(payload.id, { includeMedia: false }, auth.context.supabase);
+    if (!before) {
+      return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
+    }
 
-  const { data, error } = await updateProject(auth.context.supabase, payload.id, {
-    slug: payload.slug.toLowerCase(),
-    title: payload.title,
-    subtitle: payload.subtitle ?? null,
-    excerpt: payload.excerpt ?? null,
-    body_markdown: payload.bodyMarkdown ?? null,
-    year: payload.year ?? null,
-    client_name: payload.clientName ?? null,
-    category: payload.category ?? null,
-    featured: payload.featured,
-    status: payload.status,
-    seo_json: payload.seoJson,
-    published_at: payload.publishedAt ?? null,
-    updated_by: auth.context.userId,
-  });
+    const data = await updateProjectById(
+      payload.id,
+      {
+        slug: payload.slug,
+        title: payload.title,
+        client_name: payload.client_name ?? null,
+        excerpt: payload.excerpt ?? "",
+        description: payload.description ?? null,
+        challenge: payload.challenge ?? null,
+        solution: payload.solution ?? null,
+        results: payload.results ?? null,
+        cover_image_url: payload.cover_image_url ?? null,
+        company_logo_url: payload.company_logo_url ?? null,
+        website_url: payload.live_url ?? payload.website_url ?? null,
+        live_url: payload.live_url ?? payload.website_url ?? null,
+        featured: payload.featured,
+        status: payload.status,
+        progress_percentage:
+          payload.status === "in_progress" ? payload.progress_percentage ?? null : null,
+        progress_label: payload.status === "in_progress" ? payload.progress_label ?? null : null,
+        progress_note: payload.status === "in_progress" ? payload.progress_note ?? null : null,
+        project_orientation: payload.project_orientation ?? null,
+        what_was_done: payload.what_was_done ?? null,
+        services_applied: payload.services_applied ?? [],
+        preview_mode: payload.preview_mode,
+        preview_image_url: payload.preview_image_url ?? null,
+        is_published: payload.is_published,
+        published_at: resolvePublishedAt(payload.is_published, payload.published_at),
+        seo_title: payload.seo_title ?? null,
+        seo_description: payload.seo_description ?? null,
+      },
+      auth.context.supabase,
+    );
 
-  if (error) {
-    return NextResponse.json({ error: "No se pudo actualizar el proyecto." }, { status: 400 });
+    if (!data) {
+      return NextResponse.json({ error: "No se pudo actualizar el proyecto." }, { status: 400 });
+    }
+
+    await writeAuditLog(auth.context.supabase, {
+      actor_id: auth.context.userId,
+      action: "project.updated",
+      entity_type: "project",
+      entity_id: data.id,
+      before_json: before,
+      after_json: data,
+    });
+
+    return NextResponse.json({ data });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: "Datos de proyecto no válidos.", details: error.flatten() },
+        { status: 422 },
+      );
+    }
+
+    return NextResponse.json({ error: "Error interno al actualizar el proyecto." }, { status: 500 });
   }
-
-  await writeAuditLog(auth.context.supabase, {
-    actor_id: auth.context.userId,
-    action: "project.updated",
-    entity_type: "project",
-    entity_id: data.id,
-    before_json: before,
-    after_json: data,
-  });
-
-  return NextResponse.json({ data });
 }
 
 export async function DELETE(request: NextRequest) {
@@ -147,22 +222,37 @@ export async function DELETE(request: NextRequest) {
     return auth.response;
   }
 
-  const payload = projectDeleteSchema.parse(await request.json());
-  const { data: before } = await getProjectById(auth.context.supabase, payload.id);
+  try {
+    const payload = projectDeleteSchema.parse(await request.json());
+    const before = await getProjectById(payload.id, { includeMedia: false }, auth.context.supabase);
 
-  const { error } = await deleteProjectById(auth.context.supabase, payload.id);
-  if (error) {
-    return NextResponse.json({ error: "No se pudo eliminar el proyecto." }, { status: 400 });
+    if (!before) {
+      return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
+    }
+
+    const ok = await deleteProjectById(payload.id, auth.context.supabase);
+    if (!ok) {
+      return NextResponse.json({ error: "No se pudo eliminar el proyecto." }, { status: 400 });
+    }
+
+    await writeAuditLog(auth.context.supabase, {
+      actor_id: auth.context.userId,
+      action: "project.deleted",
+      entity_type: "project",
+      entity_id: payload.id,
+      before_json: before,
+      after_json: null,
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: "Solicitud no válida.", details: error.flatten() },
+        { status: 422 },
+      );
+    }
+
+    return NextResponse.json({ error: "Error interno al eliminar el proyecto." }, { status: 500 });
   }
-
-  await writeAuditLog(auth.context.supabase, {
-    actor_id: auth.context.userId,
-    action: "project.deleted",
-    entity_type: "project",
-    entity_id: payload.id,
-    before_json: before,
-    after_json: null,
-  });
-
-  return NextResponse.json({ success: true });
 }

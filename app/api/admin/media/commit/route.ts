@@ -3,7 +3,16 @@ import { ZodError } from "zod";
 
 import { requireEditorApi } from "@/src/lib/auth/require-api-role";
 import { writeAuditLog } from "@/src/lib/cms/audit";
-import { createOrUpdateCmsAsset, createProjectMedia, getProjectById } from "@/src/lib/cms/queries";
+import {
+  createOrUpdateCmsAsset,
+  createProjectMedia,
+} from "@/src/lib/domain/media-library";
+import {
+  inferAssetBucketName,
+  inferAssetCollectionFromStorageKey,
+  inferAssetStorageProvider,
+} from "@/src/lib/media/cms-assets";
+import { getProjectById } from "@/src/lib/domain/projects";
 import { getR2Config } from "@/src/lib/r2/client";
 import { buildDeterministicMediaStorageKey } from "@/src/lib/r2/keys";
 import { mediaCommitSchema } from "@/src/lib/validators/media-schema";
@@ -41,7 +50,7 @@ export async function POST(request: NextRequest) {
       publicBaseUrl = "";
     }
 
-    const { data: project } = await getProjectById(supabase, payload.projectId);
+    const project = await getProjectById(payload.projectId, undefined, supabase);
     if (!project) {
       return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
     }
@@ -80,7 +89,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data, error } = await createProjectMedia(supabase, {
+    const data = await createProjectMedia(
+      {
       project_id: payload.projectId,
       kind: payload.kind,
       role: payload.role,
@@ -92,14 +102,21 @@ export async function POST(request: NextRequest) {
       height: payload.height ?? null,
       duration_seconds: payload.durationSeconds ?? null,
       sort_order: payload.sortOrder,
-    });
+      },
+      supabase,
+    );
 
-    if (error) {
+    if (!data) {
       return NextResponse.json({ error: "No se pudo registrar el recurso del proyecto." }, { status: 400 });
     }
 
     if (!isManual) {
       const assetPayload = {
+        logical_collection: inferAssetCollectionFromStorageKey(storageKey),
+        storage_provider: inferAssetStorageProvider(storageKey, payload.publicUrl),
+        bucket_name: inferAssetBucketName(
+          inferAssetStorageProvider(storageKey, payload.publicUrl),
+        ),
         filename: inferFilenameFromStorageKey(storageKey),
         kind: payload.kind,
         storage_key: storageKey,
@@ -110,12 +127,13 @@ export async function POST(request: NextRequest) {
         height: payload.height ?? null,
         duration_seconds: payload.durationSeconds ?? null,
         alt_text: payload.altText ?? null,
+        caption: payload.caption ?? null,
         tags: [],
         created_by: userId,
       };
-      const { error: assetError } = await createOrUpdateCmsAsset(supabase, assetPayload);
-      if (assetError) {
-        console.error("cms_assets upsert failed", assetError.message);
+      const asset = await createOrUpdateCmsAsset(assetPayload, supabase);
+      if (!asset) {
+        console.error("cms_assets upsert failed");
       }
     }
 
