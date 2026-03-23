@@ -10,7 +10,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const site = await getPublicSiteContext();
   const seoTitle = site.seo.title;
   const seoDescription = site.seo.description;
-  const ogImage = site.seo.ogImage || brandConfig.ogImagePath;
+  const ogImage =
+    site.seo.ogImage && site.seo.ogImage !== "/og-cover.svg"
+      ? site.seo.ogImage
+      : brandConfig.ogImagePath;
 
   return {
     metadataBase: new URL(siteUrl),
@@ -43,10 +46,10 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     icons: {
       icon: [
-        { url: "/icon.svg", type: "image/svg+xml" },
-        { url: brandConfig.logoPath, type: "image/png" },
+        { url: brandConfig.squareLogoPath, type: "image/png" },
       ],
-      apple: brandConfig.logoPath,
+      shortcut: [brandConfig.squareLogoPath],
+      apple: brandConfig.squareLogoPath,
     },
   };
 }

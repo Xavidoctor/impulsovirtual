@@ -5,7 +5,8 @@ export const brandConfig = {
   localeTag: "es_ES",
   defaultSiteUrl: "https://impulsovirtual.com",
   logoPath: "/brand/impulso-virtual-logo.png",
-  ogImagePath: "/og-cover.svg",
+  squareLogoPath: "/brand/logo-cuadrado-impulso.png",
+  ogImagePath: "/assets/Mockup1.png",
   metadata: {
     title: "Impulso Virtual | Servicios digitales premium",
     description:
