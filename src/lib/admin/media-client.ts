@@ -43,6 +43,11 @@ const extensionToMime: Record<string, string> = {
   mov: "video/quicktime",
 };
 
+function logAssetUploadPhase(phase: string, payload: Record<string, unknown>) {
+  // Temporal debugging helper for upload flow tracing.
+  console.info(`[upload][asset-library] ${phase}`, payload);
+}
+
 export function normalizeUploadError(message: string) {
   const text = message.toLowerCase();
   if (text.includes("r2 no está configurado")) return "La subida a R2 no está disponible.";
@@ -132,6 +137,45 @@ async function uploadWithProgress(params: {
   });
 }
 
+async function uploadAssetViaSupabaseRoute(params: {
+  file: File;
+  validation: { kind: AssetKind; contentType: string };
+  scope: AssetScope;
+  pageKey?: string;
+  sectionKey?: string;
+  settingKey?: string;
+  folder?: string;
+  metadata: { width?: number; height?: number; durationSeconds?: number };
+}) {
+  const formData = new FormData();
+  formData.append("file", params.file);
+  formData.append("kind", params.validation.kind);
+  formData.append("contentType", params.validation.contentType);
+  formData.append("scope", params.scope);
+  formData.append("fileSize", String(params.file.size));
+  if (params.pageKey) formData.append("pageKey", params.pageKey);
+  if (params.sectionKey) formData.append("sectionKey", params.sectionKey);
+  if (params.settingKey) formData.append("settingKey", params.settingKey);
+  if (params.folder) formData.append("folder", params.folder);
+  if (params.metadata.width) formData.append("width", String(params.metadata.width));
+  if (params.metadata.height) formData.append("height", String(params.metadata.height));
+  if (params.metadata.durationSeconds) {
+    formData.append("durationSeconds", String(params.metadata.durationSeconds));
+  }
+
+  const response = await fetch("/api/admin/assets/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error ?? "No se pudo subir el recurso en modo fallback.");
+  }
+
+  return payload.data as Tables<"cms_assets">;
+}
+
 async function readMetadata(file: File, kind: AssetKind) {
   const url = URL.createObjectURL(file);
   try {
@@ -176,12 +220,39 @@ export async function uploadAssetToLibrary(params: {
   folder?: string;
   onProgress?: (value: number) => void;
 }) {
+  const scope = params.scope ?? "general";
+
+  logAssetUploadPhase("select", {
+    filename: params.file.name,
+    size: params.file.size,
+    requestedKind: params.expectedKind ?? "any",
+    scope,
+    folder: params.folder ?? null,
+  });
+
   const validation = validateAssetFile(params.file, params.expectedKind ?? "any");
   if (!validation.ok) {
+    logAssetUploadPhase("select:invalid", {
+      filename: params.file.name,
+      error: validation.error,
+    });
     throw new Error(validation.error);
   }
 
+  logAssetUploadPhase("select:ok", {
+    filename: params.file.name,
+    kind: validation.kind,
+    contentType: validation.contentType,
+    size: params.file.size,
+  });
+
   const metadata = await readMetadata(params.file, validation.kind).catch(() => ({}));
+
+  logAssetUploadPhase("presign:start", {
+    filename: params.file.name,
+    contentType: validation.contentType,
+    kind: validation.kind,
+  });
 
   const presignResponse = await fetch("/api/admin/assets/presign", {
     method: "POST",
@@ -191,7 +262,7 @@ export async function uploadAssetToLibrary(params: {
       contentType: validation.contentType,
       kind: validation.kind,
       fileSizeBytes: params.file.size,
-      scope: params.scope ?? "general",
+      scope,
       pageKey: params.pageKey,
       sectionKey: params.sectionKey,
       settingKey: params.settingKey,
@@ -201,16 +272,81 @@ export async function uploadAssetToLibrary(params: {
 
   const presignPayload = await presignResponse.json();
   if (!presignResponse.ok) {
+    const presignErrorText = String(presignPayload.error ?? "");
+    const r2Unavailable =
+      presignResponse.status === 400 &&
+      presignErrorText.toLowerCase().includes("r2 no está configurado");
+
+    if (r2Unavailable) {
+      logAssetUploadPhase("presign:fallback-supabase", {
+        status: presignResponse.status,
+        error: presignErrorText,
+      });
+      logAssetUploadPhase("upload:start", {
+        provider: "supabase",
+        filename: params.file.name,
+      });
+
+      const fallbackAsset = await uploadAssetViaSupabaseRoute({
+        file: params.file,
+        validation,
+        scope,
+        pageKey: params.pageKey,
+        sectionKey: params.sectionKey,
+        settingKey: params.settingKey,
+        folder: params.folder,
+        metadata: {
+          width: "width" in metadata ? metadata.width ?? undefined : undefined,
+          height: "height" in metadata ? metadata.height ?? undefined : undefined,
+          durationSeconds:
+            "durationSeconds" in metadata ? metadata.durationSeconds ?? undefined : undefined,
+        },
+      });
+
+      logAssetUploadPhase("upload:ok", {
+        provider: "supabase",
+        storageKey: fallbackAsset.storage_key,
+      });
+      logAssetUploadPhase("commit:ok", {
+        provider: "supabase",
+        assetId: fallbackAsset.id,
+        storageKey: fallbackAsset.storage_key,
+      });
+
+      return fallbackAsset;
+    }
+
+    logAssetUploadPhase("presign:error", {
+      status: presignResponse.status,
+      error: presignPayload.error ?? "unknown",
+      details: presignPayload.details ?? null,
+    });
     throw new Error(presignPayload.error ?? "No se pudo preparar la subida.");
   }
 
+  logAssetUploadPhase("presign:ok", {
+    storageKey: presignPayload.storageKey,
+    publicUrl: presignPayload.publicUrl,
+  });
+
+  logAssetUploadPhase("upload:start", {
+    storageKey: presignPayload.storageKey,
+    contentType: validation.contentType,
+  });
   await uploadWithProgress({
     uploadUrl: String(presignPayload.uploadUrl),
     file: params.file,
     contentType: validation.contentType,
     onProgress: params.onProgress,
   });
+  logAssetUploadPhase("upload:ok", {
+    storageKey: presignPayload.storageKey,
+  });
 
+  logAssetUploadPhase("commit:start", {
+    storageKey: presignPayload.storageKey,
+    publicUrl: presignPayload.publicUrl,
+  });
   const commitResponse = await fetch("/api/admin/assets", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -230,8 +366,18 @@ export async function uploadAssetToLibrary(params: {
 
   const commitPayload = await commitResponse.json();
   if (!commitResponse.ok) {
+    logAssetUploadPhase("commit:error", {
+      status: commitResponse.status,
+      error: commitPayload.error ?? "unknown",
+      details: commitPayload.details ?? null,
+    });
     throw new Error(commitPayload.error ?? "No se pudo registrar el recurso.");
   }
+
+  logAssetUploadPhase("commit:ok", {
+    assetId: commitPayload.data?.id ?? null,
+    storageKey: commitPayload.data?.storage_key ?? presignPayload.storageKey,
+  });
 
   return commitPayload.data as Tables<"cms_assets">;
 }

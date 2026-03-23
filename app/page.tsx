@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { PublicPageShell } from "@/components/PublicPageShell";
@@ -120,8 +121,23 @@ export default async function HomePage() {
       <section className="section-padding pb-14 pt-8 md:pt-12">
         <div className="container-width">
           <Reveal>
-            <div className="premium-panel p-7 md:p-10 lg:p-12">
-              <div className="noise-overlay" />
+            <div className="premium-panel hero-glow-panel p-7 md:p-10 lg:p-12">
+              <div className="hero-media-layer" aria-hidden>
+                <Image
+                  src="/assets/mockup3.png"
+                  alt="Composicion visual premium de Impulso Virtual"
+                  fill
+                  priority
+                  sizes="100vw"
+                  className="object-cover object-center"
+                />
+              </div>
+              <div className="hero-visual-layer" aria-hidden>
+                <span className="hero-aura-core" />
+                <span className="hero-aura-orb" />
+                <span className="hero-depth-lines" />
+                <span className="hero-shine-sweep" />
+              </div>
               <div className="relative z-[1] grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
                 <div className="space-y-6">
                   <p className="editorial-kicker text-foreground/75">{site.hero.label}</p>
@@ -162,6 +178,56 @@ export default async function HomePage() {
               </div>
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      <section className="section-padding py-12 md:py-16">
+        <div className="container-width">
+          <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+            <Reveal>
+              <article className="premium-card landing-image-card">
+                <div className="landing-image-frame aspect-[16/9]">
+                  <Image
+                    src="/assets/mockup2.png"
+                    alt="Preview profesional de interfaz web en monitor ultrawide"
+                    fill
+                    sizes="(min-width: 1024px) 58vw, 100vw"
+                    className="object-cover object-center"
+                  />
+                </div>
+                <div className="space-y-2 p-5 md:p-6">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-accent">
+                    Diseño editorial premium
+                  </p>
+                  <h3 className="text-2xl font-display text-foreground md:text-3xl">
+                    Experiencias web con presencia de marca y detalle visual
+                  </h3>
+                </div>
+              </article>
+            </Reveal>
+
+            <Reveal delay={0.06}>
+              <article className="premium-card landing-image-card">
+                <div className="landing-image-frame aspect-[16/9]">
+                  <Image
+                    src="/assets/Mockup1.png"
+                    alt="Sistema visual multi-dispositivo para sitio premium"
+                    fill
+                    sizes="(min-width: 1024px) 38vw, 100vw"
+                    className="object-cover object-center"
+                  />
+                </div>
+                <div className="space-y-2 p-5 md:p-6">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-accent">
+                    Sistema adaptativo
+                  </p>
+                  <p className="text-sm leading-relaxed text-muted">
+                    Arquitectura visual coherente en desktop y mobile, enfocada en conversion.
+                  </p>
+                </div>
+              </article>
+            </Reveal>
+          </div>
         </div>
       </section>
 
@@ -263,7 +329,7 @@ export default async function HomePage() {
                                 alt={`Logo de ${project.title}`}
                                 loading="lazy"
                                 decoding="async"
-                                className="max-h-8 w-auto max-w-full object-contain [filter:drop-shadow(0_8px_20px_rgba(0,0,0,0.45))]"
+                                className="max-h-8 w-auto max-w-full object-contain"
                               />
                             </div>
                           ) : (

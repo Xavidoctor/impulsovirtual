@@ -128,6 +128,7 @@ async function hydrateCmsAssetsFromProjectMedia(params: {
 export async function GET(request: NextRequest) {
   const auth = await requireEditorApi();
   if (!auth.ok) {
+    console.warn("[upload][assets/list] auth:error");
     return auth.response;
   }
 
@@ -150,12 +151,22 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = await requireEditorApi();
   if (!auth.ok) {
+    console.warn("[upload][assets/commit] auth:error");
     return auth.response;
   }
 
   try {
     const payload = assetCommitSchema.parse(await request.json());
     const { supabase, userId } = auth.context;
+    console.info("[upload][assets/commit] request", {
+      userId,
+      filename: payload.filename,
+      kind: payload.kind,
+      contentType: payload.contentType,
+      storageKey: payload.storageKey,
+      publicUrl: payload.publicUrl,
+      fileSize: payload.fileSize ?? null,
+    });
 
     let publicBaseUrl = "";
     try {
@@ -165,6 +176,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!publicBaseUrl) {
+      console.error("[upload][assets/commit] r2:not-configured");
       return NextResponse.json(
         { error: "R2 no está configurado para registrar recursos." },
         { status: 400 },
@@ -172,6 +184,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!payload.publicUrl.startsWith(`${publicBaseUrl}/`)) {
+      console.warn("[upload][assets/commit] public-url:invalid-base", {
+        publicBaseUrl,
+        publicUrl: payload.publicUrl,
+      });
       return NextResponse.json(
         { error: "La URL pública no coincide con el dominio de media configurado." },
         { status: 422 },
@@ -199,11 +215,19 @@ export async function POST(request: NextRequest) {
       created_by: userId,
     }, supabase);
     if (!data) {
+      console.error("[upload][assets/commit] db:upsert-failed", {
+        storageKey: payload.storageKey,
+      });
       return NextResponse.json(
         { error: "No se pudo registrar el recurso en la biblioteca." },
         { status: 400 },
       );
     }
+
+    console.info("[upload][assets/commit] success", {
+      assetId: data.id,
+      storageKey: data.storage_key,
+    });
 
     await writeAuditLog(supabase, {
       actor_id: userId,
@@ -217,12 +241,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) {
+      console.warn("[upload][assets/commit] validation:error", {
+        details: error.flatten(),
+      });
       return NextResponse.json(
         { error: "Datos de recurso no válidos.", details: error.flatten() },
         { status: 422 },
       );
     }
 
+    console.error("[upload][assets/commit] internal:error", error);
     return NextResponse.json(
       { error: "Error interno al registrar el recurso." },
       { status: 500 },
@@ -257,7 +285,12 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    if (!asset.storage_key.startsWith("manual/") && !asset.storage_key.startsWith("legacy/")) {
+    const shouldDeleteInR2 =
+      asset.storage_provider === "r2" &&
+      !asset.storage_key.startsWith("manual/") &&
+      !asset.storage_key.startsWith("legacy/");
+
+    if (shouldDeleteInR2) {
       try {
         await deleteFromR2(asset.storage_key);
       } catch {

@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.4"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       admin_panel_settings: {
@@ -404,8 +379,8 @@ export type Database = {
           kind: string
           logical_collection: string
           public_url: string
-          storage_provider: string
           storage_key: string
+          storage_provider: string
           tags: string[]
           width: number | null
         }
@@ -424,8 +399,8 @@ export type Database = {
           kind: string
           logical_collection?: string
           public_url: string
-          storage_provider?: string
           storage_key: string
+          storage_provider?: string
           tags?: string[]
           width?: number | null
         }
@@ -444,8 +419,8 @@ export type Database = {
           kind?: string
           logical_collection?: string
           public_url?: string
-          storage_provider?: string
           storage_key?: string
+          storage_provider?: string
           tags?: string[]
           width?: number | null
         }
@@ -1131,9 +1106,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       admin_role: ["admin", "editor"],

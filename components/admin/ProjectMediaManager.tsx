@@ -43,7 +43,7 @@ type ProjectMediaManagerProps = {
   onRefreshProject: () => Promise<void>;
 };
 
-const IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+const IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif", "image/svg+xml"]);
 const VIDEO_MIME_TYPES = new Set(["video/mp4", "video/webm"]);
 const VIDEO_MOV_MIME_TYPES = new Set(["video/quicktime", "video/mov"]);
 
@@ -53,6 +53,7 @@ const IMAGE_EXTENSION_TO_MIME: Record<string, string> = {
   png: "image/png",
   webp: "image/webp",
   avif: "image/avif",
+  svg: "image/svg+xml",
 };
 
 const VIDEO_EXTENSION_TO_MIME: Record<string, string> = {
@@ -155,12 +156,17 @@ function normalizeError(message: string) {
   const text = message.toLowerCase();
 
   if (text.includes("r2 no está configurado")) return "La subida a R2 no está disponible en este momento.";
-  if (text.includes("mime") || text.includes("formato")) return "Formato no permitido. Usa JPG, JPEG, PNG, WEBP, AVIF, MP4 o WEBM.";
+  if (text.includes("mime") || text.includes("formato")) return "Formato no permitido. Usa JPG, JPEG, PNG, WEBP, AVIF, SVG, MP4 o WEBM.";
   if (text.includes("supera")) return "El archivo supera el tamaño máximo permitido.";
   if (text.includes("url base") || text.includes("publicurl")) return "La URL del recurso no coincide con el dominio de media configurado.";
   if (text.includes("failed to fetch") || text.includes("network") || text.includes("conex")) return "No hay conexión suficiente para completar la subida.";
 
   return message;
+}
+
+function logProjectMediaUploadPhase(phase: string, payload: Record<string, unknown>) {
+  // Temporal debugging helper for project media flow tracing.
+  console.info(`[upload][project-media] ${phase}`, payload);
 }
 
 function validateFile(file: File): { ok: true; kind: MediaKind; contentType: string } | { ok: false; error: string } {
@@ -376,11 +382,25 @@ export function ProjectMediaManager({
     const localErrors: string[] = [];
 
     for (const file of files) {
+      logProjectMediaUploadPhase("select", {
+        filename: file.name,
+        size: file.size,
+        mime: file.type || null,
+      });
       const validation = validateFile(file);
       if (!validation.ok) {
+        logProjectMediaUploadPhase("select:invalid", {
+          filename: file.name,
+          error: validation.error,
+        });
         localErrors.push(validation.error);
         continue;
       }
+      logProjectMediaUploadPhase("select:ok", {
+        filename: file.name,
+        kind: validation.kind,
+        contentType: validation.contentType,
+      });
 
       const previewUrl = URL.createObjectURL(file);
       previewRegistry.current.add(previewUrl);
@@ -473,6 +493,12 @@ export function ProjectMediaManager({
 
       try {
         updateQueueItem(item.id, { state: "uploading", progress: 5, error: null });
+        logProjectMediaUploadPhase("presign:start", {
+          filename: item.filename,
+          kind: item.kind,
+          contentType: item.contentType,
+          projectId,
+        });
 
         const presignResponse = await fetch("/api/admin/media/presign", {
           method: "POST",
@@ -488,9 +514,22 @@ export function ProjectMediaManager({
 
         const presignPayload = await presignResponse.json();
         if (!presignResponse.ok) {
+          logProjectMediaUploadPhase("presign:error", {
+            status: presignResponse.status,
+            error: presignPayload.error ?? "unknown",
+            details: presignPayload.details ?? null,
+          });
           throw new Error(normalizeError(String(presignPayload.error ?? "No se pudo preparar la subida.")));
         }
+        logProjectMediaUploadPhase("presign:ok", {
+          storageKey: presignPayload.storageKey,
+          publicUrl: presignPayload.publicUrl,
+        });
 
+        logProjectMediaUploadPhase("upload:start", {
+          storageKey: presignPayload.storageKey,
+          contentType: item.contentType,
+        });
         await uploadWithProgress({
           uploadUrl: String(presignPayload.uploadUrl),
           file: item.file,
@@ -498,6 +537,9 @@ export function ProjectMediaManager({
           onProgress: (value) => {
             updateQueueItem(item.id, { state: "uploading", progress: value });
           },
+        });
+        logProjectMediaUploadPhase("upload:ok", {
+          storageKey: presignPayload.storageKey,
         });
 
         let metadata: { width?: number; height?: number; durationSeconds?: number } = {};
@@ -507,6 +549,11 @@ export function ProjectMediaManager({
           metadata = {};
         }
 
+        logProjectMediaUploadPhase("commit:start", {
+          storageKey: presignPayload.storageKey,
+          publicUrl: presignPayload.publicUrl,
+          role: item.role,
+        });
         const commitResponse = await fetch("/api/admin/media/commit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -527,12 +574,25 @@ export function ProjectMediaManager({
 
         const commitPayload = await commitResponse.json();
         if (!commitResponse.ok) {
+          logProjectMediaUploadPhase("commit:error", {
+            status: commitResponse.status,
+            error: commitPayload.error ?? "unknown",
+            details: commitPayload.details ?? null,
+          });
           throw new Error(normalizeError(String(commitPayload.error ?? "No se pudo registrar el recurso.")));
         }
+        logProjectMediaUploadPhase("commit:ok", {
+          mediaId: commitPayload.data?.id ?? null,
+          storageKey: presignPayload.storageKey,
+        });
 
         updateQueueItem(item.id, { state: "saved", progress: 100, error: null });
         successCount += 1;
       } catch (uploadError) {
+        logProjectMediaUploadPhase("flow:error", {
+          filename: item.filename,
+          error: uploadError instanceof Error ? uploadError.message : "unexpected",
+        });
         updateQueueItem(item.id, {
           state: "error",
           error: normalizeError(
@@ -905,7 +965,7 @@ export function ProjectMediaManager({
         <p className="text-sm text-neutral-300">
           Arrastra archivos o selecciónalos con clic. Se guardan en R2 y aparecen automáticamente en la biblioteca.
         </p>
-        <p className="text-xs text-neutral-500">Formatos: JPG, JPEG, PNG, WEBP, AVIF, MP4 y WEBM.</p>
+        <p className="text-xs text-neutral-500">Formatos: JPG, JPEG, PNG, WEBP, AVIF, SVG, MP4 y WEBM.</p>
       </div>
 
       <button

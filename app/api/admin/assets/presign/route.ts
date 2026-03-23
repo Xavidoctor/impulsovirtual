@@ -10,11 +10,20 @@ import { assetPresignSchema } from "@/src/lib/validators/assets-schema";
 export async function POST(request: NextRequest) {
   const auth = await requireEditorApi();
   if (!auth.ok) {
+    console.warn("[upload][assets/presign] auth:error");
     return auth.response;
   }
 
   try {
     const payload = assetPresignSchema.parse(await request.json());
+    console.info("[upload][assets/presign] request", {
+      userId: auth.context.userId,
+      filename: payload.filename,
+      kind: payload.kind,
+      contentType: payload.contentType,
+      fileSizeBytes: payload.fileSizeBytes,
+      scope: payload.scope,
+    });
 
     const storageKey = buildCmsAssetStorageKey({
       kind: payload.kind,
@@ -35,6 +44,9 @@ export async function POST(request: NextRequest) {
       });
       publicUrl = buildPublicR2Url(storageKey);
     } catch {
+      console.error("[upload][assets/presign] r2:not-configured", {
+        storageKey,
+      });
       return NextResponse.json(
         { error: "R2 no está configurado para subida directa." },
         { status: 400 },
@@ -62,12 +74,16 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof ZodError) {
+      console.warn("[upload][assets/presign] validation:error", {
+        details: error.flatten(),
+      });
       return NextResponse.json(
         { error: "Solicitud de subida no válida.", details: error.flatten() },
         { status: 422 },
       );
     }
 
+    console.error("[upload][assets/presign] internal:error", error);
     return NextResponse.json(
       { error: "Error interno al preparar la subida del recurso." },
       { status: 500 },

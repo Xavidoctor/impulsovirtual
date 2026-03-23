@@ -104,6 +104,7 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
   const [previewState, setPreviewState] = useState<PreviewState>("loading");
   const [manualFallback, setManualFallback] = useState(false);
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
+  const [previewViewport, setPreviewViewport] = useState<"desktop" | "mobile">("desktop");
 
   const liveUrl = useMemo(() => (project ? resolveLiveUrl(project) : null), [project]);
 
@@ -135,6 +136,7 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
 
     setManualFallback(false);
     setIsMobilePanelOpen(false);
+    setPreviewViewport("desktop");
     if (project.preview_mode === "image" || project.preview_mode === "external_only" || !liveUrl) {
       setPreviewState("fallback");
       return;
@@ -209,6 +211,22 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
           </div>
 
           <div className="relative min-h-0 flex-1 overflow-hidden">
+            <div className="absolute right-4 top-4 z-20 hidden lg:block">
+              {!showFallback && project.preview_mode === "embed" && liveUrl ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPreviewViewport((current) =>
+                      current === "desktop" ? "mobile" : "desktop",
+                    )
+                  }
+                  className="focus-ring rounded-full border border-white/20 bg-black/55 px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-neutral-200 transition-colors hover:bg-black/75"
+                >
+                  {previewViewport === "desktop" ? "Modo movil" : "Modo PC"}
+                </button>
+              ) : null}
+            </div>
+
             {showFallback ? (
               <div className="flex h-full flex-col items-center justify-center gap-6 p-6 text-center">
                 <div className="w-full max-w-4xl overflow-hidden rounded-xl border border-white/10 bg-black/40 p-3">
@@ -236,14 +254,34 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
               </div>
             ) : (
               <>
-                <iframe
-                  key={`${project.id}-${liveUrl}`}
-                  src={liveUrl ?? undefined}
-                  title={`Preview ${project.title}`}
-                  className="h-full w-full border-0"
-                  onLoad={() => setPreviewState("ready")}
-                  onError={() => setPreviewState("fallback")}
-                />
+                <div
+                  className={`h-full w-full ${
+                    previewViewport === "mobile"
+                      ? "flex items-center justify-center p-4 lg:p-6"
+                      : ""
+                  }`}
+                >
+                  <div
+                    className={
+                      previewViewport === "mobile"
+                        ? "h-full w-full max-h-[calc(100dvh-7.5rem)] max-w-[390px] overflow-hidden rounded-[30px] border border-white/15 bg-black shadow-[0_20px_60px_-20px_rgba(0,0,0,0.85)] overscroll-contain"
+                        : "h-full w-full"
+                    }
+                  >
+                    <iframe
+                      key={`${project.id}-${liveUrl}`}
+                      src={liveUrl ?? undefined}
+                      title={`Preview ${project.title}`}
+                      className={`border-0 [touch-action:pan-x_pan-y_pinch-zoom] ${
+                        previewViewport === "mobile"
+                          ? "h-full w-[390px] max-w-full"
+                          : "h-full w-full"
+                      }`}
+                      onLoad={() => setPreviewState("ready")}
+                      onError={() => setPreviewState("fallback")}
+                    />
+                  </div>
+                </div>
                 {previewState === "loading" ? (
                   <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#070b0d]/75">
                     <div className="space-y-2 text-center">

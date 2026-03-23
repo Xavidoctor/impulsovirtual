@@ -11,11 +11,20 @@ import { mediaPresignSchema } from "@/src/lib/validators/media-schema";
 export async function POST(request: NextRequest) {
   const auth = await requireEditorApi();
   if (!auth.ok) {
+    console.warn("[upload][media/presign] auth:error");
     return auth.response;
   }
 
   try {
     const payload = mediaPresignSchema.parse(await request.json());
+    console.info("[upload][media/presign] request", {
+      userId: auth.context.userId,
+      filename: payload.filename,
+      kind: payload.kind,
+      contentType: payload.contentType,
+      fileSizeBytes: payload.fileSizeBytes,
+      projectId: payload.projectId ?? null,
+    });
     let projectSlug: string | undefined;
 
     if (payload.projectId) {
@@ -43,6 +52,9 @@ export async function POST(request: NextRequest) {
       publicUrl = buildPublicR2Url(storageKey);
     } catch (presignError) {
       void presignError;
+      console.error("[upload][media/presign] r2:not-configured", {
+        storageKey,
+      });
       return NextResponse.json(
         { error: "R2 no está configurado para subida directa." },
         { status: 400 },
@@ -70,12 +82,16 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof ZodError) {
+      console.warn("[upload][media/presign] validation:error", {
+        details: error.flatten(),
+      });
       return NextResponse.json(
         { error: "Payload de firma de subida de recursos no válido.", details: error.flatten() },
         { status: 422 },
       );
     }
 
+    console.error("[upload][media/presign] internal:error", error);
     void error;
     return NextResponse.json({ error: "Error interno al generar la firma de subida." }, { status: 500 });
   }

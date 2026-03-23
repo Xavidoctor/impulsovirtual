@@ -37,12 +37,22 @@ function inferFilenameFromStorageKey(storageKey: string) {
 export async function POST(request: NextRequest) {
   const auth = await requireEditorApi();
   if (!auth.ok) {
+    console.warn("[upload][media/commit] auth:error");
     return auth.response;
   }
 
   try {
     const payload = mediaCommitSchema.parse(await request.json());
     const { supabase, userId } = auth.context;
+    console.info("[upload][media/commit] request", {
+      userId,
+      projectId: payload.projectId,
+      kind: payload.kind,
+      role: payload.role,
+      sourceType: payload.sourceType,
+      storageKey: payload.storageKey ?? null,
+      publicUrl: payload.publicUrl,
+    });
     let publicBaseUrl = "";
     try {
       publicBaseUrl = getR2Config().publicBaseUrl;
@@ -52,6 +62,9 @@ export async function POST(request: NextRequest) {
 
     const project = await getProjectById(payload.projectId, undefined, supabase);
     if (!project) {
+      console.warn("[upload][media/commit] project:not-found", {
+        projectId: payload.projectId,
+      });
       return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
     }
 
@@ -68,6 +81,7 @@ export async function POST(request: NextRequest) {
       });
     } else {
       if (!publicBaseUrl) {
+        console.error("[upload][media/commit] r2:not-configured");
         return NextResponse.json(
           { error: "R2 no está configurado. Usa el modo de recursos manual por ahora." },
           { status: 400 },
@@ -75,6 +89,10 @@ export async function POST(request: NextRequest) {
       }
 
       if (!payload.publicUrl.startsWith(`${publicBaseUrl}/`)) {
+        console.warn("[upload][media/commit] public-url:invalid-base", {
+          publicBaseUrl,
+          publicUrl: payload.publicUrl,
+        });
         return NextResponse.json(
           { error: "publicUrl debe pertenecer a la URL base de R2 configurada." },
           { status: 422 },
@@ -83,6 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!storageKey) {
+      console.warn("[upload][media/commit] storage-key:missing");
       return NextResponse.json(
         { error: "storageKey es obligatorio para sourceType = r2." },
         { status: 422 },
@@ -107,6 +126,10 @@ export async function POST(request: NextRequest) {
     );
 
     if (!data) {
+      console.error("[upload][media/commit] db:project-media-insert-failed", {
+        projectId: payload.projectId,
+        storageKey,
+      });
       return NextResponse.json({ error: "No se pudo registrar el recurso del proyecto." }, { status: 400 });
     }
 
@@ -133,9 +156,18 @@ export async function POST(request: NextRequest) {
       };
       const asset = await createOrUpdateCmsAsset(assetPayload, supabase);
       if (!asset) {
-        console.error("cms_assets upsert failed");
+        console.error("[upload][media/commit] db:cms-assets-upsert-failed", {
+          storageKey,
+          publicUrl: payload.publicUrl,
+        });
       }
     }
+
+    console.info("[upload][media/commit] success", {
+      mediaId: data.id,
+      storageKey: data.storage_key,
+      sourceType: payload.sourceType,
+    });
 
     await writeAuditLog(supabase, {
       actor_id: userId,
@@ -149,12 +181,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) {
+      console.warn("[upload][media/commit] validation:error", {
+        details: error.flatten(),
+      });
       return NextResponse.json(
         { error: "Payload de registro de recursos no válido.", details: error.flatten() },
         { status: 422 },
       );
     }
 
+    console.error("[upload][media/commit] internal:error", error);
     void error;
     return NextResponse.json({ error: "Error interno al registrar el recurso." }, { status: 500 });
   }

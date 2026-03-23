@@ -8,6 +8,7 @@ export const allowedImageMimeTypes = [
   "image/png",
   "image/webp",
   "image/avif",
+  "image/svg+xml",
 ] as const;
 
 export const allowedVideoMimeTypes = ["video/mp4", "video/webm"] as const;
