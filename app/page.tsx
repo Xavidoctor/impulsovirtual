@@ -123,14 +123,17 @@ export default async function HomePage() {
           <Reveal>
             <div className="premium-panel hero-glow-panel p-7 md:p-10 lg:p-12">
               <div className="hero-media-layer" aria-hidden>
-                <Image
-                  src="/assets/mockup3.png"
-                  alt="Composicion visual premium de Impulso Virtual"
-                  fill
-                  priority
-                  sizes="100vw"
-                  className="object-cover object-center"
-                />
+                <video
+                  className="hero-media-video"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="metadata"
+                  poster="/assets/mockup3.png"
+                >
+                  <source src="/assets/video%20impulso%201.mp4" type="video/mp4" />
+                </video>
               </div>
               <div className="hero-visual-layer" aria-hidden>
                 <span className="hero-aura-core" />

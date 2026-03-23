@@ -6,3 +6,5 @@ out
 .env
 .env.local
 .netlify
+.vercel
+.env*.local

@@ -161,6 +161,16 @@ summary {
   opacity: 0.52;
 }
 
+.hero-media-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  transform: scale(1.06);
+  opacity: 0.52;
+  pointer-events: none;
+}
+
 .hero-glow-panel::after {
   content: "";
   pointer-events: none;
@@ -405,6 +415,10 @@ summary {
     transform: none;
   }
 
+  .hero-media-video {
+    transform: none;
+  }
+
   .reveal-block {
     opacity: 1;
     transform: none;
@@ -462,6 +476,12 @@ summary {
   .hero-media-layer img {
     opacity: 0.42;
     transform: scale(1.01);
+  }
+
+  .hero-media-video {
+    object-position: center 26%;
+    transform: scale(1.28);
+    opacity: 0.46;
   }
 
   .landing-image-card:hover .landing-image-frame img {
