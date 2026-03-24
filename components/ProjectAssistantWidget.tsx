@@ -210,26 +210,25 @@ export function ProjectAssistantWidget() {
           type="button"
           aria-label="Cerrar asistente"
           onClick={() => setOpen(false)}
-          className="fixed inset-0 z-[64] cursor-default bg-black/35 backdrop-blur-[1px]"
+          className="fixed inset-0 z-[64] cursor-default bg-black/55 backdrop-blur-[2px]"
         />
       ) : null}
 
-      <div className={cn("fixed right-4 z-[65] md:right-6", bottomOffset)}>
-        <button
-          type="button"
-          onClick={() => setOpen((prev) => !prev)}
-          aria-expanded={open}
-          aria-controls="assistant-panel"
-          className={cn(
-            "focus-ring inline-flex h-14 items-center gap-2 rounded-full border border-accent/35 bg-[#0b1618]/96 px-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground shadow-[0_16px_36px_-18px_rgba(0,0,0,0.8)] transition-all hover:border-accent/60 hover:brightness-110",
-            open && "border-accent/65 bg-[#102125]",
-          )}
-        >
-          <span className="inline-block h-2 w-2 rounded-full bg-accent" />
-          <span className="hidden md:inline">Asistente IA</span>
-          <span className="md:hidden">IA</span>
-        </button>
-      </div>
+      {!open ? (
+        <div className={cn("fixed right-4 z-[65] md:right-6", bottomOffset)}>
+          <button
+            type="button"
+            onClick={() => setOpen((prev) => !prev)}
+            aria-expanded={open}
+            aria-controls="assistant-panel"
+            className="focus-ring inline-flex h-14 items-center gap-2 rounded-full border border-accent/35 bg-[#0b1618]/96 px-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground shadow-[0_16px_36px_-18px_rgba(0,0,0,0.8)] transition-all hover:border-accent/60 hover:brightness-110"
+          >
+            <span className="inline-block h-2 w-2 rounded-full bg-accent" />
+            <span className="hidden md:inline">Asistente IA</span>
+            <span className="md:hidden">IA</span>
+          </button>
+        </div>
+      ) : null}
 
       <div
         id="assistant-panel"
@@ -241,7 +240,8 @@ export function ProjectAssistantWidget() {
             : "pointer-events-none translate-y-5 opacity-0",
         )}
       >
-        <section className="premium-panel overflow-hidden border-white/12 bg-[#0d1518]/97">
+        <section className="premium-panel overflow-hidden border-white/12 bg-[#071015]/99">
+          <div className="pointer-events-none absolute inset-0 bg-[#04090d]/58" />
           <div className="noise-overlay" />
           <div className="relative z-[1] flex h-[min(74dvh,760px)] flex-col md:h-[min(78vh,760px)]">
             <header className="flex items-start justify-between gap-3 border-b border-white/10 px-4 py-4">

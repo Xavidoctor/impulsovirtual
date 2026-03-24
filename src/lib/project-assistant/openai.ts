@@ -18,7 +18,7 @@ import {
 } from "@/src/lib/validators/project-assistant-schema";
 
 const OPENAI_BASE_URL = (process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/+$/, "");
-const DEFAULT_MODEL = process.env.OPENAI_PROJECT_ASSISTANT_MODEL?.trim() || "gpt-4.1-mini";
+const DEFAULT_MODEL = process.env.OPENAI_PROJECT_ASSISTANT_MODEL?.trim() || "gpt-4o-mini";
 
 type GenerateResult =
   | { ok: true; data: ProjectAssistantOutput; source: "openai" }
@@ -41,6 +41,23 @@ type OpenAIChatCompletionResponse = {
     type?: string;
   };
 };
+
+type OpenAIJsonSchemaResponseFormat = {
+  type: "json_schema";
+  json_schema: {
+    name: string;
+    strict: boolean;
+    schema: Record<string, unknown>;
+  };
+};
+
+type OpenAIJsonObjectResponseFormat = {
+  type: "json_object";
+};
+
+type OpenAIResponseFormat =
+  | OpenAIJsonSchemaResponseFormat
+  | OpenAIJsonObjectResponseFormat;
 
 const responseJsonSchema = {
   name: "project_assistant_response",
@@ -600,96 +617,109 @@ export async function generateProjectAssistantResponse(
   const systemPrompt = buildProjectAssistantSystemPrompt();
   const userPrompt = buildProjectAssistantUserPrompt(messages);
 
-  let providerResponse: Response;
-  try {
-    providerResponse = await fetch(`${OPENAI_BASE_URL}/chat/completions`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: DEFAULT_MODEL,
-        temperature: 0.35,
-        response_format: {
-          type: "json_schema",
-          json_schema: responseJsonSchema,
-        },
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
-      cache: "no-store",
-      signal: AbortSignal.timeout(25000),
-    });
-  } catch (error) {
-    return {
-      ok: false,
-      code: "provider_error",
-      message:
-        error instanceof Error
-          ? `No se pudo conectar con OpenAI: ${error.message}`
-          : "No se pudo conectar con OpenAI.",
-      fallback: deterministicFallback,
-    };
+  const candidateModels = Array.from(
+    new Set([DEFAULT_MODEL, "gpt-4o-mini", "gpt-4.1-mini"]),
+  ).filter(Boolean);
+
+  const responseFormats: OpenAIResponseFormat[] = [
+    {
+      type: "json_schema",
+      json_schema: responseJsonSchema,
+    },
+    {
+      type: "json_object",
+    },
+  ];
+
+  let lastProviderError = "No se pudo generar la respuesta del asistente con OpenAI.";
+  let hadInvalidStructuredResponse = false;
+
+  for (const model of candidateModels) {
+    for (const responseFormat of responseFormats) {
+      let providerResponse: Response;
+      try {
+        providerResponse = await fetch(`${OPENAI_BASE_URL}/chat/completions`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model,
+            temperature: 0.35,
+            response_format: responseFormat,
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userPrompt },
+            ],
+          }),
+          cache: "no-store",
+          signal: AbortSignal.timeout(25000),
+        });
+      } catch (error) {
+        lastProviderError =
+          error instanceof Error
+            ? `No se pudo conectar con OpenAI: ${error.message}`
+            : "No se pudo conectar con OpenAI.";
+        continue;
+      }
+
+      let payload: OpenAIChatCompletionResponse;
+      try {
+        payload = (await providerResponse.json()) as OpenAIChatCompletionResponse;
+      } catch {
+        lastProviderError = "Respuesta no válida del proveedor de IA.";
+        continue;
+      }
+
+      if (!providerResponse.ok) {
+        lastProviderError = buildProviderErrorMessage(payload, providerResponse.status);
+        continue;
+      }
+
+      const rawContent = readContent(payload);
+      if (!rawContent) {
+        hadInvalidStructuredResponse = true;
+        lastProviderError = "El proveedor de IA no devolvió contenido utilizable.";
+        continue;
+      }
+
+      const maybeJson = parseJson(rawContent);
+      if (!maybeJson) {
+        hadInvalidStructuredResponse = true;
+        lastProviderError = "No se pudo parsear la salida estructurada del asistente.";
+        continue;
+      }
+
+      const parsed = projectAssistantOutputSchema.safeParse(maybeJson);
+      if (!parsed.success) {
+        hadInvalidStructuredResponse = true;
+        lastProviderError =
+          parsed.error.issues[0]?.message ||
+          "La salida de IA no cumple el esquema requerido.";
+        continue;
+      }
+
+      const safeOutput = sanitizeOutput(parsed.data, messages);
+      return { ok: true, data: safeOutput, source: "openai" };
+    }
   }
 
-  let payload: OpenAIChatCompletionResponse;
-  try {
-    payload = (await providerResponse.json()) as OpenAIChatCompletionResponse;
-  } catch {
-    return {
-      ok: false,
-      code: "provider_error",
-      message: "Respuesta no válida del proveedor de IA.",
-      fallback: deterministicFallback,
-    };
-  }
-
-  if (!providerResponse.ok) {
-    return {
-      ok: false,
-      code: "provider_error",
-      message: buildProviderErrorMessage(payload, providerResponse.status),
-      fallback: deterministicFallback,
-    };
-  }
-
-  const rawContent = readContent(payload);
-  if (!rawContent) {
+  if (hadInvalidStructuredResponse) {
     return {
       ok: false,
       code: "invalid_response",
-      message: "El proveedor de IA no devolvió contenido utilizable.",
+      message: lastProviderError,
       fallback: deterministicFallback,
     };
   }
 
-  const maybeJson = parseJson(rawContent);
-  if (!maybeJson) {
-    return {
-      ok: false,
-      code: "invalid_response",
-      message: "No se pudo parsear la salida estructurada del asistente.",
-      fallback: deterministicFallback,
-    };
-  }
-
-  const parsed = projectAssistantOutputSchema.safeParse(maybeJson);
-  if (!parsed.success) {
-    return {
-      ok: false,
-      code: "invalid_response",
-      message:
-        parsed.error.issues[0]?.message ||
-        "La salida de IA no cumple el esquema requerido.",
-      fallback: deterministicFallback,
-    };
-  }
-
-  const safeOutput = sanitizeOutput(parsed.data, messages);
-  return { ok: true, data: safeOutput, source: "openai" };
+  return {
+    ok: false,
+    code: "provider_error",
+    message: lastProviderError,
+    fallback: deterministicFallback,
+  };
 }
 
 export function fallbackAssistantOutput(messages: ProjectAssistantChatMessage[] = []) {

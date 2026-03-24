@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     if (result.code === "provider_error") {
       return NextResponse.json(
         {
-          warning: "OpenAI no respondió correctamente. Se aplica un fallback contextual.",
+          warning: "Modo continuidad activo: seguimos con un diagnóstico contextual mientras se estabiliza la respuesta de IA.",
           data: result.fallback,
           meta: { source: "fallback" },
         },
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        warning: "La respuesta de IA llegó incompleta. Se aplica un fallback contextual.",
+        warning: "Respuesta IA parcial: continuamos con un diagnóstico contextual para no frenar el flujo.",
         data: result.fallback,
         meta: { source: "fallback" },
       },
