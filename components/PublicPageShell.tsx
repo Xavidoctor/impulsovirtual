@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { ProjectAssistantWidget } from "@/components/ProjectAssistantWidget";
 import { LEGAL_PAGE_LINKS } from "@/content/legal/shared";
 import { getPublicSiteContext } from "@/src/lib/domain/public-site";
 
@@ -20,6 +21,7 @@ export async function PublicPageShell({ children }: PublicPageShellProps) {
         primaryCta={site.primaryCta}
       />
       <main className="pt-24 md:pt-32">{children}</main>
+      <ProjectAssistantWidget />
       <Footer
         brandLine={site.footer.brandLine}
         copyright={site.footer.copyright}

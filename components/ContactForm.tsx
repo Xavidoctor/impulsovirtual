@@ -49,6 +49,39 @@ export function ContactForm() {
     trackAnalytics("contact_form_view");
   }, [trackAnalytics]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const prefillMessage = (params.get("message") ?? "").trim();
+    const prefillService = (params.get("service") ?? "").trim();
+    const prefillSource = (params.get("source") ?? "").trim();
+
+    if (!prefillMessage && !prefillService && !prefillSource) return;
+
+    setValues((prev) => {
+      let changed = false;
+      const nextValues = { ...prev };
+
+      if (prefillMessage.length > 0 && !prev.message.trim()) {
+        nextValues.message = prefillMessage.slice(0, 2000);
+        changed = true;
+      }
+
+      if (prefillService.length > 0 && !prev.service.trim()) {
+        nextValues.service = prefillService.slice(0, 120);
+        changed = true;
+      }
+
+      if (prefillSource.length > 0 && !(prev.source ?? "").trim()) {
+        nextValues.source = prefillSource.slice(0, 80);
+        changed = true;
+      }
+
+      return changed ? nextValues : prev;
+    });
+  }, []);
+
   const update = (field: Exclude<keyof ContactFormValues, "privacyAccepted">, value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }));
     if (status !== "idle") {

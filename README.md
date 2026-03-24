@@ -24,9 +24,12 @@ Usa `.env.local.example` como plantilla local y `.env.example` como referencia d
 - `QUOTE_FROM_EMAIL`
 - `CONTACT_USER_CONFIRMATION_ENABLED`
 - `QUOTE_USER_CONFIRMATION_ENABLED`
+- `OPENAI_API_KEY`
 - `NEXT_PUBLIC_ENABLE_LEGACY_ADMIN` (mantener en `false`)
 
 ### Opcionales
+- `OPENAI_PROJECT_ASSISTANT_MODEL` (por defecto `gpt-4.1-mini`)
+- `OPENAI_BASE_URL` (por defecto `https://api.openai.com/v1`)
 - `CMS_PREVIEW_SECRET`
 - `DEFAULT_FROM_EMAIL` (fallback para remitente de email)
 - `R2_*` (si usas subida/gestión de media en R2)
