@@ -7,7 +7,7 @@ export type PortfolioProject = {
   projectOrientation?: string;
   whatWasDone?: string;
   servicesApplied?: string[];
-  previewMode?: "embed" | "image" | "external_only";
+  previewMode?: "embed" | "image";
   previewImageUrl?: string;
   slug: string;
   title: string;

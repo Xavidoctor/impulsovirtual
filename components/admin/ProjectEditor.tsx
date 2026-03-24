@@ -34,7 +34,7 @@ type FormState = {
   project_orientation: string;
   what_was_done: string;
   services_applied: string;
-  preview_mode: "embed" | "image" | "external_only";
+  preview_mode: "embed" | "image";
   preview_image_url: string;
   featured: boolean;
   status: ProjectStatus;
@@ -440,14 +440,13 @@ export function ProjectEditor({ projectId, initialProject, initialMedia }: Proje
                 onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      preview_mode: event.target.value as "embed" | "image" | "external_only",
+                      preview_mode: event.target.value as "embed" | "image",
                     }))
                 }
                 className="w-full rounded-md border border-white/15 bg-black/40 px-3 py-2"
               >
                 <option value="embed">Intentar en iframe</option>
                 <option value="image">Solo imagen alternativa</option>
-                <option value="external_only">Solo externo (botón + alternativa)</option>
               </select>
             </label>
             <label className="space-y-1 text-sm">

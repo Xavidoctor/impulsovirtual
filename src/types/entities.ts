@@ -58,7 +58,7 @@ export type ProjectEntity = {
   project_orientation: string | null;
   what_was_done: string | null;
   services_applied: string[];
-  preview_mode: "embed" | "image" | "external_only";
+  preview_mode: "embed" | "image";
   preview_image_url: string | null;
   is_published: boolean;
   published_at: ISODateTime | null;

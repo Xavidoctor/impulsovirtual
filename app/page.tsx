@@ -30,6 +30,43 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+function ProcessStepIcon({ index }: { index: number }) {
+  const baseClass = "h-[18px] w-[18px]";
+
+  switch (index) {
+    case 0:
+      return (
+        <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+          <circle cx="12" cy="12" r="8" />
+          <path d="M9.2 14.8 14.8 9.2l-1.9 5.7-3.7-.1z" />
+        </svg>
+      );
+    case 1:
+      return (
+        <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+          <rect x="5" y="5" width="14" height="5" rx="1.5" />
+          <rect x="5" y="14" width="9" height="5" rx="1.5" />
+          <path d="M16 14h3m-3 5h3" />
+        </svg>
+      );
+    case 2:
+      return (
+        <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+          <path d="M8.5 15.5c0-4.7 4.1-8.8 8.8-8.8-.1 4.7-4.1 8.8-8.8 8.8z" />
+          <path d="m7.1 16.9-2.4 2.4m3.4-7.4-3.4 3.4m6.8 1.3 3.4 3.4" />
+        </svg>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+          <path d="M20 12a8 8 0 1 1-2.3-5.7" />
+          <path d="M20 5.5v5h-5" />
+          <path d="m7 12 3 3 7-7" />
+        </svg>
+      );
+  }
+}
+
 export default async function HomePage() {
   const [site, servicesData, projectsData, testimonialsData, faqsData, blogData] =
     await Promise.all([
@@ -91,7 +128,7 @@ export default async function HomePage() {
           project_orientation: project.projectOrientation ?? project.category,
           what_was_done: project.whatWasDone ?? project.fullDescription,
           services_applied: project.servicesApplied ?? project.services,
-          preview_mode: project.previewMode ?? "embed",
+          preview_mode: (project.previewMode === "image" ? "image" : "embed") as "embed" | "image",
           preview_image_url: project.previewImageUrl ?? project.coverImage,
           is_published: true,
           published_at: null,
@@ -276,18 +313,38 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-padding py-14">
+      <section className="section-padding process-section py-14">
         <div className="container-width space-y-8">
           <Reveal>
-            <h2 className="section-title font-display">Proceso de trabajo</h2>
+            <div className="process-heading space-y-4">
+              <p className="editorial-kicker text-accent/90">METODOLOGÍA</p>
+              <h2 className="section-title font-display">Proceso de trabajo</h2>
+              <p className="section-copy max-w-3xl text-foreground/75">
+                Un sistema de ejecución pensado para tomar decisiones con criterio, reducir
+                incertidumbre y construir un activo digital que crece contigo.
+              </p>
+            </div>
           </Reveal>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="process-grid">
             {homeSupportContent.processSteps.map((step, index) => (
               <Reveal key={step.step} delay={index * 0.06}>
-                <article className="premium-card elevate-hover h-full p-6">
-                  <p className="text-xs uppercase tracking-[0.24em] text-accent">{step.step}</p>
-                  <h3 className="mt-3 text-2xl font-display text-foreground">{step.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-muted">{step.description}</p>
+                <article className="process-card h-full p-6 md:p-7">
+                  <span className="process-mobile-dot" aria-hidden />
+                  <span className="process-ghost-number" aria-hidden>
+                    {step.step}
+                  </span>
+                  <div className="relative z-[1] flex items-start justify-between gap-4">
+                    <span className="process-icon">
+                      <ProcessStepIcon index={index} />
+                    </span>
+                    <p className="process-step-badge">{step.step}</p>
+                  </div>
+                  <h3 className="relative z-[1] mt-5 text-2xl font-display text-foreground md:text-[2rem]">
+                    {step.title}
+                  </h3>
+                  <p className="relative z-[1] mt-3 text-sm leading-relaxed text-muted md:text-[15px]">
+                    {step.description}
+                  </p>
                 </article>
               </Reveal>
             ))}

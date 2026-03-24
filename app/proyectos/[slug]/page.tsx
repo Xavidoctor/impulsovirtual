@@ -39,7 +39,7 @@ function mapFallbackProjectToEntity(
     project_orientation: fallback.projectOrientation ?? fallback.category,
     what_was_done: fallback.whatWasDone ?? fallback.fullDescription,
     services_applied: fallback.servicesApplied ?? fallback.services,
-    preview_mode: fallback.previewMode ?? "embed",
+    preview_mode: (fallback.previewMode === "image" ? "image" : "embed") as "embed" | "image",
     preview_image_url: fallback.previewImageUrl ?? fallback.coverImage,
     is_published: true,
     published_at: null,

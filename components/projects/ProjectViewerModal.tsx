@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 
 import type { ProjectEntity } from "@/src/types/entities";
 
-type PreviewState = "loading" | "ready" | "fallback";
+type PreviewState = "loading" | "ready" | "error";
 
 type ProjectViewerModalProps = {
   project: ProjectEntity | null;
@@ -102,9 +102,9 @@ function ProjectInfoContent({
 export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps) {
   const [mounted, setMounted] = useState(false);
   const [previewState, setPreviewState] = useState<PreviewState>("loading");
-  const [manualFallback, setManualFallback] = useState(false);
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
   const [previewViewport, setPreviewViewport] = useState<"desktop" | "mobile">("desktop");
+  const [iframeNonce, setIframeNonce] = useState(0);
 
   const liveUrl = useMemo(() => (project ? resolveLiveUrl(project) : null), [project]);
 
@@ -134,25 +134,24 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
   useEffect(() => {
     if (!project) return;
 
-    setManualFallback(false);
     setIsMobilePanelOpen(false);
     setPreviewViewport("desktop");
-    if (project.preview_mode === "image" || project.preview_mode === "external_only" || !liveUrl) {
-      setPreviewState("fallback");
+    setIframeNonce(0);
+
+    if (!liveUrl) {
+      setPreviewState("error");
       return;
     }
 
     setPreviewState("loading");
     const timer = window.setTimeout(() => {
-      setPreviewState((current) => (current === "ready" ? current : "fallback"));
-    }, 7000);
+      setPreviewState((current) => (current === "ready" ? current : "error"));
+    }, 10000);
 
     return () => window.clearTimeout(timer);
   }, [project, liveUrl]);
 
   if (!project || !mounted) return null;
-
-  const showFallback = manualFallback || previewState === "fallback";
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md">
@@ -163,14 +162,29 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
         className="grid h-[100dvh] min-h-[100svh] w-screen overflow-hidden border-y border-white/15 bg-[#080b0d] shadow-[0_40px_120px_-40px_rgba(0,0,0,0.9)] lg:grid-cols-[360px_1fr] lg:border"
       >
         <aside className="relative hidden overflow-y-auto border-r border-white/10 bg-[#0a1013] lg:block">
-          <button
-            type="button"
-            onClick={onClose}
-            className="focus-ring absolute right-4 top-4 rounded-full border border-white/20 px-2.5 py-1 text-[11px] uppercase tracking-[0.14em] text-neutral-200 transition-colors hover:bg-white/10"
-          >
-            Cerrar
-          </button>
-          <div className="space-y-6 p-6 pt-14">
+          <div className="absolute left-4 right-4 top-4 z-10 flex items-center justify-end gap-2">
+            {liveUrl ? (
+              <button
+                type="button"
+                onClick={() =>
+                  setPreviewViewport((current) =>
+                    current === "desktop" ? "mobile" : "desktop",
+                  )
+                }
+                className="focus-ring rounded-full border border-white/20 bg-white/[0.03] px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-neutral-200 transition-colors hover:bg-white/10"
+              >
+                {previewViewport === "desktop" ? "Modo móvil" : "Modo escritorio"}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={onClose}
+              className="focus-ring rounded-full border border-white/20 px-2.5 py-1 text-[11px] uppercase tracking-[0.14em] text-neutral-200 transition-colors hover:bg-white/10"
+            >
+              Cerrar
+            </button>
+          </div>
+          <div className="space-y-6 p-6 pt-16">
             <ProjectInfoContent project={project} liveUrl={liveUrl} />
           </div>
         </aside>
@@ -211,46 +225,14 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
           </div>
 
           <div className="relative min-h-0 flex-1 overflow-hidden">
-            <div className="absolute right-4 top-4 z-20 hidden lg:block">
-              {!showFallback && project.preview_mode === "embed" && liveUrl ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setPreviewViewport((current) =>
-                      current === "desktop" ? "mobile" : "desktop",
-                    )
-                  }
-                  className="focus-ring rounded-full border border-white/20 bg-black/55 px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-neutral-200 transition-colors hover:bg-black/75"
-                >
-                  {previewViewport === "desktop" ? "Modo móvil" : "Modo escritorio"}
-                </button>
-              ) : null}
-            </div>
-
-            {showFallback ? (
-              <div className="flex h-full flex-col items-center justify-center gap-6 p-6 text-center">
-                <div className="w-full max-w-4xl overflow-hidden rounded-xl border border-white/10 bg-black/40 p-3">
-                  <img
-                    src={project.preview_image_url || project.cover_image_url || "/og-cover.svg"}
-                    alt={`Vista previa de ${project.title}`}
-                    className="h-[52vh] w-full rounded-lg object-cover"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <p className="text-lg font-display text-foreground">
-                    Vista previa externa no disponible
-                  </p>
-                  <p className="max-w-xl text-sm text-muted">
-                    {project.preview_mode === "external_only"
-                      ? "Este proyecto usa modo externo. Abre el sitio para ver la experiencia completa."
-                      : "Este dominio no permite embeber su web dentro de un iframe. Puedes abrir el sitio en una pestaña nueva."}
+            {!liveUrl ? (
+              <div className="flex h-full items-center justify-center p-6 text-center">
+                <div className="max-w-xl space-y-2 rounded-xl border border-white/10 bg-black/30 p-6">
+                  <p className="text-lg font-display text-foreground">Vista previa no disponible</p>
+                  <p className="text-sm text-muted">
+                    Este proyecto todavía no tiene una URL pública para mostrarse en el visor.
                   </p>
                 </div>
-                {liveUrl ? (
-                  <Link href={liveUrl} target="_blank" rel="noreferrer" className="focus-ring btn-primary">
-                    Abrir sitio
-                  </Link>
-                ) : null}
               </div>
             ) : (
               <>
@@ -269,8 +251,8 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
                     }
                   >
                     <iframe
-                      key={`${project.id}-${liveUrl}`}
-                      src={liveUrl ?? undefined}
+                      key={`${project.id}-${liveUrl}-${iframeNonce}`}
+                      src={liveUrl}
                       title={`Vista previa de ${project.title}`}
                       className={`border-0 [touch-action:pan-x_pan-y_pinch-zoom] ${
                         previewViewport === "mobile"
@@ -278,7 +260,7 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
                           : "h-full w-full"
                       }`}
                       onLoad={() => setPreviewState("ready")}
-                      onError={() => setPreviewState("fallback")}
+                      onError={() => setPreviewState("error")}
                     />
                   </div>
                 </div>
@@ -290,18 +272,32 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
                     </div>
                   </div>
                 ) : null}
+                {previewState === "error" ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-[#070b0d]/84 p-6">
+                    <div className="max-w-lg space-y-3 rounded-xl border border-white/10 bg-black/45 p-6 text-center">
+                      <p className="text-lg font-display text-foreground">
+                        No hemos podido cargar la vista previa
+                      </p>
+                      <p className="text-sm text-muted">
+                        Puede deberse a restricciones del dominio o a un bloqueo temporal.
+                      </p>
+                      <div className="flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPreviewState("loading");
+                            setIframeNonce((current) => current + 1);
+                          }}
+                          className="focus-ring rounded-full border border-white/20 bg-black/55 px-4 py-2 text-[11px] uppercase tracking-[0.14em] text-neutral-200 transition-colors hover:bg-black/75"
+                        >
+                          Reintentar carga
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
               </>
             )}
-
-            {!showFallback && project.preview_mode === "embed" ? (
-              <button
-                type="button"
-                onClick={() => setManualFallback(true)}
-                className="focus-ring absolute bottom-4 right-4 rounded-full border border-white/20 bg-black/55 px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-neutral-200 transition-colors hover:bg-black/75"
-              >
-                Mostrar alternativa
-              </button>
-            ) : null}
           </div>
         </div>
       </div>

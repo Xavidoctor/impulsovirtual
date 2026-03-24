@@ -3,44 +3,76 @@ import {
   type ProjectAssistantOutput,
 } from "@/src/lib/project-assistant/types";
 
-function asHumanBoolean(value: boolean) {
-  return value ? "Sí" : "No";
-}
-
-function asQualificationLabel(value: ProjectAssistantOutput["qualification_level"]) {
-  if (value === "high") return "alto";
-  if (value === "medium") return "medio";
-  return "bajo";
-}
-
 function cleanLine(value: string) {
   return value.replace(/\s+/g, " ").trim();
 }
 
 export function buildAssistantContactMessage(output: ProjectAssistantOutput) {
-  const needs =
-    output.detected_needs.length > 0
-      ? output.detected_needs.map((item) => cleanLine(item)).join(", ")
-      : "Pendiente de concretar";
-
   const lines = [
     "Hola equipo de Impulso Virtual,",
     "",
     "Vengo del Asistente de proyecto con IA y quiero avanzar con esta necesidad.",
-    `- Tipo de proyecto: ${output.project_type}`,
-    `- Objetivo principal: ${cleanLine(output.goal)}`,
-    `- Necesidades detectadas: ${needs}`,
-    `- Plataforma objetivo: ${output.target_platform}`,
-    `- Urgencia: ${output.urgency}`,
-    `- ¿Requiere backend?: ${asHumanBoolean(output.needs_backend)}`,
-    `- Interés en IA: ${asHumanBoolean(output.interest_in_ai)}`,
-    `- Interés en automatización: ${asHumanBoolean(output.interest_in_automation)}`,
-    `- Nivel de cualificación detectado: ${asQualificationLabel(output.qualification_level)}`,
+  ];
+
+  if (output.project_type) {
+    lines.push(`- Tipo de proyecto: ${output.project_type}`);
+  }
+
+  if (output.goal) {
+    lines.push(`- Objetivo principal: ${cleanLine(output.goal)}`);
+  }
+
+  if (output.detected_needs.length > 0) {
+    lines.push(`- Necesidades detectadas: ${output.detected_needs.map((item) => cleanLine(item)).join(", ")}`);
+  }
+
+  if (output.current_situation) {
+    lines.push(
+      `- Punto de partida: ${output.current_situation === "desde_cero" ? "desde cero" : "base actual a mejorar"}`,
+    );
+  }
+
+  if (output.target_platform) {
+    lines.push(`- Plataforma objetivo: ${output.target_platform}`);
+  }
+
+  if (output.urgency) {
+    lines.push(`- Urgencia: ${output.urgency}`);
+  }
+
+  if (output.needs_backend !== null) {
+    lines.push(`- Backend: ${output.needs_backend ? "sí" : "no"}`);
+  }
+
+  if (output.needs_admin_panel !== null) {
+    lines.push(`- Panel de administración: ${output.needs_admin_panel ? "sí" : "no"}`);
+  }
+
+  if (output.integrations.length > 0) {
+    lines.push(`- Integraciones: ${output.integrations.join(", ")}`);
+  }
+
+  if (output.interest_in_ai !== null) {
+    lines.push(`- Interés en IA: ${output.interest_in_ai ? "sí" : "no"}`);
+  }
+
+  if (output.interest_in_automation !== null) {
+    lines.push(`- Interés en automatización: ${output.interest_in_automation ? "sí" : "no"}`);
+  }
+
+  lines.push(
     "",
-    `Resumen: ${cleanLine(output.lead_summary)}`,
+  );
+
+  if (output.lead_summary) {
+    lines.push(`Resumen: ${cleanLine(output.lead_summary)}`);
+    lines.push("");
+  }
+
+  lines.push(
     "",
     "Me gustaría recibir una propuesta inicial con alcance recomendado y siguientes pasos.",
-  ];
+  );
 
   return lines.join("\n").trim();
 }

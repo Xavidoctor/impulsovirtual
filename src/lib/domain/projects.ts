@@ -27,8 +27,8 @@ function normalizeProjectStatus(value: string | null | undefined): ProjectStatus
 
 function normalizePreviewMode(
   value: string | null | undefined,
-): "embed" | "image" | "external_only" {
-  if (value === "image" || value === "external_only") return value;
+): "embed" | "image" {
+  if (value === "image" || value === "external_only") return "image";
   return "embed";
 }
 

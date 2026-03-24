@@ -56,24 +56,8 @@ export async function POST(request: Request) {
 
   const result = await generateProjectAssistantResponse(parsed.data.messages);
   if (!result.ok) {
-    if (result.code === "config_error") {
-      return NextResponse.json({ error: result.message }, { status: 503 });
-    }
-
-    if (result.code === "provider_error") {
-      return NextResponse.json(
-        {
-          warning: "Modo continuidad activo: seguimos con un diagnóstico contextual mientras se estabiliza la respuesta de IA.",
-          data: result.fallback,
-          meta: { source: "fallback" },
-        },
-        { status: 200 },
-      );
-    }
-
     return NextResponse.json(
       {
-        warning: "Respuesta IA parcial: continuamos con un diagnóstico contextual para no frenar el flujo.",
         data: result.fallback,
         meta: { source: "fallback" },
       },

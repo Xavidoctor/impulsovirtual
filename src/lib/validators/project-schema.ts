@@ -40,7 +40,7 @@ const projectBaseSchema = z.object({
   project_orientation: z.string().trim().max(180).nullable().optional(),
   what_was_done: z.string().trim().max(6000).nullable().optional(),
   services_applied: z.array(z.string().trim().min(1).max(80)).max(12).default([]),
-  preview_mode: z.enum(["embed", "image", "external_only"]).default("embed"),
+  preview_mode: z.enum(["embed", "image"]).default("embed"),
   preview_image_url: optionalUrl,
   is_published: z.boolean().default(false),
   published_at: z.string().datetime().nullable().optional(),

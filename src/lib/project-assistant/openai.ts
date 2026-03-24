@@ -24,7 +24,7 @@ type GenerateResult =
   | { ok: true; data: ProjectAssistantOutput; source: "openai" }
   | {
       ok: false;
-      code: "config_error" | "provider_error" | "invalid_response";
+      code: "config_error" | "provider_error";
       message: string;
       fallback: ProjectAssistantOutput;
     };
@@ -60,7 +60,7 @@ type OpenAIResponseFormat =
   | OpenAIJsonObjectResponseFormat;
 
 const responseJsonSchema = {
-  name: "project_assistant_response",
+  name: "project_assistant_response_v2",
   strict: true,
   schema: {
     type: "object",
@@ -70,55 +70,91 @@ const responseJsonSchema = {
       "project_type",
       "detected_needs",
       "goal",
+      "current_situation",
       "urgency",
       "target_platform",
       "needs_backend",
+      "needs_admin_panel",
+      "integrations",
       "qualification_level",
       "interest_in_ai",
       "interest_in_automation",
       "ready_for_cta",
       "lead_summary",
+      "conversation_phase",
+      "collected_data",
+      "slot_status",
+      "missing_critical_fields",
+      "should_ask_follow_up",
+      "follow_up_questions",
+      "cta_label",
     ],
     properties: {
       message: { type: "string" },
       project_type: {
-        type: "string",
-        enum: [
-          "web corporativa",
-          "landing page",
-          "tienda online",
-          "rediseño web",
-          "automatización",
-          "integración de IA",
-          "app personalizada",
-          "app interna",
-          "panel interno",
-          "videojuego 2D",
-          "otro",
+        anyOf: [
+          { type: "null" },
+          {
+            type: "string",
+            enum: [
+              "web corporativa",
+              "landing page",
+              "tienda online",
+              "rediseño web",
+              "automatización",
+              "integración de IA",
+              "app personalizada",
+              "app interna",
+              "panel interno",
+              "videojuego 2D",
+              "otro",
+            ],
+          },
         ],
       },
       detected_needs: {
         type: "array",
         items: { type: "string" },
       },
-      goal: { type: "string" },
+      goal: { anyOf: [{ type: "string" }, { type: "null" }] },
+      current_situation: {
+        anyOf: [
+          { type: "null" },
+          { type: "string", enum: ["desde_cero", "ya_tengo_algo"] },
+        ],
+      },
       urgency: {
-        type: "string",
-        enum: ["alta", "media", "baja", "desconocida"],
+        anyOf: [
+          { type: "null" },
+          { type: "string", enum: ["alta", "media", "baja", "desconocida"] },
+        ],
       },
       target_platform: {
-        type: "string",
-        enum: ["web", "móvil", "web y móvil", "escritorio", "campaña", "desconocida"],
+        anyOf: [
+          { type: "null" },
+          { type: "string", enum: ["web", "móvil", "web y móvil", "escritorio", "campaña", "desconocida"] },
+        ],
       },
-      needs_backend: { type: "boolean" },
+      needs_backend: { anyOf: [{ type: "boolean" }, { type: "null" }] },
+      needs_admin_panel: { anyOf: [{ type: "boolean" }, { type: "null" }] },
+      integrations: { type: "array", items: { type: "string" } },
       qualification_level: {
-        type: "string",
-        enum: ["low", "medium", "high"],
+        anyOf: [{ type: "null" }, { type: "string", enum: ["low", "medium", "high"] }],
       },
-      interest_in_ai: { type: "boolean" },
-      interest_in_automation: { type: "boolean" },
+      interest_in_ai: { anyOf: [{ type: "boolean" }, { type: "null" }] },
+      interest_in_automation: { anyOf: [{ type: "boolean" }, { type: "null" }] },
       ready_for_cta: { type: "boolean" },
-      lead_summary: { type: "string" },
+      lead_summary: { anyOf: [{ type: "string" }, { type: "null" }] },
+      conversation_phase: {
+        type: "string",
+        enum: ["discovering", "qualifying", "ready_for_cta"],
+      },
+      collected_data: { type: "object" },
+      slot_status: { type: "object" },
+      missing_critical_fields: { type: "array", items: { type: "string" } },
+      should_ask_follow_up: { type: "boolean" },
+      follow_up_questions: { type: "array", items: { type: "string" } },
+      cta_label: { anyOf: [{ type: "string" }, { type: "null" }] },
     },
   },
 };
@@ -218,7 +254,14 @@ function normalizeText(value: string) {
 }
 
 function includesAny(text: string, keywords: readonly string[]) {
-  return keywords.some((keyword) => text.includes(keyword));
+  return keywords.some((keyword) => {
+    const normalizedKeyword = keyword.toLowerCase().trim();
+    if (normalizedKeyword.length <= 2) {
+      const pattern = new RegExp(`(^|\\s)${normalizedKeyword}(\\s|$)`, "i");
+      return pattern.test(text);
+    }
+    return text.includes(normalizedKeyword);
+  });
 }
 
 function aggregateUserText(messages: ProjectAssistantChatMessage[]) {
@@ -234,7 +277,12 @@ function countUserTurns(messages: ProjectAssistantChatMessage[]) {
   return messages.filter((message) => message.role === "user").length;
 }
 
-function inferProjectTypeFromTranscript(text: string, fallback: ProjectType): ProjectType {
+function getLastAssistantMessage(messages: ProjectAssistantChatMessage[]) {
+  const lastAssistant = [...messages].reverse().find((message) => message.role === "assistant");
+  return lastAssistant ? cleanText(lastAssistant.content) : "";
+}
+
+function inferProjectTypeFromTranscript(text: string, fallback: ProjectType | null): ProjectType | null {
   const hasGame = includesAny(text, GAME_KEYWORDS);
   if (hasGame) return "videojuego 2D";
 
@@ -263,7 +311,7 @@ function inferProjectTypeFromTranscript(text: string, fallback: ProjectType): Pr
   return fallback;
 }
 
-function inferTargetPlatform(text: string, fallback: TargetPlatform): TargetPlatform {
+function inferTargetPlatform(text: string, fallback: TargetPlatform | null): TargetPlatform | null {
   const hasWeb = text.includes("web");
   const hasMobile =
     text.includes("movil") || text.includes("móvil") || text.includes("android") || text.includes("ios");
@@ -271,7 +319,6 @@ function inferTargetPlatform(text: string, fallback: TargetPlatform): TargetPlat
   const hasCampaign = text.includes("campaña") || text.includes("campana");
 
   if (hasWeb && hasMobile) return "web y móvil";
-  if (hasCampaign && (hasWeb || hasMobile || hasDesktop)) return "desconocida";
   if (hasCampaign) return "campaña";
   if (hasMobile) return "móvil";
   if (hasDesktop) return "escritorio";
@@ -279,7 +326,7 @@ function inferTargetPlatform(text: string, fallback: TargetPlatform): TargetPlat
   return fallback;
 }
 
-function inferUrgency(text: string, fallback: Urgency): Urgency {
+function inferUrgency(text: string, fallback: Urgency | null): Urgency | null {
   if (
     text.includes("urgente") ||
     text.includes("cuanto antes") ||
@@ -299,6 +346,66 @@ function inferUrgency(text: string, fallback: Urgency): Urgency {
     return "media";
   }
   return fallback;
+}
+
+function inferCurrentSituation(text: string): "desde_cero" | "ya_tengo_algo" | null {
+  if (
+    text.includes("desde cero") ||
+    text.includes("empezar de cero") ||
+    text.includes("no tengo web") ||
+    text.includes("no tenemos nada")
+  ) {
+    return "desde_cero";
+  }
+
+  if (
+    text.includes("ya tengo") ||
+    text.includes("ya tenemos") ||
+    text.includes("web actual") ||
+    text.includes("tienda actual") ||
+    text.includes("rediseñar") ||
+    text.includes("rehacer")
+  ) {
+    return "ya_tengo_algo";
+  }
+
+  return null;
+}
+
+function inferIntegrationsFromText(text: string) {
+  const integrations: string[] = [];
+
+  if (text.includes("whatsapp")) addNeed(integrations, "WhatsApp");
+  if (text.includes("stripe")) addNeed(integrations, "Stripe");
+  if (text.includes("paypal")) addNeed(integrations, "PayPal");
+  if (text.includes("shopify")) addNeed(integrations, "Shopify");
+  if (text.includes("woocommerce")) addNeed(integrations, "WooCommerce");
+  if (text.includes("crm")) addNeed(integrations, "CRM");
+  if (text.includes("erp")) addNeed(integrations, "ERP");
+  if (text.includes("zapier")) addNeed(integrations, "Zapier");
+  if (text.includes("n8n")) addNeed(integrations, "n8n");
+
+  return normalizeNeeds(integrations);
+}
+
+function inferExplicitTriState(
+  text: string,
+  keywords: readonly string[],
+  explicitNegativePatterns: RegExp[],
+) {
+  if (!includesAny(text, keywords)) return null;
+  if (
+    text.includes("no sé si") ||
+    text.includes("no se si") ||
+    text.includes("quizá") ||
+    text.includes("quizas")
+  ) {
+    return null;
+  }
+  if (explicitNegativePatterns.some((pattern) => pattern.test(text))) {
+    return false;
+  }
+  return true;
 }
 
 function normalizeNeeds(needs: string[]) {
@@ -346,11 +453,22 @@ function inferNeedsFromText(text: string, baseNeeds: string[]) {
   return normalizeNeeds(needs);
 }
 
-function inferGoalFromMessages(messages: ProjectAssistantChatMessage[], fallback: string) {
+function inferGoalFromMessages(messages: ProjectAssistantChatMessage[], fallback: string | null) {
   const lastUser = [...messages].reverse().find((message) => message.role === "user");
   if (!lastUser) return fallback;
   const text = cleanText(lastUser.content);
-  if (text.length < 8) return fallback;
+  if (text.length < 12) return fallback;
+  const normalized = normalizeText(text);
+  if (
+    !normalized.includes("quiero") &&
+    !normalized.includes("necesito") &&
+    !normalized.includes("busco") &&
+    !normalized.includes("mejorar") &&
+    !normalized.includes("vender") &&
+    !normalized.includes("captar")
+  ) {
+    return fallback;
+  }
   return text.slice(0, 220);
 }
 
@@ -359,13 +477,21 @@ function hasAmbiguousWebVsApp(text: string) {
   return text.includes("web") && text.includes("app") && (text.includes("no se") || text.includes("no sé"));
 }
 
-function buildStrategicQuestion(projectType: ProjectType, text: string, currentPlatform: TargetPlatform) {
+function buildStrategicQuestion(
+  projectType: ProjectType | null,
+  text: string,
+  currentPlatform: TargetPlatform | null,
+) {
+  if (!projectType) {
+    return "Para orientarte bien, ¿qué tipo de proyecto necesitas ahora: web, tienda online, app, automatización, IA, videojuego 2D u otro?";
+  }
+
   if (hasAmbiguousWebVsApp(text)) {
     return "Para orientarte bien, ¿qué pesa más ahora: captar clientes con una web o resolver procesos con una aplicación?";
   }
 
   if (projectType === "videojuego 2D") {
-    if (currentPlatform === "desconocida") {
+    if (!currentPlatform) {
       return "Para plantearlo bien, ¿dónde quieres lanzar primero el juego 2D: web, móvil o campaña puntual?";
     }
     return "¿Buscas un minijuego promocional rápido o un producto 2D con evolución por fases?";
@@ -398,6 +524,52 @@ function buildStrategicQuestion(projectType: ProjectType, text: string, currentP
   return "¿Cuál es el resultado principal que te haría decir que el proyecto ha sido un éxito?";
 }
 
+function buildSituationQuestion() {
+  return "¿Partimos desde cero o ya tienes una web/sistema actual que quieras mejorar?";
+}
+
+function buildUrgencyQuestion() {
+  return "¿Qué plazo manejas para lanzar la primera versión: este mes, este trimestre o sin fecha cerrada?";
+}
+
+function buildTechnicalQuestion() {
+  return "¿Necesitas backend, panel de administración o integraciones externas en esta primera fase?";
+}
+
+function buildAutomationAiQuestion() {
+  return "¿Te interesa incorporar automatización o IA en esta fase, o prefieres dejarlo para después?";
+}
+
+function avoidConsecutiveDuplicateQuestion(
+  message: string,
+  messages: ProjectAssistantChatMessage[],
+  projectType: ProjectType | null,
+  text: string,
+  currentPlatform: TargetPlatform | null,
+) {
+  const normalized = cleanText(message).toLowerCase();
+  const lastAssistant = getLastAssistantMessage(messages).toLowerCase();
+  if (!lastAssistant || normalized !== lastAssistant) {
+    return message;
+  }
+
+  const alternatives = [
+    buildSituationQuestion(),
+    buildUrgencyQuestion(),
+    buildTechnicalQuestion(),
+    buildAutomationAiQuestion(),
+    buildStrategicQuestion(projectType, text, currentPlatform),
+  ];
+
+  for (const candidate of alternatives) {
+    if (cleanText(candidate).toLowerCase() !== lastAssistant) {
+      return candidate;
+    }
+  }
+
+  return message;
+}
+
 function ensureSingleQuestion(message: string, fallbackQuestion: string, readyForCta: boolean) {
   const normalized = cleanText(message);
   if (readyForCta) {
@@ -413,100 +585,248 @@ function ensureSingleQuestion(message: string, fallbackQuestion: string, readyFo
 }
 
 function buildLeadSummary(output: ProjectAssistantOutput) {
-  const needs = output.detected_needs.length > 0 ? output.detected_needs.join(", ") : "sin necesidades concretas aún";
-  return cleanText(
-    `Proyecto clasificado como ${output.project_type}. Objetivo: ${output.goal}. Necesidades: ${needs}. Urgencia ${output.urgency} y plataforma ${output.target_platform}.`,
-  ).slice(0, 680);
-}
+  if (!output.project_type || !output.goal) return null;
 
-function shouldHoldCta(output: ProjectAssistantOutput, text: string, userTurns: number) {
-  if (!output.ready_for_cta) return true;
-  if (userTurns < 2) return true;
-  if (hasAmbiguousWebVsApp(text)) return true;
-  if (output.detected_needs.length === 0) return true;
-  if (output.goal.toLowerCase().includes("pendiente")) return true;
-  if (output.lead_summary.trim().length < 25) return true;
-  if (
-    (output.project_type === "app personalizada" ||
-      output.project_type === "app interna" ||
-      output.project_type === "panel interno" ||
-      output.project_type === "videojuego 2D") &&
-    output.target_platform === "desconocida"
-  ) {
-    return true;
+  const lines: string[] = [];
+  lines.push(`Proyecto clasificado como ${output.project_type} con objetivo: ${output.goal}.`);
+
+  if (output.detected_needs.length > 0) {
+    lines.push(`Necesidades detectadas: ${output.detected_needs.join(", ")}.`);
   }
-  return false;
+  if (output.current_situation) {
+    lines.push(
+      output.current_situation === "desde_cero"
+        ? "Parte desde cero."
+        : "Parte de una base ya existente.",
+    );
+  }
+  if (output.target_platform) {
+    lines.push(`Plataforma objetivo: ${output.target_platform}.`);
+  }
+  if (output.urgency) {
+    lines.push(`Urgencia: ${output.urgency}.`);
+  }
+  if (output.integrations.length > 0) {
+    lines.push(`Integraciones mencionadas: ${output.integrations.join(", ")}.`);
+  }
+  if (output.needs_backend === true) lines.push("Se confirma necesidad de backend.");
+  if (output.needs_backend === false) lines.push("Se descarta backend en esta fase.");
+  if (output.needs_admin_panel === true) lines.push("Se confirma necesidad de panel de administración.");
+  if (output.needs_admin_panel === false) lines.push("Se descarta panel de administración en esta fase.");
+  if (output.interest_in_ai === true) lines.push("Existe interés explícito en IA.");
+  if (output.interest_in_ai === false) lines.push("Se descarta IA en esta fase.");
+  if (output.interest_in_automation === true) lines.push("Existe interés explícito en automatización.");
+  if (output.interest_in_automation === false) lines.push("Se descarta automatización en esta fase.");
+
+  return cleanText(lines.join(" ")).slice(0, 680);
 }
 
-function canFallbackEnableCta(output: ProjectAssistantOutput, text: string, userTurns: number) {
-  if (userTurns < 3) return false;
+function buildMissingCriticalFields(output: ProjectAssistantOutput) {
+  const missing: string[] = [];
+
+  if (!output.project_type) missing.push("tipo de proyecto");
+  if (!output.goal) missing.push("objetivo principal");
+  if (output.detected_needs.length < 2) missing.push("al menos 2 necesidades o requisitos clave");
+  if (!output.current_situation) missing.push("punto de partida (desde cero o base existente)");
+
+  let optionalBlocks = 0;
+  if (output.target_platform) optionalBlocks += 1;
+  if (output.urgency) optionalBlocks += 1;
+  if (output.needs_backend !== null || output.needs_admin_panel !== null) optionalBlocks += 1;
+  if (output.integrations.length > 0) optionalBlocks += 1;
+  if (output.interest_in_automation !== null) optionalBlocks += 1;
+  if (output.interest_in_ai !== null) optionalBlocks += 1;
+
+  if (optionalBlocks < 2) {
+    missing.push("faltan señales de cualificación adicional (mínimo 2 bloques extra)");
+  }
+
+  return normalizeNeeds(missing).slice(0, 16);
+}
+
+function buildSlotStatus(
+  messages: ProjectAssistantChatMessage[],
+  output: ProjectAssistantOutput,
+) {
+  const assistantText = normalizeText(
+    messages
+      .filter((message) => message.role === "assistant")
+      .map((message) => message.content)
+      .join(" "),
+  );
+
+  const wasAsked = (keywords: string[]) => keywords.some((keyword) => assistantText.includes(keyword));
+  const boolStatus = (value: boolean | null, askedKeywords: string[]) => {
+    if (value === true) return "filled" as const;
+    if (value === false) return "explicitly_negative" as const;
+    return wasAsked(askedKeywords) ? ("missing" as const) : ("not_asked" as const);
+  };
+
+  return {
+    projectType: output.project_type ? "filled" : wasAsked(["tipo", "proyecto", "web", "app"]) ? "missing" : "not_asked",
+    mainGoal: output.goal ? "filled" : wasAsked(["objetivo", "resultado"]) ? "missing" : "not_asked",
+    featuresNeeded:
+      output.detected_needs.length > 0
+        ? "filled"
+        : wasAsked(["necesidad", "funcionalidad", "priorizar"]) ? "missing" : "not_asked",
+    currentSituation:
+      output.current_situation
+        ? "filled"
+        : wasAsked(["desde cero", "actual", "ya tienes"]) ? "missing" : "not_asked",
+    targetPlatform:
+      output.target_platform
+        ? "filled"
+        : wasAsked(["plataforma", "web", "móvil", "movil"]) ? "missing" : "not_asked",
+    urgency:
+      output.urgency
+        ? "filled"
+        : wasAsked(["urgencia", "plazo", "fecha"]) ? "missing" : "not_asked",
+    needsBackend: boolStatus(output.needs_backend, ["backend", "api"]),
+    needsAdminPanel: boolStatus(output.needs_admin_panel, ["panel", "admin", "dashboard"]),
+    integrations:
+      output.integrations.length > 0
+        ? "filled"
+        : wasAsked(["integración", "integracion", "herramienta externa"]) ? "missing" : "not_asked",
+    aiInterest: boolStatus(output.interest_in_ai, [" ia ", "inteligencia artificial"]),
+    automationInterest: boolStatus(output.interest_in_automation, ["automat"]),
+  } as const;
+}
+
+function isReadyForCta(output: ProjectAssistantOutput, text: string, turns: number) {
+  if (turns < 3) return false;
   if (hasAmbiguousWebVsApp(text)) return false;
-  if (output.detected_needs.length < 2) return false;
-  if (output.goal.trim().length < 18) return false;
-  if (
-    (output.project_type === "app personalizada" ||
-      output.project_type === "app interna" ||
-      output.project_type === "panel interno" ||
-      output.project_type === "videojuego 2D") &&
-    output.target_platform === "desconocida"
-  ) {
-    return false;
+  return buildMissingCriticalFields(output).length === 0;
+}
+
+function buildNextQuestion(output: ProjectAssistantOutput, text: string) {
+  if (!output.project_type || hasAmbiguousWebVsApp(text)) {
+    return buildStrategicQuestion(output.project_type, text, output.target_platform);
   }
-  return output.project_type !== "otro";
+  if (!output.goal) {
+    return "¿Cuál es el objetivo principal que quieres conseguir con este proyecto?";
+  }
+  if (output.detected_needs.length < 2) {
+    return buildStrategicQuestion(output.project_type, text, output.target_platform);
+  }
+  if (!output.current_situation) {
+    return buildSituationQuestion();
+  }
+  if (!output.target_platform) {
+    return buildStrategicQuestion(output.project_type, text, output.target_platform);
+  }
+  if (!output.urgency) {
+    return buildUrgencyQuestion();
+  }
+  if (output.needs_backend === null && output.needs_admin_panel === null && output.integrations.length === 0) {
+    return buildTechnicalQuestion();
+  }
+  if (output.interest_in_ai === null || output.interest_in_automation === null) {
+    return buildAutomationAiQuestion();
+  }
+  return buildStrategicQuestion(output.project_type, text, output.target_platform);
 }
 
 function sanitizeOutput(output: ProjectAssistantOutput, messages: ProjectAssistantChatMessage[]): ProjectAssistantOutput {
   const transcriptText = aggregateUserText(messages);
-  const userTurns = countUserTurns(messages);
+  const turns = countUserTurns(messages);
   const inferredType = inferProjectTypeFromTranscript(transcriptText, output.project_type);
   const inferredPlatform = inferTargetPlatform(transcriptText, output.target_platform);
   const inferredUrgency = inferUrgency(transcriptText, output.urgency);
+  const inferredCurrentSituation = inferCurrentSituation(transcriptText);
+  const inferredIntegrations = inferIntegrationsFromText(transcriptText);
+  const explicitBackend = inferExplicitTriState(
+    transcriptText,
+    ["backend", "api", "base de datos", "servidor"],
+    [/no necesito.*backend/, /sin backend/, /no queremos.*backend/],
+  );
+  const explicitAdminPanel = inferExplicitTriState(
+    transcriptText,
+    ["panel", "dashboard", "admin", "administración", "administracion"],
+    [/no necesito.*panel/, /sin panel/, /no queremos.*panel/],
+  );
+  const explicitAi = inferExplicitTriState(
+    transcriptText,
+    ["ia", "ai", "inteligencia artificial"],
+    [/no quiero.*ia/, /sin ia/, /no necesito.*ia/],
+  );
+  const explicitAutomation = inferExplicitTriState(
+    transcriptText,
+    ["automatización", "automatizacion", "automatizar", "n8n", "zapier"],
+    [/no quiero.*automat/, /sin automat/, /no necesito.*automat/],
+  );
 
   const nextOutput: ProjectAssistantOutput = {
     ...output,
     project_type: inferredType,
-    target_platform: inferredPlatform,
-    urgency: inferredUrgency,
+    target_platform: inferredPlatform === "desconocida" ? null : inferredPlatform,
+    urgency: inferredUrgency === "desconocida" ? null : inferredUrgency,
     message: cleanText(output.message),
-    goal: cleanText(inferGoalFromMessages(messages, output.goal)),
-    lead_summary: cleanText(output.lead_summary),
+    goal: inferGoalFromMessages(messages, output.goal),
+    current_situation: output.current_situation ?? inferredCurrentSituation,
+    lead_summary: output.lead_summary ? cleanText(output.lead_summary) : null,
     detected_needs: inferNeedsFromText(transcriptText, output.detected_needs),
-    needs_backend:
-      output.needs_backend ||
-      inferredType === "app personalizada" ||
-      inferredType === "app interna" ||
-      inferredType === "panel interno" ||
-      transcriptText.includes("backend") ||
-      transcriptText.includes("api"),
-    interest_in_ai: output.interest_in_ai || includesAny(transcriptText, AI_KEYWORDS),
-    interest_in_automation:
-      output.interest_in_automation || includesAny(transcriptText, AUTOMATION_KEYWORDS),
+    needs_backend: output.needs_backend ?? explicitBackend,
+    needs_admin_panel: output.needs_admin_panel ?? explicitAdminPanel,
+    integrations: normalizeNeeds([...output.integrations, ...inferredIntegrations]).slice(0, 12),
+    interest_in_ai: output.interest_in_ai ?? explicitAi,
+    interest_in_automation: output.interest_in_automation ?? explicitAutomation,
   };
 
   if (nextOutput.project_type === "videojuego 2D") {
     addNeed(nextOutput.detected_needs, "juego 2D para web, móvil o campaña");
   }
 
-  const fallbackQuestion = buildStrategicQuestion(
-    nextOutput.project_type,
-    transcriptText,
-    nextOutput.target_platform,
-  );
-
-  const holdCta = shouldHoldCta(nextOutput, transcriptText, userTurns);
-  nextOutput.ready_for_cta = !holdCta;
+  const fallbackQuestion = buildNextQuestion(nextOutput, transcriptText);
+  nextOutput.ready_for_cta = isReadyForCta(nextOutput, transcriptText, turns);
   nextOutput.message = ensureSingleQuestion(nextOutput.message, fallbackQuestion, nextOutput.ready_for_cta);
+  if (!nextOutput.ready_for_cta) {
+    nextOutput.message = avoidConsecutiveDuplicateQuestion(
+      nextOutput.message,
+      messages,
+      nextOutput.project_type,
+      transcriptText,
+      nextOutput.target_platform,
+    );
+  }
 
   if (nextOutput.ready_for_cta) {
     nextOutput.message =
-      "Perfecto, ya tengo un diagnóstico inicial claro. Si te encaja, pasa al contacto y preparo una propuesta con siguientes pasos.";
+      "Perfecto, ya tengo contexto suficiente para preparar una propuesta inicial útil. Si te encaja, pulsa “Quiero esto en mi web” y seguimos por contacto.";
     nextOutput.qualification_level =
-      nextOutput.qualification_level === "low" ? "medium" : nextOutput.qualification_level;
+      nextOutput.detected_needs.length >= 3 ? "high" : "medium";
+  } else {
+    nextOutput.qualification_level = null;
   }
 
-  if (!nextOutput.lead_summary || nextOutput.lead_summary.length < 25) {
+  if (nextOutput.ready_for_cta && (!nextOutput.lead_summary || nextOutput.lead_summary.length < 25)) {
     nextOutput.lead_summary = buildLeadSummary(nextOutput);
+  } else if (!nextOutput.ready_for_cta) {
+    nextOutput.lead_summary = null;
   }
+
+  nextOutput.conversation_phase = nextOutput.ready_for_cta
+    ? "ready_for_cta"
+    : turns <= 1
+      ? "discovering"
+      : "qualifying";
+  nextOutput.missing_critical_fields = buildMissingCriticalFields(nextOutput);
+  nextOutput.should_ask_follow_up = !nextOutput.ready_for_cta;
+  nextOutput.follow_up_questions = nextOutput.ready_for_cta ? [] : [fallbackQuestion];
+  nextOutput.cta_label = nextOutput.ready_for_cta ? "Quiero esto en mi web" : null;
+  nextOutput.slot_status = buildSlotStatus(messages, nextOutput);
+  nextOutput.collected_data = {
+    projectType: nextOutput.project_type,
+    mainGoal: nextOutput.goal,
+    featuresNeeded: nextOutput.detected_needs,
+    currentSituation: nextOutput.current_situation,
+    targetPlatform: nextOutput.target_platform,
+    urgency: nextOutput.urgency,
+    needsBackend: nextOutput.needs_backend,
+    needsAdminPanel: nextOutput.needs_admin_panel,
+    integrations: nextOutput.integrations,
+    aiInterest: nextOutput.interest_in_ai,
+    automationInterest: nextOutput.interest_in_automation,
+  };
 
   return nextOutput;
 }
@@ -551,51 +871,92 @@ function buildProviderErrorMessage(payload: OpenAIChatCompletionResponse, status
 
 export function buildDeterministicFallbackOutput(messages: ProjectAssistantChatMessage[]) {
   const userText = aggregateUserText(messages);
-  const userTurns = countUserTurns(messages);
+  const turns = countUserTurns(messages);
 
-  const detectedType = inferProjectTypeFromTranscript(userText, "otro");
-  const targetPlatform = inferTargetPlatform(userText, "desconocida");
-  const urgency = inferUrgency(userText, "desconocida");
+  const detectedType = inferProjectTypeFromTranscript(userText, null);
+  const targetPlatform = inferTargetPlatform(userText, null);
+  const urgency = inferUrgency(userText, null);
   const needs = inferNeedsFromText(userText, []);
-  const ambiguity = hasAmbiguousWebVsApp(userText);
+  const currentSituation = inferCurrentSituation(userText);
+  const integrations = inferIntegrationsFromText(userText);
+  const explicitBackend = inferExplicitTriState(
+    userText,
+    ["backend", "api", "base de datos", "servidor"],
+    [/no necesito.*backend/, /sin backend/, /no queremos.*backend/],
+  );
+  const explicitAdminPanel = inferExplicitTriState(
+    userText,
+    ["panel", "dashboard", "admin", "administración", "administracion"],
+    [/no necesito.*panel/, /sin panel/, /no queremos.*panel/],
+  );
+  const explicitAi = inferExplicitTriState(
+    userText,
+    ["ia", "ai", "inteligencia artificial"],
+    [/no quiero.*ia/, /sin ia/, /no necesito.*ia/],
+  );
+  const explicitAutomation = inferExplicitTriState(
+    userText,
+    ["automatización", "automatizacion", "automatizar", "n8n", "zapier"],
+    [/no quiero.*automat/, /sin automat/, /no necesito.*automat/],
+  );
 
   const fallback: ProjectAssistantOutput = {
     ...DEFAULT_PROJECT_ASSISTANT_OUTPUT,
     project_type: detectedType,
     detected_needs: needs,
-    goal: inferGoalFromMessages(messages, "Definir alcance y enfoque inicial del proyecto"),
+    goal: inferGoalFromMessages(messages, null),
+    current_situation: currentSituation,
     urgency,
     target_platform: targetPlatform,
-    needs_backend:
-      detectedType === "app personalizada" ||
-      detectedType === "app interna" ||
-      detectedType === "panel interno" ||
-      userText.includes("backend") ||
-      userText.includes("api"),
-    qualification_level: userTurns >= 3 ? "medium" : "low",
-    interest_in_ai: includesAny(userText, AI_KEYWORDS),
-    interest_in_automation: includesAny(userText, AUTOMATION_KEYWORDS),
+    needs_backend: explicitBackend,
+    needs_admin_panel: explicitAdminPanel,
+    integrations,
+    qualification_level: null,
+    interest_in_ai: explicitAi,
+    interest_in_automation: explicitAutomation,
     ready_for_cta: false,
-    lead_summary: "",
+    lead_summary: null,
     message: "",
   };
 
-  if (ambiguity) {
-    fallback.project_type = "otro";
+  fallback.ready_for_cta = isReadyForCta(fallback, userText, turns);
+  fallback.message = fallback.ready_for_cta
+    ? "Perfecto, ya tengo contexto suficiente para preparar una propuesta inicial útil. Si te encaja, pulsa “Quiero esto en mi web” y seguimos por contacto."
+    : buildNextQuestion(fallback, userText);
+  if (!fallback.ready_for_cta) {
+    fallback.message = avoidConsecutiveDuplicateQuestion(
+      fallback.message,
+      messages,
+      fallback.project_type,
+      userText,
+      fallback.target_platform,
+    );
   }
-
-  const readyForCta = canFallbackEnableCta(fallback, userText, userTurns);
-  fallback.ready_for_cta = readyForCta;
-  fallback.qualification_level = readyForCta ? "medium" : fallback.qualification_level;
-
-  fallback.message = readyForCta
-    ? "Perfecto, ya tengo un diagnóstico inicial claro. Si te encaja, pasa al contacto y preparo una propuesta con siguientes pasos."
-    : buildStrategicQuestion(
-        fallback.project_type,
-        userText,
-        fallback.target_platform,
-      );
-  fallback.lead_summary = buildLeadSummary(fallback);
+  fallback.qualification_level = fallback.ready_for_cta ? (needs.length >= 3 ? "high" : "medium") : null;
+  fallback.lead_summary = fallback.ready_for_cta ? buildLeadSummary(fallback) : null;
+  fallback.conversation_phase = fallback.ready_for_cta
+    ? "ready_for_cta"
+    : turns <= 1
+      ? "discovering"
+      : "qualifying";
+  fallback.missing_critical_fields = buildMissingCriticalFields(fallback);
+  fallback.should_ask_follow_up = !fallback.ready_for_cta;
+  fallback.follow_up_questions = fallback.ready_for_cta ? [] : [fallback.message];
+  fallback.cta_label = fallback.ready_for_cta ? "Quiero esto en mi web" : null;
+  fallback.slot_status = buildSlotStatus(messages, fallback);
+  fallback.collected_data = {
+    projectType: fallback.project_type,
+    mainGoal: fallback.goal,
+    featuresNeeded: fallback.detected_needs,
+    currentSituation: fallback.current_situation,
+    targetPlatform: fallback.target_platform,
+    urgency: fallback.urgency,
+    needsBackend: fallback.needs_backend,
+    needsAdminPanel: fallback.needs_admin_panel,
+    integrations: fallback.integrations,
+    aiInterest: fallback.interest_in_ai,
+    automationInterest: fallback.interest_in_automation,
+  };
   return fallback;
 }
 
@@ -632,8 +993,6 @@ export async function generateProjectAssistantResponse(
   ];
 
   let lastProviderError = "No se pudo generar la respuesta del asistente con OpenAI.";
-  let hadInvalidStructuredResponse = false;
-
   for (const model of candidateModels) {
     for (const responseFormat of responseFormats) {
       let providerResponse: Response;
@@ -679,39 +1038,22 @@ export async function generateProjectAssistantResponse(
 
       const rawContent = readContent(payload);
       if (!rawContent) {
-        hadInvalidStructuredResponse = true;
-        lastProviderError = "El proveedor de IA no devolvió contenido utilizable.";
-        continue;
+        return { ok: true, data: deterministicFallback, source: "openai" };
       }
 
       const maybeJson = parseJson(rawContent);
       if (!maybeJson) {
-        hadInvalidStructuredResponse = true;
-        lastProviderError = "No se pudo parsear la salida estructurada del asistente.";
-        continue;
+        return { ok: true, data: deterministicFallback, source: "openai" };
       }
 
       const parsed = projectAssistantOutputSchema.safeParse(maybeJson);
       if (!parsed.success) {
-        hadInvalidStructuredResponse = true;
-        lastProviderError =
-          parsed.error.issues[0]?.message ||
-          "La salida de IA no cumple el esquema requerido.";
-        continue;
+        return { ok: true, data: deterministicFallback, source: "openai" };
       }
 
       const safeOutput = sanitizeOutput(parsed.data, messages);
       return { ok: true, data: safeOutput, source: "openai" };
     }
-  }
-
-  if (hadInvalidStructuredResponse) {
-    return {
-      ok: false,
-      code: "invalid_response",
-      message: lastProviderError,
-      fallback: deterministicFallback,
-    };
   }
 
   return {

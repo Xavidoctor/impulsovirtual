@@ -56,7 +56,7 @@ export default async function ProyectosPage() {
           project_orientation: project.projectOrientation ?? project.category,
           what_was_done: project.whatWasDone ?? project.fullDescription,
           services_applied: project.servicesApplied ?? project.services,
-          preview_mode: project.previewMode ?? "embed",
+          preview_mode: (project.previewMode === "image" ? "image" : "embed") as "embed" | "image",
           preview_image_url: project.previewImageUrl ?? project.coverImage,
           is_published: true,
           published_at: null,

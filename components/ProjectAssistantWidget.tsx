@@ -36,21 +36,45 @@ function toChatMessages(messages: LocalMessage[]): ProjectAssistantChatMessage[]
   }));
 }
 
-function hasMeaningfulGoal(goal: string) {
-  const normalized = goal.trim().toLowerCase();
-  return normalized.length >= 10 && !normalized.includes("pendiente");
+function buildAlternativeAssistantMessage(state: ProjectAssistantOutput) {
+  if (state.ready_for_cta) {
+    return "Perfecto, con este diagnóstico ya podemos preparar una propuesta inicial. Si te encaja, avanzamos por contacto.";
+  }
+
+  if (state.project_type === "videojuego 2D") {
+    return "Para afinar el alcance, ¿quieres lanzar primero en web, móvil o como campaña puntual?";
+  }
+
+  if (state.project_type === "app personalizada") {
+    return "Para enfocar la primera fase, ¿qué funcionalidad mínima debería tener la app desde el inicio?";
+  }
+
+  if (state.project_type === "app interna" || state.project_type === "panel interno") {
+    return "¿Qué proceso interno quieres resolver primero para notar impacto real en tiempo o costes?";
+  }
+
+  if (state.project_type === "tienda online") {
+    return "Para priorizar bien, ¿qué bloque necesitas resolver antes: catálogo, pagos, logística o captación?";
+  }
+
+  if (state.project_type === "web corporativa" || state.project_type === "landing page") {
+    return "¿Cuál es la acción principal que quieres mejorar primero: contactos, reservas o ventas?";
+  }
+
+  return "Para avanzar con foco, ¿cuál sería el resultado más importante para ti en esta primera fase?";
 }
 
 export function ProjectAssistantWidget() {
   const pathname = usePathname();
   const router = useRouter();
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const inFlightRef = useRef(false);
+  const messagesRef = useRef<LocalMessage[]>([]);
 
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [input, setInput] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [noticeMessage, setNoticeMessage] = useState("");
   const [hasConsentDecision, setHasConsentDecision] = useState(true);
   const [assistantState, setAssistantState] = useState<ProjectAssistantOutput>({
     ...DEFAULT_PROJECT_ASSISTANT_OUTPUT,
@@ -59,6 +83,10 @@ export function ProjectAssistantWidget() {
   const [messages, setMessages] = useState<LocalMessage[]>([
     createLocalMessage("assistant", INITIAL_ASSISTANT_MESSAGE),
   ]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   const hideWidget = useMemo(() => {
     if (!pathname) return false;
@@ -76,10 +104,7 @@ export function ProjectAssistantWidget() {
   const canSend = input.trim().length > 0 && !isLoading;
   const canShowCta =
     assistantState.ready_for_cta &&
-    userTurns >= 2 &&
-    hasMeaningfulGoal(assistantState.goal) &&
-    assistantState.lead_summary.trim().length >= 25 &&
-    (assistantState.project_type !== "otro" || assistantState.detected_needs.length >= 2);
+    assistantState.conversation_phase === "ready_for_cta";
 
   useEffect(() => {
     setHasConsentDecision(getCookieConsent() !== null);
@@ -124,15 +149,15 @@ export function ProjectAssistantWidget() {
 
   async function handleSubmit() {
     const userText = input.trim();
-    if (!userText || isLoading) return;
+    if (!userText || isLoading || inFlightRef.current) return;
+    inFlightRef.current = true;
 
     const userMessage = createLocalMessage("user", userText);
-    const nextMessages = [...messages, userMessage];
+    const nextMessages = [...messagesRef.current, userMessage];
     setMessages(nextMessages);
     setInput("");
     setStatus("loading");
     setErrorMessage("");
-    setNoticeMessage("");
 
     try {
       const response = await fetch("/api/ai/project-assistant", {
@@ -162,6 +187,7 @@ export function ProjectAssistantWidget() {
             : "No se pudo continuar el diagnóstico en este momento.";
         setStatus("error");
         setErrorMessage(message);
+        inFlightRef.current = false;
         return;
       }
 
@@ -169,19 +195,27 @@ export function ProjectAssistantWidget() {
       if (!parsed.success) {
         setStatus("error");
         setErrorMessage("La respuesta del asistente no tiene el formato esperado.");
+        inFlightRef.current = false;
         return;
       }
 
       const nextState = parsed.data.data;
-      if (typeof parsed.data.warning === "string" && parsed.data.warning.trim()) {
-        setNoticeMessage(parsed.data.warning.trim());
-      }
+      const lastAssistant = [...nextMessages].reverse().find((item) => item.role === "assistant");
+      const assistantMessage =
+        lastAssistant &&
+        lastAssistant.content.trim().toLowerCase() ===
+          nextState.message.trim().toLowerCase()
+          ? buildAlternativeAssistantMessage(nextState)
+          : nextState.message;
+
       setAssistantState(nextState);
-      setMessages((prev) => [...prev, createLocalMessage("assistant", nextState.message)]);
+      setMessages((prev) => [...prev, createLocalMessage("assistant", assistantMessage)]);
       setStatus("idle");
     } catch {
       setStatus("error");
       setErrorMessage("Error de red. Revisa la conexión e inténtalo de nuevo.");
+    } finally {
+      inFlightRef.current = false;
     }
   }
 
@@ -193,8 +227,8 @@ export function ProjectAssistantWidget() {
     setMessages([createLocalMessage("assistant", INITIAL_ASSISTANT_MESSAGE)]);
     setInput("");
     setErrorMessage("");
-    setNoticeMessage("");
     setStatus("idle");
+    inFlightRef.current = false;
   }
 
   function handleCta() {
@@ -264,13 +298,13 @@ export function ProjectAssistantWidget() {
 
             <div className="flex flex-wrap gap-2 border-b border-white/10 px-4 py-3 text-[10px] uppercase tracking-[0.14em]">
               <span className="rounded-full border border-white/12 bg-white/[0.03] px-2.5 py-1 text-foreground/90">
-                {assistantState.project_type}
+                {assistantState.project_type ?? "tipo pendiente"}
               </span>
               <span className="rounded-full border border-white/12 bg-white/[0.03] px-2.5 py-1 text-foreground/90">
-                Urgencia: {assistantState.urgency}
+                Urgencia: {assistantState.urgency ?? "pendiente"}
               </span>
               <span className="rounded-full border border-white/12 bg-white/[0.03] px-2.5 py-1 text-foreground/90">
-                Plataforma: {assistantState.target_platform}
+                Plataforma: {assistantState.target_platform ?? "pendiente"}
               </span>
             </div>
 
@@ -295,15 +329,6 @@ export function ProjectAssistantWidget() {
                 </article>
               ) : null}
             </div>
-
-            {noticeMessage ? (
-              <p
-                className="mx-4 mb-2 rounded-xl border border-yellow-300/30 bg-yellow-500/10 px-3 py-2 text-xs leading-relaxed text-yellow-100"
-                role="status"
-              >
-                {noticeMessage}
-              </p>
-            ) : null}
 
             {errorMessage ? (
               <p
