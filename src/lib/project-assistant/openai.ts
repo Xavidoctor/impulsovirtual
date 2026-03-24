@@ -245,6 +245,16 @@ const AUTOMATION_KEYWORDS = [
   "zapier",
 ] as const;
 
+const INTERNAL_MESSAGE_PATTERNS = [
+  /modo continuidad/i,
+  /fallback/i,
+  /debug/i,
+  /openai no respondi/i,
+  /se estabiliza/i,
+  /respuesta incompleta/i,
+  /error de esquema/i,
+] as const;
+
 function cleanText(value: string) {
   return value.replace(/\s+/g, " ").trim();
 }
@@ -540,6 +550,20 @@ function buildAutomationAiQuestion() {
   return "¿Te interesa incorporar automatización o IA en esta fase, o prefieres dejarlo para después?";
 }
 
+function isInternalMessage(value: string) {
+  return INTERNAL_MESSAGE_PATTERNS.some((pattern) => pattern.test(value));
+}
+
+function sanitizeUserFacingMessage(message: string, fallbackQuestion: string, readyForCta: boolean) {
+  const cleaned = cleanText(message);
+  if (!cleaned || isInternalMessage(cleaned)) {
+    return readyForCta
+      ? "Perfecto, ya tengo contexto suficiente para preparar una propuesta inicial útil. Si te encaja, pulsa “Quiero esto en mi web” y seguimos por contacto."
+      : fallbackQuestion;
+  }
+  return cleaned;
+}
+
 function avoidConsecutiveDuplicateQuestion(
   message: string,
   messages: ProjectAssistantChatMessage[],
@@ -778,6 +802,11 @@ function sanitizeOutput(output: ProjectAssistantOutput, messages: ProjectAssista
 
   const fallbackQuestion = buildNextQuestion(nextOutput, transcriptText);
   nextOutput.ready_for_cta = isReadyForCta(nextOutput, transcriptText, turns);
+  nextOutput.message = sanitizeUserFacingMessage(
+    nextOutput.message,
+    fallbackQuestion,
+    nextOutput.ready_for_cta,
+  );
   nextOutput.message = ensureSingleQuestion(nextOutput.message, fallbackQuestion, nextOutput.ready_for_cta);
   if (!nextOutput.ready_for_cta) {
     nextOutput.message = avoidConsecutiveDuplicateQuestion(
@@ -811,7 +840,7 @@ function sanitizeOutput(output: ProjectAssistantOutput, messages: ProjectAssista
       : "qualifying";
   nextOutput.missing_critical_fields = buildMissingCriticalFields(nextOutput);
   nextOutput.should_ask_follow_up = !nextOutput.ready_for_cta;
-  nextOutput.follow_up_questions = nextOutput.ready_for_cta ? [] : [fallbackQuestion];
+  nextOutput.follow_up_questions = nextOutput.ready_for_cta ? [] : [nextOutput.message];
   nextOutput.cta_label = nextOutput.ready_for_cta ? "Quiero esto en mi web" : null;
   nextOutput.slot_status = buildSlotStatus(messages, nextOutput);
   nextOutput.collected_data = {

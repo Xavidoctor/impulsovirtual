@@ -21,6 +21,16 @@ type LocalMessage = {
 const INITIAL_ASSISTANT_MESSAGE =
   "Soy tu asistente de proyecto con IA. Cuéntame qué quieres construir o mejorar y te guío paso a paso.";
 
+const INTERNAL_MESSAGE_PATTERNS = [
+  /modo continuidad/i,
+  /fallback/i,
+  /debug/i,
+  /openai no respondi/i,
+  /se estabiliza/i,
+  /respuesta incompleta/i,
+  /error de esquema/i,
+] as const;
+
 function createLocalMessage(role: LocalMessage["role"], content: string): LocalMessage {
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
@@ -34,6 +44,38 @@ function toChatMessages(messages: LocalMessage[]): ProjectAssistantChatMessage[]
     role: message.role,
     content: message.content,
   }));
+}
+
+function cleanMessage(value: string) {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function normalizeForCompare(value: string) {
+  return cleanMessage(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[¿?¡!.,;:()[\]{}"'`]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractNormalizedQuestion(value: string) {
+  const cleaned = cleanMessage(value);
+  const match = cleaned.match(/[^?]+\?/g);
+  return normalizeForCompare(match?.[0] ?? cleaned);
+}
+
+function isInternalMessage(value: string) {
+  return INTERNAL_MESSAGE_PATTERNS.some((pattern) => pattern.test(value));
+}
+
+function sanitizeAssistantMessage(rawMessage: string, state: ProjectAssistantOutput) {
+  const message = cleanMessage(rawMessage);
+  if (!message || isInternalMessage(message)) {
+    return buildAlternativeAssistantMessage(state);
+  }
+  return message;
 }
 
 function buildAlternativeAssistantMessage(state: ProjectAssistantOutput) {
@@ -69,6 +111,7 @@ export function ProjectAssistantWidget() {
   const router = useRouter();
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const inFlightRef = useRef(false);
+  const requestIdRef = useRef(0);
   const messagesRef = useRef<LocalMessage[]>([]);
 
   const [open, setOpen] = useState(false);
@@ -150,6 +193,19 @@ export function ProjectAssistantWidget() {
   async function handleSubmit() {
     const userText = input.trim();
     if (!userText || isLoading || inFlightRef.current) return;
+
+    const normalizedUserText = normalizeForCompare(userText);
+    const lastMessage = messagesRef.current[messagesRef.current.length - 1];
+    if (
+      lastMessage &&
+      lastMessage.role === "user" &&
+      normalizeForCompare(lastMessage.content) === normalizedUserText
+    ) {
+      return;
+    }
+
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
     inFlightRef.current = true;
 
     const userMessage = createLocalMessage("user", userText);
@@ -174,6 +230,7 @@ export function ProjectAssistantWidget() {
       try {
         payload = await response.json();
       } catch {
+        if (requestId !== requestIdRef.current) return;
         setStatus("error");
         setErrorMessage("El servidor devolvió una respuesta no válida.");
         return;
@@ -185,41 +242,60 @@ export function ProjectAssistantWidget() {
           typeof data?.error === "string"
             ? data.error
             : "No se pudo continuar el diagnóstico en este momento.";
+        if (requestId !== requestIdRef.current) return;
         setStatus("error");
         setErrorMessage(message);
-        inFlightRef.current = false;
         return;
       }
 
       const parsed = projectAssistantApiResponseSchema.safeParse(payload);
       if (!parsed.success) {
+        if (requestId !== requestIdRef.current) return;
         setStatus("error");
         setErrorMessage("La respuesta del asistente no tiene el formato esperado.");
-        inFlightRef.current = false;
         return;
       }
 
+      if (requestId !== requestIdRef.current) return;
+
       const nextState = parsed.data.data;
       const lastAssistant = [...nextMessages].reverse().find((item) => item.role === "assistant");
+      const safeIncomingMessage = sanitizeAssistantMessage(nextState.message, nextState);
       const assistantMessage =
         lastAssistant &&
-        lastAssistant.content.trim().toLowerCase() ===
-          nextState.message.trim().toLowerCase()
+        normalizeForCompare(lastAssistant.content) === normalizeForCompare(safeIncomingMessage)
           ? buildAlternativeAssistantMessage(nextState)
-          : nextState.message;
+          : safeIncomingMessage;
 
       setAssistantState(nextState);
-      setMessages((prev) => [...prev, createLocalMessage("assistant", assistantMessage)]);
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last && last.role === "assistant") {
+          const sameContent =
+            normalizeForCompare(last.content) === normalizeForCompare(assistantMessage);
+          const sameQuestion =
+            extractNormalizedQuestion(last.content) === extractNormalizedQuestion(assistantMessage);
+          if (sameContent || sameQuestion) {
+            return prev;
+          }
+        }
+
+        return [...prev, createLocalMessage("assistant", assistantMessage)];
+      });
       setStatus("idle");
     } catch {
+      if (requestId !== requestIdRef.current) return;
       setStatus("error");
       setErrorMessage("Error de red. Revisa la conexión e inténtalo de nuevo.");
     } finally {
-      inFlightRef.current = false;
+      if (requestId === requestIdRef.current) {
+        inFlightRef.current = false;
+      }
     }
   }
 
   function handleReset() {
+    requestIdRef.current += 1;
     setAssistantState({
       ...DEFAULT_PROJECT_ASSISTANT_OUTPUT,
       message: INITIAL_ASSISTANT_MESSAGE,
