@@ -20,7 +20,7 @@ export async function PublicPageShell({ children }: PublicPageShellProps) {
         links={site.navLinks}
         primaryCta={site.primaryCta}
       />
-      <main className="pt-12 md:pt-32">{children}</main>
+      <main className="pt-12 md:pt-20">{children}</main>
       <ProjectAssistantWidget />
       <Footer
         brandLine={site.footer.brandLine}

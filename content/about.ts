@@ -1,26 +1,26 @@
 export const aboutPageContent = {
   intro:
-    "Impulso Virtual es un estudio enfocado en transformar presencia digital en sistemas reales de crecimiento.",
+    "Impulso Virtual es un estudio digital premium orientado a convertir presencia online en un sistema real de posicionamiento, conversión y escala.",
   paragraphs: [
-    "Trabajamos con empresas y marcas que quieren posicionarse en una categoría premium y convertir mejor su demanda digital.",
-    "Combinamos estrategia, diseño y ejecución técnica para evitar decisiones aisladas y construir una base coherente de negocio.",
-    "Nuestro enfoque prioriza claridad, consistencia y resultados medibles sin perder sensibilidad visual.",
+    "Trabajamos como partner estratégico de marcas y equipos que necesitan criterio, no ejecución aislada.",
+    "Unimos dirección de negocio, diseño editorial y arquitectura técnica para construir activos digitales sólidos.",
+    "Cada decisión se toma con intención comercial: elevar percepción, mejorar conversión y ordenar la operación para crecer.",
   ],
   pillars: [
     {
-      title: "Visión de negocio",
+      title: "Criterio estratégico",
       description:
-        "Cada proyecto nace de objetivos comerciales claros, no solo de una necesidad visual.",
+        "Definimos prioridades con impacto real en posicionamiento, captación y rentabilidad.",
     },
     {
-      title: "Excelencia en experiencia",
+      title: "Excelencia visual y funcional",
       description:
-        "Construimos interfaces y narrativas que elevan la percepción de valor y facilitan la conversión.",
+        "Diseñamos experiencias premium que refuerzan marca y facilitan decisiones de compra.",
     },
     {
-      title: "Operación sostenible",
+      title: "Sistemas sostenibles",
       description:
-        "Dejamos sistemas listos para crecer sin depender de soluciones improvisadas.",
+        "Estructuramos tecnología y procesos para escalar sin fricción ni dependencia de improvisaciones.",
     },
   ],
 } as const;
