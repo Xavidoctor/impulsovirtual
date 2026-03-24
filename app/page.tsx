@@ -436,11 +436,10 @@ export default async function HomePage() {
                   <span className="process-ghost-number" aria-hidden>
                     {step.step}
                   </span>
-                  <div className="relative z-[1] flex items-start justify-between gap-4">
+                  <div className="relative z-[1] flex items-start">
                     <span className="process-icon">
                       <ProcessStepIcon index={index} />
                     </span>
-                    <p className="process-step-badge">{step.step}</p>
                   </div>
                   <h3 className="relative z-[1] mt-5 text-2xl font-display text-foreground md:text-[2rem]">
                     {step.title}

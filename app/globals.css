@@ -740,22 +740,6 @@ summary {
   box-shadow: inset 0 0 16px rgba(149, 238, 224, 0.12);
 }
 
-.process-step-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 3rem;
-  height: 1.7rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(10, 14, 18, 0.74);
-  padding: 0 0.75rem;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  color: rgba(229, 244, 241, 0.92);
-}
-
 .process-ghost-number {
   pointer-events: none;
   position: absolute;
@@ -765,7 +749,7 @@ summary {
   font-size: clamp(4rem, 10vw, 6.7rem);
   line-height: 0.9;
   letter-spacing: -0.03em;
-  color: rgba(173, 237, 226, 0.09);
+  color: rgba(183, 245, 234, 0.17);
 }
 
 @media (min-width: 768px) {
