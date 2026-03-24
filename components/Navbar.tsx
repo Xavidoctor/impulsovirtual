@@ -46,7 +46,7 @@ export function Navbar({ links, primaryCta }: NavbarProps) {
           <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-r from-accent/15 via-transparent to-transparent" />
           <Logo
             className="focus-ring relative inline-flex items-center"
-            imageClassName="h-8 w-auto"
+            imageClassName="h-10 w-auto md:h-11"
             priority
           />
 
