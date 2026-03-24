@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Datos invalidos." },
+        { error: parsed.error.issues[0]?.message ?? "Datos inválidos." },
         { status: 400 },
       );
     }
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
     if (!created) {
       return NextResponse.json(
-        { error: "No se pudo registrar la solicitud. Intentalo de nuevo." },
+        { error: "No se pudo registrar la solicitud. Inténtalo de nuevo." },
         { status: 500 },
       );
     }
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
 
       if (!internalEmail.ok) {
         warnings.push(
-          "Solicitud guardada correctamente, pero no se pudo enviar la notificacion interna.",
+          "Solicitud guardada correctamente, pero no se pudo enviar la notificación interna.",
         );
       }
     }
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
 
       if (!userEmail.ok) {
         warnings.push(
-          "Solicitud guardada correctamente, pero no se pudo enviar la confirmacion al usuario.",
+          "Solicitud guardada correctamente, pero no se pudo enviar la confirmación al usuario.",
         );
       }
     }

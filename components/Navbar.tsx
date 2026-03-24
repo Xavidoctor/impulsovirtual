@@ -41,7 +41,7 @@ export function Navbar({ links, primaryCta }: NavbarProps) {
               ? "border-white/15 bg-[#090f11]/88 shadow-[0_14px_42px_-28px_rgba(0,0,0,0.9)] backdrop-blur-xl"
               : "border-white/10 bg-[#0c1215]/58 backdrop-blur-lg"
           }`}
-          aria-label="Navegacion principal"
+          aria-label="Navegación principal"
         >
           <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-r from-accent/15 via-transparent to-transparent" />
           <Logo
@@ -80,10 +80,10 @@ export function Navbar({ links, primaryCta }: NavbarProps) {
           <button
             type="button"
             onClick={() => setOpen((prev) => !prev)}
-            aria-label="Abrir menu"
+            aria-label="Abrir menú"
             className="focus-ring relative rounded-full border border-white/15 px-3 py-1.5 text-[11px] uppercase tracking-[0.2em] text-foreground md:hidden"
           >
-            {open ? "Cerrar" : "Menu"}
+            {open ? "Cerrar" : "Menú"}
           </button>
         </nav>
       </div>

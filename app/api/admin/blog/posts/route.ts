@@ -87,7 +87,7 @@ export async function PUT(request: NextRequest) {
     const payload = blogPostUpdateSchema.parse(await request.json());
     const before = await getBlogPostById(payload.id, auth.context.supabase);
     if (!before) {
-      return NextResponse.json({ error: "Post no encontrado." }, { status: 404 });
+      return NextResponse.json({ error: "Entrada no encontrada." }, { status: 404 });
     }
 
     const data = await updateBlogPostById(
@@ -143,7 +143,7 @@ export async function DELETE(request: NextRequest) {
     const payload = blogPostDeleteSchema.parse(await request.json());
     const before = await getBlogPostById(payload.id, auth.context.supabase);
     if (!before) {
-      return NextResponse.json({ error: "Post no encontrado." }, { status: 404 });
+      return NextResponse.json({ error: "Entrada no encontrada." }, { status: 404 });
     }
 
     const ok = await deleteBlogPostById(payload.id, auth.context.supabase);

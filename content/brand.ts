@@ -10,7 +10,7 @@ export const brandConfig = {
   metadata: {
     title: "Impulso Virtual | Servicios digitales premium",
     description:
-      "Impulso Virtual impulsa marcas con estrategia digital, diseno web premium y automatizaciones para crecer con claridad."
+      "Impulso Virtual impulsa marcas con estrategia digital, diseño web premium y automatizaciones para crecer con claridad."
   },
   contact: {
     email: "hola@impulsovirtual.com",

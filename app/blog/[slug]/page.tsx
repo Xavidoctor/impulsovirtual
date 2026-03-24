@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
   if (!post && !fallback) {
     return {
-      title: "Articulo no encontrado",
+      title: "Artículo no encontrado",
       alternates: {
         canonical,
       },
@@ -80,7 +80,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         excerpt: domainPost.excerpt,
         publishedAt: (domainPost.published_at ?? domainPost.created_at).slice(0, 10),
         coverImage: domainPost.cover_image_url,
-        category: domainPost.category?.name ?? "Insights",
+        category: domainPost.category?.name ?? "Análisis",
         author: domainPost.author_name ?? "Impulso Virtual",
         content: domainPost.content,
       }
@@ -90,10 +90,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           excerpt: fallbackPost.excerpt,
           publishedAt: fallbackPost.publishedAt,
           coverImage: null,
-          category: "Insights",
+          category: "Análisis",
           author: "Impulso Virtual",
           content:
-            "Contenido de ejemplo para esta entrada.\n\nEn la siguiente fase conectaremos editor enriquecido y bloques dinamicos.",
+            "Contenido de ejemplo para esta entrada.\n\nEn la siguiente fase conectaremos el editor enriquecido y bloques dinámicos.",
         }
       : null;
 

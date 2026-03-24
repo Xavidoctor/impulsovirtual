@@ -225,7 +225,7 @@ export default async function HomePage() {
                     Sistema adaptativo
                   </p>
                   <p className="text-sm leading-relaxed text-muted">
-                    Arquitectura visual coherente en desktop y mobile, enfocada en conversion.
+                    Arquitectura visual coherente en escritorio y móvil, enfocada en conversión.
                   </p>
                 </div>
               </article>
@@ -237,7 +237,7 @@ export default async function HomePage() {
       <section className="section-padding py-14">
         <div className="container-width space-y-8">
           <Reveal className="flex items-end justify-between gap-4">
-            <h2 className="section-title font-display">Servicios Estratégicos</h2>
+            <h2 className="section-title font-display">Servicios estratégicos</h2>
             <Link href="/servicios" className="focus-ring lift-link">
               Ver servicios
             </Link>
@@ -254,7 +254,7 @@ export default async function HomePage() {
                     {service.short_description}
                   </p>
                   <Link href={`/servicios/${service.slug}`} className="focus-ring mt-6 lift-link">
-                    Ver detalle
+                    Ver servicio
                   </Link>
                 </article>
               </Reveal>
@@ -279,7 +279,7 @@ export default async function HomePage() {
       <section className="section-padding py-14">
         <div className="container-width space-y-8">
           <Reveal>
-            <h2 className="section-title font-display">Proceso De Trabajo</h2>
+            <h2 className="section-title font-display">Proceso de trabajo</h2>
           </Reveal>
           <div className="grid gap-4 md:grid-cols-2">
             {homeSupportContent.processSteps.map((step, index) => (
@@ -298,7 +298,7 @@ export default async function HomePage() {
       <section className="section-padding py-14">
         <div className="container-width space-y-8">
           <Reveal className="flex items-end justify-between gap-4">
-            <h2 className="section-title font-display">Casos Destacados</h2>
+            <h2 className="section-title font-display">Casos destacados</h2>
             <Link href="/proyectos" className="focus-ring lift-link">
               Explorar proyectos
             </Link>
@@ -386,7 +386,7 @@ export default async function HomePage() {
                           />
                         </div>
                         <p className="text-xs leading-relaxed text-muted">
-                          {project.progress_note || "Ejecucion activa con avance continuo."}
+                          {project.progress_note || "Ejecución activa con avance continuo."}
                         </p>
                       </div>
                     ))
@@ -435,7 +435,7 @@ export default async function HomePage() {
         <section className="section-padding py-14">
           <div className="container-width space-y-8">
             <Reveal>
-              <h2 className="section-title font-display">Preguntas Frecuentes</h2>
+              <h2 className="section-title font-display">Preguntas frecuentes</h2>
             </Reveal>
             <div className="space-y-3">
               {faqs.map((faq, index) => (
@@ -457,7 +457,7 @@ export default async function HomePage() {
         <section className="section-padding py-14">
           <div className="container-width space-y-8">
             <Reveal className="flex items-end justify-between gap-4">
-              <h2 className="section-title font-display">Insights</h2>
+              <h2 className="section-title font-display">Análisis</h2>
               <Link href="/blog" className="focus-ring lift-link">
                 Ver blog
               </Link>

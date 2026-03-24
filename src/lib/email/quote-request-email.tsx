@@ -65,12 +65,12 @@ export function renderQuoteRequestInternalEmail(
       <li><strong>ID:</strong> ${escapeHtml(input.quoteId)}</li>
       <li><strong>Nombre:</strong> ${escapeHtml(input.fullName)}</li>
       <li><strong>Email:</strong> ${escapeHtml(input.email)}</li>
-      <li><strong>Telefono:</strong> ${escapeHtml(input.phone || "No indicado")}</li>
+      <li><strong>Teléfono:</strong> ${escapeHtml(input.phone || "No indicado")}</li>
       <li><strong>Empresa:</strong> ${escapeHtml(input.company || "No indicada")}</li>
       <li><strong>Tipo de proyecto:</strong> ${escapeHtml(input.projectType || "No indicado")}</li>
       <li><strong>Servicios solicitados:</strong> ${escapeHtml(services)}</li>
       <li><strong>Presupuesto:</strong> ${escapeHtml(input.budgetRange || "No indicado")}</li>
-      <li><strong>Deadline:</strong> ${escapeHtml(input.deadline || "No indicado")}</li>
+      <li><strong>Fecha objetivo:</strong> ${escapeHtml(input.deadline || "No indicada")}</li>
       <li><strong>Fecha:</strong> ${escapeHtml(new Date(input.submittedAt).toLocaleString("es-ES"))}</li>
     </ul>
     <hr style="border-color:#2b2b2b;margin:20px 0;" />
@@ -91,12 +91,12 @@ export function renderQuoteRequestInternalEmail(
     `ID: ${input.quoteId}`,
     `Nombre: ${input.fullName}`,
     `Email: ${input.email}`,
-    `Telefono: ${input.phone || "No indicado"}`,
+    `Teléfono: ${input.phone || "No indicado"}`,
     `Empresa: ${input.company || "No indicada"}`,
     `Tipo de proyecto: ${input.projectType || "No indicado"}`,
     `Servicios solicitados: ${services}`,
     `Presupuesto: ${input.budgetRange || "No indicado"}`,
-    `Deadline: ${input.deadline || "No indicado"}`,
+    `Fecha objetivo: ${input.deadline || "No indicada"}`,
     `Fecha: ${new Date(input.submittedAt).toLocaleString("es-ES")}`,
     "",
     "Resumen del proyecto:",
@@ -117,7 +117,7 @@ export function renderQuoteRequestUserConfirmationEmail(
     <h1 style="margin:0 0 16px;font-size:24px;">Solicitud recibida</h1>
     <p style="margin:0 0 12px;color:#d6d6d2;">Hola ${escapeHtml(input.fullName)}, gracias por compartir los detalles de tu proyecto.</p>
     <p style="margin:0 0 12px;color:#c8c8c2;">Revisaremos la solicitud y te responderemos con los siguientes pasos.</p>
-    <p style="margin:0 0 12px;color:#c8c8c2;">Si necesitas ampliar informacion, puedes escribirnos a ${escapeHtml(input.supportEmail)}.</p>
+    <p style="margin:0 0 12px;color:#c8c8c2;">Si necesitas ampliar información, puedes escribirnos a ${escapeHtml(input.supportEmail)}.</p>
     <p style="margin:0;color:#c8c8c2;">Equipo ${escapeHtml(input.brandName)}</p>
   `);
 
@@ -125,7 +125,7 @@ export function renderQuoteRequestUserConfirmationEmail(
     `Hola ${input.fullName},`,
     `Hemos recibido tu solicitud en ${input.brandName}.`,
     "Te responderemos con los siguientes pasos lo antes posible.",
-    `Si necesitas ampliar informacion, escribe a ${input.supportEmail}.`,
+    `Si necesitas ampliar información, escribe a ${input.supportEmail}.`,
     "",
     `Equipo ${input.brandName}`,
   ].join("\n");

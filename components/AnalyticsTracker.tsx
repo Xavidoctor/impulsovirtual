@@ -1,7 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import {
+  hasAnalyticsConsent,
+  subscribeCookieConsent,
+} from "@/lib/cookies/consent";
 
 function sendEvent(payload: {
   eventType: "page_view" | "project_view" | "cta_click";
@@ -24,9 +28,15 @@ function sendEvent(payload: {
 
 export function AnalyticsTracker() {
   const pathname = usePathname();
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
 
   useEffect(() => {
-    if (!pathname || pathname.startsWith("/admin")) return;
+    setAnalyticsEnabled(hasAnalyticsConsent());
+    return subscribeCookieConsent((consent) => setAnalyticsEnabled(Boolean(consent?.analytics)));
+  }, []);
+
+  useEffect(() => {
+    if (!pathname || pathname.startsWith("/admin") || !analyticsEnabled) return;
     const query =
       typeof window !== "undefined"
         ? new URLSearchParams(window.location.search).toString()
@@ -41,9 +51,11 @@ export function AnalyticsTracker() {
         value: { slug: pathname.split("/")[2] ?? null },
       });
     }
-  }, [pathname]);
+  }, [analyticsEnabled, pathname]);
 
   useEffect(() => {
+    if (!analyticsEnabled) return;
+
     function handleClick(event: MouseEvent) {
       if (!(event.target instanceof HTMLElement)) return;
       const ctaTarget = event.target.closest("[data-cta]");
@@ -57,7 +69,7 @@ export function AnalyticsTracker() {
     }
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
-  }, []);
+  }, [analyticsEnabled]);
 
   return null;
 }

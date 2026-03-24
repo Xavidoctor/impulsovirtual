@@ -99,7 +99,7 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json(
-        { error: "Datos de actualizacion no validos.", details: error.flatten() },
+        { error: "Datos de actualización no válidos.", details: error.flatten() },
         { status: 422 },
       );
     }

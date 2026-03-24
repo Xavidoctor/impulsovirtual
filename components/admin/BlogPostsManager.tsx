@@ -93,7 +93,7 @@ export function BlogPostsManager({
   async function refreshItems() {
     const response = await fetch("/api/admin/blog/posts", { cache: "no-store" });
     const payload = await response.json();
-    if (!response.ok) throw new Error(payload.error ?? "No se pudieron recargar los posts.");
+    if (!response.ok) throw new Error(payload.error ?? "No se pudieron recargar las entradas.");
     const next = (payload.data ?? []) as BlogPostWithCategory[];
     setItems(next);
     if (selectedId) {
@@ -128,13 +128,13 @@ export function BlogPostsManager({
         body: JSON.stringify(body),
       });
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error ?? "No se pudo guardar el post.");
+      if (!response.ok) throw new Error(payload.error ?? "No se pudo guardar la entrada.");
 
       await refreshItems();
       const saved = payload.data as BlogPostEntity;
       setSelectedId(saved.id);
       setForm(toForm((payload.data as BlogPostWithCategory) ?? null));
-      setMessage(form.id ? "Post actualizado." : "Post creado.");
+      setMessage(form.id ? "Entrada actualizada." : "Entrada creada.");
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Error inesperado.");
     } finally {
@@ -161,7 +161,7 @@ export function BlogPostsManager({
       const remaining = items.filter((item) => item.id !== form.id);
       setItems(remaining);
       selectItem(remaining[0] ?? null);
-      setMessage("Post eliminado.");
+      setMessage("Entrada eliminada.");
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Error inesperado.");
     } finally {
@@ -215,8 +215,8 @@ export function BlogPostsManager({
   return (
     <section className="space-y-6">
       <div className="space-y-1">
-        <h1 className="font-display text-4xl tracking-wide">Blog · Posts</h1>
-        <p className="text-sm text-neutral-400">Gestiona posts, publicación y SEO.</p>
+        <h1 className="font-display text-4xl tracking-wide">Blog · Entradas</h1>
+        <p className="text-sm text-neutral-400">Gestiona entradas, publicación y SEO.</p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
@@ -259,7 +259,7 @@ export function BlogPostsManager({
 
         <div className="space-y-4 rounded-lg border border-white/10 bg-white/[0.02] p-4">
           <h2 className="font-display text-2xl tracking-wide">
-            {form.id ? "Editar post" : "Nuevo post"}
+            {form.id ? "Editar entrada" : "Nueva entrada"}
           </h2>
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-1 text-sm md:col-span-2">
@@ -319,7 +319,7 @@ export function BlogPostsManager({
               />
             </label>
             <label className="space-y-1 text-sm md:col-span-2">
-              <span className="text-neutral-300">Excerpt</span>
+              <span className="text-neutral-300">Extracto</span>
               <textarea
                 rows={2}
                 value={form.excerpt}
@@ -337,7 +337,7 @@ export function BlogPostsManager({
               />
             </label>
             <label className="space-y-1 text-sm md:col-span-2">
-              <span className="text-neutral-300">Cover image URL</span>
+              <span className="text-neutral-300">URL de imagen de portada</span>
               <input
                 value={form.cover_image_url}
                 onChange={(event) => setForm((prev) => ({ ...prev, cover_image_url: event.target.value }))}
@@ -367,7 +367,7 @@ export function BlogPostsManager({
               </div>
             </label>
             <label className="space-y-1 text-sm">
-              <span className="text-neutral-300">SEO title</span>
+              <span className="text-neutral-300">Título SEO</span>
               <input
                 value={form.seo_title}
                 onChange={(event) => setForm((prev) => ({ ...prev, seo_title: event.target.value }))}
@@ -375,7 +375,7 @@ export function BlogPostsManager({
               />
             </label>
             <label className="space-y-1 text-sm">
-              <span className="text-neutral-300">SEO description</span>
+              <span className="text-neutral-300">Descripción SEO</span>
               <input
                 value={form.seo_description}
                 onChange={(event) =>
@@ -385,7 +385,7 @@ export function BlogPostsManager({
               />
             </label>
             <label className="space-y-1 text-sm md:col-span-2">
-              <span className="text-neutral-300">OG image URL</span>
+              <span className="text-neutral-300">URL de imagen OG</span>
               <input
                 value={form.og_image_url}
                 onChange={(event) => setForm((prev) => ({ ...prev, og_image_url: event.target.value }))}

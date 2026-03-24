@@ -189,15 +189,15 @@ export function SiteSettingsManager({
       <div className="space-y-1">
         <h1 className="font-display text-4xl tracking-wide">Ajustes</h1>
         <p className="text-sm text-neutral-400">
-          Configura site settings públicos y ajustes operativos del panel.
+          Configura ajustes públicos del sitio y ajustes operativos del panel.
         </p>
       </div>
 
       <div className="space-y-6 rounded-lg border border-white/10 bg-white/[0.02] p-4">
-        <h2 className="font-display text-2xl tracking-wide">Site Settings</h2>
+        <h2 className="font-display text-2xl tracking-wide">Ajustes del sitio</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <label className="space-y-1 text-sm md:col-span-2">
-            <span className="text-neutral-300">Business name</span>
+            <span className="text-neutral-300">Nombre del negocio</span>
             <input
               value={siteForm.business_name}
               onChange={(event) => setSiteForm((prev) => ({ ...prev, business_name: event.target.value }))}
@@ -205,7 +205,7 @@ export function SiteSettingsManager({
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-neutral-300">Hero title</span>
+            <span className="text-neutral-300">Título principal</span>
             <input
               value={siteForm.hero_title}
               onChange={(event) => setSiteForm((prev) => ({ ...prev, hero_title: event.target.value }))}
@@ -213,7 +213,7 @@ export function SiteSettingsManager({
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-neutral-300">Hero subtitle</span>
+            <span className="text-neutral-300">Subtítulo principal</span>
             <input
               value={siteForm.hero_subtitle}
               onChange={(event) => setSiteForm((prev) => ({ ...prev, hero_subtitle: event.target.value }))}
@@ -293,7 +293,7 @@ export function SiteSettingsManager({
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-neutral-300">Default SEO title</span>
+            <span className="text-neutral-300">Título SEO por defecto</span>
             <input
               value={siteForm.default_seo_title}
               onChange={(event) => setSiteForm((prev) => ({ ...prev, default_seo_title: event.target.value }))}
@@ -301,7 +301,7 @@ export function SiteSettingsManager({
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-neutral-300">Default SEO description</span>
+            <span className="text-neutral-300">Descripción SEO por defecto</span>
             <input
               value={siteForm.default_seo_description}
               onChange={(event) =>
@@ -311,7 +311,7 @@ export function SiteSettingsManager({
             />
           </label>
           <label className="space-y-1 text-sm md:col-span-2">
-            <span className="text-neutral-300">Default OG image URL</span>
+            <span className="text-neutral-300">URL de imagen OG por defecto</span>
             <input
               value={siteForm.default_og_image_url}
               onChange={(event) =>
@@ -346,10 +346,10 @@ export function SiteSettingsManager({
       </div>
 
       <div className="space-y-6 rounded-lg border border-white/10 bg-white/[0.02] p-4">
-        <h2 className="font-display text-2xl tracking-wide">Admin Panel Settings</h2>
+        <h2 className="font-display text-2xl tracking-wide">Ajustes del panel de administración</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <label className="space-y-1 text-sm">
-            <span className="text-neutral-300">Email notificaciones</span>
+            <span className="text-neutral-300">Email de notificaciones</span>
             <input
               value={adminForm.contact_notification_email}
               onChange={(event) =>
@@ -359,7 +359,7 @@ export function SiteSettingsManager({
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-neutral-300">Proveedor email</span>
+            <span className="text-neutral-300">Proveedor de email</span>
             <input
               value={adminForm.email_provider}
               onChange={(event) => setAdminForm((prev) => ({ ...prev, email_provider: event.target.value }))}
@@ -367,7 +367,7 @@ export function SiteSettingsManager({
             />
           </label>
           <label className="space-y-1 text-sm md:col-span-2">
-            <span className="text-neutral-300">Asunto auto-reply</span>
+            <span className="text-neutral-300">Asunto de respuesta automática</span>
             <input
               value={adminForm.contact_auto_reply_subject}
               onChange={(event) =>
@@ -377,7 +377,7 @@ export function SiteSettingsManager({
             />
           </label>
           <label className="space-y-1 text-sm md:col-span-2">
-            <span className="text-neutral-300">Cuerpo auto-reply</span>
+            <span className="text-neutral-300">Cuerpo de respuesta automática</span>
             <textarea
               rows={4}
               value={adminForm.contact_auto_reply_body}
@@ -412,7 +412,7 @@ export function SiteSettingsManager({
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-neutral-300">Warning %</span>
+            <span className="text-neutral-300">Umbral de aviso (%)</span>
             <input
               type="number"
               value={adminForm.usage_warning_threshold}
@@ -423,7 +423,7 @@ export function SiteSettingsManager({
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-neutral-300">Danger %</span>
+            <span className="text-neutral-300">Umbral crítico (%)</span>
             <input
               type="number"
               value={adminForm.usage_danger_threshold}
@@ -471,7 +471,7 @@ export function SiteSettingsManager({
                 setAdminForm((prev) => ({ ...prev, contact_auto_reply_enabled: event.target.checked }))
               }
             />
-            Auto-reply activado
+            Respuesta automática activada
           </label>
           <label className="flex items-center gap-2 text-sm text-neutral-300">
             <input

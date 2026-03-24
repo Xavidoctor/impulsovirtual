@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { PrivacyConsentCheckbox } from "@/components/legal/PrivacyConsentCheckbox";
 import { CONTACT_FORM_MIN_MESSAGE } from "@/lib/constants";
+import { hasAnalyticsConsent } from "@/lib/cookies/consent";
 import type { ContactFormValues } from "@/lib/contact-schema";
 
 const initialValues: ContactFormValues = {
@@ -17,6 +19,7 @@ const initialValues: ContactFormValues = {
   utmSource: "",
   utmMedium: "",
   utmCampaign: "",
+  privacyAccepted: false,
   website: "",
 };
 
@@ -29,19 +32,24 @@ export function ContactForm() {
   const [successMessage, setSuccessMessage] = useState("");
   const isSubmitting = status === "loading";
 
-  useEffect(() => {
+  const trackAnalytics = useCallback((eventType: "contact_form_view" | "contact_form_submit") => {
+    if (!hasAnalyticsConsent()) return;
     void fetch("/api/analytics/track", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        eventType: "contact_form_view",
+        eventType,
         path: window.location.pathname,
         value: { source: "contact_form" },
       }),
     });
   }, []);
 
-  const update = (field: keyof ContactFormValues, value: string) => {
+  useEffect(() => {
+    trackAnalytics("contact_form_view");
+  }, [trackAnalytics]);
+
+  const update = (field: Exclude<keyof ContactFormValues, "privacyAccepted">, value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }));
     if (status !== "idle") {
       setStatus("idle");
@@ -65,6 +73,12 @@ export function ContactForm() {
     if (values.message.trim().length < CONTACT_FORM_MIN_MESSAGE) {
       setStatus("error");
       setError(`El mensaje debe tener al menos ${CONTACT_FORM_MIN_MESSAGE} caracteres.`);
+      return;
+    }
+
+    if (!values.privacyAccepted) {
+      setStatus("error");
+      setError("Debes aceptar la política de privacidad para continuar.");
       return;
     }
 
@@ -101,18 +115,10 @@ export function ContactForm() {
           "Mensaje enviado correctamente. Te responderemos lo antes posible.",
       );
       setValues(initialValues);
-      void fetch("/api/analytics/track", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          eventType: "contact_form_submit",
-          path: window.location.pathname,
-          value: { source: "contact_form" },
-        }),
-      });
+      trackAnalytics("contact_form_submit");
     } catch {
       setStatus("error");
-      setError("Error de red. Intentalo de nuevo.");
+      setError("Error de red. Inténtalo de nuevo.");
     }
   };
 
@@ -133,7 +139,7 @@ export function ContactForm() {
         </label>
 
         <label className="space-y-2">
-          <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Email</span>
+          <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Correo electrónico</span>
           <input
             type="email"
             required
@@ -159,7 +165,7 @@ export function ContactForm() {
         </label>
 
         <label className="space-y-2">
-          <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Telefono</span>
+          <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Teléfono</span>
           <input
             disabled={isSubmitting}
             autoComplete="tel"
@@ -179,7 +185,7 @@ export function ContactForm() {
           value={values.service}
           onChange={(event) => update("service", event.target.value)}
           className="focus-ring surface-input"
-          placeholder="Diseno web premium, estrategia digital..."
+          placeholder="Diseño web premium, estrategia digital..."
         />
       </label>
 
@@ -206,6 +212,19 @@ export function ContactForm() {
           placeholder="Describe objetivo, contexto y necesidades prioritarias."
         />
       </label>
+
+      <PrivacyConsentCheckbox
+        checked={values.privacyAccepted}
+        onChange={(checked) => {
+          setValues((prev) => ({ ...prev, privacyAccepted: checked }));
+          if (status !== "idle") {
+            setStatus("idle");
+            setError("");
+            setSuccessMessage("");
+          }
+        }}
+        disabled={isSubmitting}
+      />
 
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" disabled={isSubmitting} className="focus-ring btn-primary disabled:opacity-55">

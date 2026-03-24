@@ -2,7 +2,7 @@ import type { SiteContent } from "@/types/content";
 import { contentEs } from "@/content/site-content";
 import { brandConfig } from "@/content/brand";
 
-// Placeholder de estructura para futura traduccion completa.
+// Placeholder de estructura para futura traducción completa.
 export const contentEn: SiteContent = {
   ...contentEs,
   metadata: {

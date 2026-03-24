@@ -8,16 +8,16 @@ export type BlogPreview = {
 export const blogPreviews: BlogPreview[] = [
   {
     slug: "como-escalar-presencia-digital-premium",
-    title: "Como escalar una presencia digital premium en 2026",
+    title: "Cómo escalar una presencia digital premium en 2026",
     excerpt:
-      "Framework practico para combinar marca, conversion y experiencia digital sin perder coherencia.",
+      "Framework práctico para combinar marca, conversión y experiencia digital sin perder coherencia.",
     publishedAt: "2026-03-01"
   },
   {
     slug: "errores-comunes-en-webs-de-servicios",
     title: "Errores comunes en webs de servicios de alto valor",
     excerpt:
-      "Patrones que frenan leads cualificados y como corregirlos con una arquitectura mas clara.",
+      "Patrones que frenan leads cualificados y cómo corregirlos con una arquitectura más clara.",
     publishedAt: "2026-02-20"
   }
 ];

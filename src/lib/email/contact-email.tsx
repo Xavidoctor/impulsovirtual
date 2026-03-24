@@ -58,11 +58,11 @@ export function renderContactInternalEmail(
       <li><strong>ID:</strong> ${escapeHtml(input.leadId)}</li>
       <li><strong>Nombre:</strong> ${escapeHtml(input.fullName)}</li>
       <li><strong>Email:</strong> ${escapeHtml(input.email)}</li>
-      <li><strong>Telefono:</strong> ${escapeHtml(input.phone || "No indicado")}</li>
+      <li><strong>Teléfono:</strong> ${escapeHtml(input.phone || "No indicado")}</li>
       <li><strong>Empresa:</strong> ${escapeHtml(input.company || "No indicada")}</li>
       <li><strong>Servicio:</strong> ${escapeHtml(input.serviceInterest || "No indicado")}</li>
       <li><strong>Fuente:</strong> ${escapeHtml(input.source || "No indicada")}</li>
-      <li><strong>Pagina:</strong> ${escapeHtml(input.pageUrl || "No indicada")}</li>
+      <li><strong>Página:</strong> ${escapeHtml(input.pageUrl || "No indicada")}</li>
       <li><strong>Fecha:</strong> ${escapeHtml(new Date(input.submittedAt).toLocaleString("es-ES"))}</li>
     </ul>
     <hr style="border-color:#2b2b2b;margin:20px 0;" />
@@ -75,11 +75,11 @@ export function renderContactInternalEmail(
     `ID: ${input.leadId}`,
     `Nombre: ${input.fullName}`,
     `Email: ${input.email}`,
-    `Telefono: ${input.phone || "No indicado"}`,
+    `Teléfono: ${input.phone || "No indicado"}`,
     `Empresa: ${input.company || "No indicada"}`,
     `Servicio: ${input.serviceInterest || "No indicado"}`,
     `Fuente: ${input.source || "No indicada"}`,
-    `Pagina: ${input.pageUrl || "No indicada"}`,
+    `Página: ${input.pageUrl || "No indicada"}`,
     `Fecha: ${new Date(input.submittedAt).toLocaleString("es-ES")}`,
     "",
     "Mensaje:",

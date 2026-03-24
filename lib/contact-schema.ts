@@ -3,7 +3,7 @@ import { CONTACT_FORM_MIN_MESSAGE } from "@/lib/constants";
 
 export const contactSchema = z.object({
   name: z.string().trim().min(2, "El nombre es obligatorio."),
-  email: z.string().trim().email("Introduce un email valido."),
+  email: z.string().trim().email("Introduce un email válido."),
   phone: z
     .string()
     .trim()
@@ -22,6 +22,9 @@ export const contactSchema = z.object({
   utmSource: z.string().trim().max(120).optional(),
   utmMedium: z.string().trim().max(120).optional(),
   utmCampaign: z.string().trim().max(120).optional(),
+  privacyAccepted: z
+    .boolean()
+    .refine((value) => value, "Debes aceptar la política de privacidad."),
   website: z.string().optional(),
 });
 

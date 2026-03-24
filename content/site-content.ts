@@ -23,20 +23,20 @@ export const contentEs: SiteContent = {
   nav: {
     brand: brandConfig.name,
     links: [
-      { label: "Home", href: "/" },
+      { label: "Inicio", href: "/" },
       { label: "Servicios", href: "/servicios" },
       { label: "Proyectos", href: "/proyectos" },
       { label: "Blog", href: "/blog" }
     ],
-    copyEmail: "Copiar email",
-    contactWhatsapp: "Contacto / WhatsApp"
+    copyEmail: "Copiar correo",
+    contactWhatsapp: "Contactar por WhatsApp"
   },
   hero: {
     label: "Estudio digital premium",
     marqueeText: "IMPULSO VIRTUAL",
     paragraph:
-      "Impulsamos marcas con estrategia digital, diseno web y sistemas de automatizacion enfocados en conversion, posicionamiento y crecimiento sostenible.",
-    disciplines: ["Estrategia digital", "Diseno web premium", "Automatizacion y embudos"],
+      "Impulsamos marcas con estrategia digital, diseño web y sistemas de automatización enfocados en conversión, posicionamiento y crecimiento sostenible.",
+    disciplines: ["Estrategia digital", "Diseño web premium", "Automatización y embudos"],
     media: {
       type: "video",
       videoSrc: "/assets/video-01.mp4",
@@ -54,7 +54,7 @@ export const contentEs: SiteContent = {
   },
   showreel: {
     heading: "Resultados en movimiento",
-    caption: "Estrategia / Web / Automatizacion",
+    caption: "Estrategia / Web / Automatización",
     videoSrc: "/assets/video-02.mp4",
     posterSrc: "/assets/work-03.png",
     overlayOpacity: 0.24
@@ -63,40 +63,40 @@ export const contentEs: SiteContent = {
     heading: "Sobre Impulso Virtual",
     paragraphs: [
       "Impulso Virtual es un estudio enfocado en servicios digitales de alto impacto para marcas y negocios en crecimiento.",
-      "Cada proyecto integra estrategia, diseno y ejecucion para transformar objetivos comerciales en experiencias digitales medibles.",
-      "Trabajamos con equipos que valoran claridad, velocidad de implementacion y una presencia digital premium."
+      "Cada proyecto integra estrategia, diseño y ejecución para transformar objetivos comerciales en experiencias digitales medibles.",
+      "Trabajamos con equipos que valoran claridad, velocidad de implementación y una presencia digital premium."
     ]
   },
   expertise: {
     heading: "Especialidades",
-    intro: "Capacidades para empresas que quieren escalar su presencia digital con una base solida.",
+    intro: "Capacidades para empresas que quieren escalar su presencia digital con una base sólida.",
     items: [
       "Estrategia digital",
-      "Diseno web",
-      "Conversion y CRO",
-      "Direccion creativa",
+      "Diseño web",
+      "Conversión y CRO",
+      "Dirección creativa",
       "Branding",
       "Automatizaciones",
       "Email marketing",
-      "Sistemas de captacion"
+      "Sistemas de captación"
     ]
   },
   gallery: {
-    heading: "Galeria visual",
+    heading: "Galería visual",
     images: [
-      { src: "/assets/work-01.png", alt: "Lampara blanca junto a sofa azul" },
+      { src: "/assets/work-01.png", alt: "Lámpara blanca junto a sofá azul" },
       { src: "/assets/work-02.png", alt: "Interior minimal frente al mar" },
-      { src: "/assets/work-03.png", alt: "Pabellon organico en playa exterior" },
-      { src: "/assets/renders/ARCH3.png", alt: "Interior de pabellon organico" },
+      { src: "/assets/work-03.png", alt: "Pabellón orgánico en playa exterior" },
+      { src: "/assets/renders/ARCH3.png", alt: "Interior de pabellón orgánico" },
       { src: "/assets/renders/ARCH4.png", alt: "Arquitectura minimal sobre el agua" }
     ]
   },
   contact: {
     heading: "Contacto",
-    intro: "Si quieres transformar tu presencia digital, escribenos y definimos el siguiente paso.",
+    intro: "Si quieres transformar tu presencia digital, escríbenos y definimos el siguiente paso.",
     email: brandConfig.contact.email,
-    contactLabel: "Enviar email",
-    copyEmail: "Copiar email",
+    contactLabel: "Enviar correo",
+    copyEmail: "Copiar correo",
     whatsappLabel: "Contactar por WhatsApp",
     socials: [...brandConfig.socials]
   },

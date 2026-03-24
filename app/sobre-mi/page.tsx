@@ -9,14 +9,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const site = await getPublicSiteContext();
   const canonical = getCanonicalUrl("/sobre-mi");
   return {
-    title: "Sobre Mi",
+    title: "Sobre mí",
     description:
       "Conoce el enfoque de Impulso Virtual para construir presencia digital premium y crecimiento sostenible.",
     alternates: {
       canonical,
     },
     openGraph: {
-      title: `Sobre Mi | ${site.brandName}`,
+      title: `Sobre mí | ${site.brandName}`,
       description:
         "Conoce el enfoque de Impulso Virtual para construir presencia digital premium y crecimiento sostenible.",
       images: [site.seo.ogImage],
@@ -58,15 +58,15 @@ export default async function SobreMiPage() {
             <Reveal delay={0.06}>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
                 <article className="premium-card p-5">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-accent">Direccion</p>
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-accent">Dirección</p>
                   <p className="mt-2 text-sm leading-relaxed text-muted">
-                    Estrategia, experiencia y tecnologia alineadas para mover resultados de negocio.
+                    Estrategia, experiencia y tecnología alineadas para mover resultados de negocio.
                   </p>
                 </article>
                 <article className="premium-card p-5">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-accent">Metodo</p>
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-accent">Método</p>
                   <p className="mt-2 text-sm leading-relaxed text-muted">
-                    Diagnostico claro, ejecucion precisa y mejoras continuas con criterio comercial.
+                    Diagnóstico claro, ejecución precisa y mejoras continuas con criterio comercial.
                   </p>
                 </article>
                 <article className="premium-card p-5 sm:col-span-2 lg:col-span-1">
@@ -98,8 +98,8 @@ export default async function SobreMiPage() {
               <div className="relative z-[1] space-y-5">
                 <h2 className="section-title max-w-4xl font-display">Construimos activos digitales que venden valor real</h2>
                 <p className="section-copy max-w-3xl">
-                  Si quieres pasar de una web correcta a una plataforma que eleve percepcion,
-                  conversion y operacion, podemos definir la siguiente etapa juntos.
+                  Si quieres pasar de una web correcta a una plataforma que eleve percepción,
+                  conversión y operación, podemos definir la siguiente etapa juntos.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Link href="/solicitar-propuesta" className="focus-ring btn-primary">

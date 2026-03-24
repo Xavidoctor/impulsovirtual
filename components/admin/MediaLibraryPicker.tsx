@@ -38,11 +38,11 @@ function kindLabel(kind: "image" | "video") {
 }
 
 function collectionLabel(collection: string) {
-  if (collection === "projects") return "Projects";
+  if (collection === "projects") return "Proyectos";
   if (collection === "blog") return "Blog";
-  if (collection === "brand") return "Brand";
-  if (collection === "site") return "Site";
-  if (collection === "proposals") return "Proposals";
+  if (collection === "brand") return "Marca";
+  if (collection === "site") return "Sitio";
+  if (collection === "proposals") return "Propuestas";
   return "General";
 }
 

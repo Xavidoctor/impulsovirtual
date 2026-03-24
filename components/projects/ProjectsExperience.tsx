@@ -79,7 +79,7 @@ export function ProjectsExperience({
           </div>
         ) : (
           <div className="premium-card p-6 text-sm text-muted">
-            Todavia no hay proyectos marcados como completados.
+            Todavía no hay proyectos marcados como completados.
           </div>
         )}
       </section>
@@ -121,7 +121,7 @@ export function ProjectsExperience({
                   </div>
                   <p className="text-xs leading-relaxed text-muted">
                     {project.progress_label ? `${project.progress_label} · ` : ""}
-                    {project.progress_note || "Ejecucion activa con avance sostenido y foco en calidad final."}
+                    {project.progress_note || "Ejecución activa con avance sostenido y foco en la calidad final."}
                   </p>
                 </div>
 

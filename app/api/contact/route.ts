@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Datos de formulario invalidos." },
+        { error: parsed.error.issues[0]?.message ?? "Datos de formulario inválidos." },
         { status: 400 },
       );
     }
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     const ip = forwardedFor.split(",")[0]?.trim() ?? "unknown";
     if (!canProceedByRateLimit(ip)) {
       return NextResponse.json(
-        { error: "Has enviado demasiadas solicitudes en poco tiempo. Intentalo en 1 minuto." },
+        { error: "Has enviado demasiadas solicitudes en poco tiempo. Inténtalo en 1 minuto." },
         { status: 429 },
       );
     }
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
 
     if (!insertedLead) {
       return NextResponse.json(
-        { error: "No se pudo guardar tu mensaje. Intentalo de nuevo." },
+        { error: "No se pudo guardar tu mensaje. Inténtalo de nuevo." },
         { status: 500 },
       );
     }
@@ -160,7 +160,7 @@ export async function POST(request: Request) {
         } else {
           emailStatus = "error";
           warnings.push(
-            "Lead guardado correctamente, pero no se pudo enviar la notificacion interna.",
+            "Lead guardado correctamente, pero no se pudo enviar la notificación interna.",
           );
         }
       }
@@ -187,7 +187,7 @@ export async function POST(request: Request) {
 
       if (!confirmationResult.ok) {
         warnings.push(
-          "Lead guardado correctamente, pero no se pudo enviar la confirmacion al usuario.",
+          "Lead guardado correctamente, pero no se pudo enviar la confirmación al usuario.",
         );
       }
     }

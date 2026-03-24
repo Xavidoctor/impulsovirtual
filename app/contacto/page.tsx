@@ -11,13 +11,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const canonical = getCanonicalUrl("/contacto");
   return {
     title: "Contacto",
-    description: "Canal directo para iniciar una conversacion con Impulso Virtual.",
+    description: "Canal directo para iniciar una conversación con Impulso Virtual.",
     alternates: {
       canonical,
     },
     openGraph: {
       title: `Contacto | ${site.brandName}`,
-      description: "Canal directo para iniciar una conversacion con Impulso Virtual.",
+      description: "Canal directo para iniciar una conversación con Impulso Virtual.",
       images: [site.seo.ogImage],
       url: canonical,
     },
@@ -35,8 +35,8 @@ export default async function ContactoPage() {
             <p className="editorial-kicker">Contacto</p>
             <h1 className="hero-title font-display leading-[0.95]">Hablemos de tu siguiente etapa digital</h1>
             <p className="section-copy max-w-2xl">
-              Cuanto mas contexto compartas, mas precisa sera nuestra respuesta inicial.
-              Normalmente respondemos en menos de 24h laborables.
+              Cuanto más contexto compartas, más precisa será nuestra respuesta inicial.
+              Normalmente respondemos en menos de 24 h laborables.
             </p>
           </Reveal>
 
@@ -79,7 +79,7 @@ export default async function ContactoPage() {
                 <div className="subtle-divider" />
 
                 <div className="space-y-3">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-accent">Que ocurre despues</p>
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-accent">Qué ocurre después</p>
                   <ul className="space-y-2 text-sm leading-relaxed text-muted">
                     <li>1. Revisamos tu contexto y objetivo principal.</li>
                     <li>2. Te damos una respuesta inicial con siguientes pasos.</li>
@@ -106,7 +106,7 @@ export default async function ContactoPage() {
                 proceso comercial.
               </p>
               <Link href="/solicitar-propuesta" className="focus-ring btn-primary">
-                Ir a solicitar propuesta
+                Ir al formulario de propuesta
               </Link>
             </div>
           </Reveal>

@@ -215,7 +215,7 @@ export function ProjectEditor({ projectId, initialProject, initialMedia }: Proje
     if (!asset) return;
     if (pickerTarget === "preview") {
       setForm((prev) => ({ ...prev, preview_image_url: asset.public_url }));
-      setMessage("Imagen fallback aplicada desde biblioteca.");
+      setMessage("Imagen alternativa aplicada desde biblioteca.");
     } else if (pickerTarget === "logo") {
       setForm((prev) => ({ ...prev, company_logo_url: asset.public_url }));
       setMessage("Logo aplicado desde biblioteca.");
@@ -364,7 +364,7 @@ export function ProjectEditor({ projectId, initialProject, initialMedia }: Proje
               />
             </label>
             <label className="space-y-1 text-sm md:col-span-2">
-              <span className="text-neutral-300">Portada URL</span>
+              <span className="text-neutral-300">URL de portada</span>
               <input
                 value={form.cover_image_url}
                 onChange={(event) => setForm((prev) => ({ ...prev, cover_image_url: event.target.value }))}
@@ -398,7 +398,7 @@ export function ProjectEditor({ projectId, initialProject, initialMedia }: Proje
               <input
                 value={form.company_logo_url}
                 onChange={(event) => setForm((prev) => ({ ...prev, company_logo_url: event.target.value }))}
-                placeholder="URL del logo para cards de proyecto"
+                placeholder="URL del logo para tarjetas del proyecto"
                 className="w-full rounded-md border border-white/15 bg-black/40 px-3 py-2"
               />
               <div className="flex flex-wrap gap-2">
@@ -434,7 +434,7 @@ export function ProjectEditor({ projectId, initialProject, initialMedia }: Proje
               ) : null}
             </label>
             <label className="space-y-1 text-sm">
-              <span className="text-neutral-300">Modo de preview</span>
+              <span className="text-neutral-300">Modo de vista previa</span>
               <select
                 value={form.preview_mode}
                 onChange={(event) =>
@@ -445,13 +445,13 @@ export function ProjectEditor({ projectId, initialProject, initialMedia }: Proje
                 }
                 className="w-full rounded-md border border-white/15 bg-black/40 px-3 py-2"
               >
-                <option value="embed">Intentar iframe</option>
-                <option value="image">Solo imagen fallback</option>
-                <option value="external_only">Solo externo (botón + fallback)</option>
+                <option value="embed">Intentar en iframe</option>
+                <option value="image">Solo imagen alternativa</option>
+                <option value="external_only">Solo externo (botón + alternativa)</option>
               </select>
             </label>
             <label className="space-y-1 text-sm">
-              <span className="text-neutral-300">Imagen fallback del preview</span>
+              <span className="text-neutral-300">Imagen alternativa de vista previa</span>
               <input
                 value={form.preview_image_url}
                 onChange={(event) =>
@@ -533,7 +533,7 @@ export function ProjectEditor({ projectId, initialProject, initialMedia }: Proje
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-neutral-300">Challenge</span>
+            <span className="text-neutral-300">Reto</span>
             <textarea
               rows={4}
               value={form.challenge}
@@ -542,7 +542,7 @@ export function ProjectEditor({ projectId, initialProject, initialMedia }: Proje
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-neutral-300">Solution</span>
+            <span className="text-neutral-300">Solución</span>
             <textarea
               rows={4}
               value={form.solution}
@@ -551,7 +551,7 @@ export function ProjectEditor({ projectId, initialProject, initialMedia }: Proje
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-neutral-300">Results</span>
+            <span className="text-neutral-300">Resultados</span>
             <textarea
               rows={4}
               value={form.results}
@@ -565,7 +565,7 @@ export function ProjectEditor({ projectId, initialProject, initialMedia }: Proje
           <h2 className="font-display text-2xl tracking-wide">SEO</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-1 text-sm">
-              <span className="text-neutral-300">SEO title</span>
+              <span className="text-neutral-300">Título SEO</span>
               <input
                 value={form.seo_title}
                 onChange={(event) => setForm((prev) => ({ ...prev, seo_title: event.target.value }))}
@@ -573,7 +573,7 @@ export function ProjectEditor({ projectId, initialProject, initialMedia }: Proje
               />
             </label>
             <label className="space-y-1 text-sm">
-              <span className="text-neutral-300">SEO description</span>
+              <span className="text-neutral-300">Descripción SEO</span>
               <input
                 value={form.seo_description}
                 onChange={(event) =>
@@ -607,7 +607,7 @@ export function ProjectEditor({ projectId, initialProject, initialMedia }: Proje
         tipoPermitido="image"
         textoConfirmar={
           pickerTarget === "preview"
-            ? "Usar fallback"
+            ? "Usar alternativa"
             : pickerTarget === "logo"
               ? "Usar logo"
               : "Usar portada"

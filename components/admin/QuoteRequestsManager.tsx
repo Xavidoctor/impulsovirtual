@@ -100,7 +100,7 @@ export function QuoteRequestsManager({
       <div className="space-y-2">
         <h1 className="font-display text-4xl tracking-wide">Solicitudes de propuesta</h1>
         <p className="text-sm text-neutral-400">
-          Gestiona solicitudes comerciales y su avance en el pipeline.
+          Gestiona solicitudes comerciales y su avance en el proceso.
         </p>
       </div>
 
@@ -198,7 +198,7 @@ export function QuoteRequestsManager({
                   {selected.email} · {new Date(selected.created_at).toLocaleString("es-ES")}
                 </p>
                 {selected.phone ? (
-                  <p className="text-sm text-neutral-400">Telefono: {selected.phone}</p>
+                  <p className="text-sm text-neutral-400">Teléfono: {selected.phone}</p>
                 ) : null}
                 {selected.company ? (
                   <p className="text-sm text-neutral-400">Empresa: {selected.company}</p>
@@ -209,7 +209,7 @@ export function QuoteRequestsManager({
                 <p className="mb-2 text-xs uppercase tracking-[0.12em] text-neutral-500">Contexto</p>
                 <p>Tipo: {selected.project_type || "Sin especificar"}</p>
                 <p>Presupuesto: {selected.budget_range || "No indicado"}</p>
-                <p>Deadline: {selected.deadline || "No indicado"}</p>
+                <p>Fecha objetivo: {selected.deadline || "No indicada"}</p>
               </div>
 
               <div className="rounded-md border border-white/10 bg-black/35 p-3 text-sm text-neutral-300">

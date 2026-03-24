@@ -4,7 +4,7 @@ export const projects: PortfolioProject[] = [
   {
     status: "completed",
     slug: "estudio-juridico-mr",
-    title: "Estudio Juridico MR",
+    title: "Estudio Jurídico MR",
     category: "Web corporativa",
     shortDescription:
       "Web corporativa legal con enfoque premium, estructura clara y posicionamiento profesional.",
@@ -59,7 +59,7 @@ export const projects: PortfolioProject[] = [
     projectOrientation: "Portfolio profesional",
     whatWasDone:
       "Reposicionamiento de marca, estructura editorial y presentación de servicios/casos con enfoque de conversión.",
-    servicesApplied: ["Brand strategy", "Diseño web premium", "Copy estratégico"],
+    servicesApplied: ["Estrategia de marca", "Diseño web premium", "Copy estratégico"],
     previewMode: "embed",
     previewImageUrl: "/og-cover.svg",
     coverImage: "/og-cover.svg",
@@ -73,7 +73,7 @@ export const projects: PortfolioProject[] = [
   {
     status: "completed",
     slug: "barberia-denia",
-    title: "Barberia Denia",
+    title: "Barbería Denia",
     category: "Negocio local",
     shortDescription:
       "Web local para reforzar marca, mostrar servicios y mejorar adquisición de clientes.",
@@ -97,7 +97,7 @@ export const projects: PortfolioProject[] = [
     status: "in_progress",
     progressPercentage: 70,
     progressLabel: "Fase final de implementación",
-    progressNote: "Arquitectura y visual final completados. Pendiente QA y ajustes de contenido.",
+    progressNote: "Arquitectura y visual final completados. Pendiente de QA y ajustes de contenido.",
     slug: "ella-boutique",
     title: "Ella Boutique",
     category: "Ecommerce",

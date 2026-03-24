@@ -159,7 +159,7 @@ export function TestimonialsManager({ initialItems }: { initialItems: Testimonia
   return (
     <section className="space-y-6">
       <div className="space-y-1">
-        <h1 className="font-display text-4xl tracking-wide">Testimonials</h1>
+        <h1 className="font-display text-4xl tracking-wide">Testimonios</h1>
         <p className="text-sm text-neutral-400">Gestiona testimonios, orden y publicación.</p>
       </div>
 
@@ -233,7 +233,7 @@ export function TestimonialsManager({ initialItems }: { initialItems: Testimonia
               />
             </label>
             <label className="space-y-1 text-sm">
-              <span className="text-neutral-300">Sort order</span>
+              <span className="text-neutral-300">Orden</span>
               <input
                 type="number"
                 value={form.sort_order}

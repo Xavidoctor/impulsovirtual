@@ -13,14 +13,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const canonical = getCanonicalUrl("/proyectos");
   return {
     title: "Proyectos",
-    description: "Casos reales de estrategia, diseno web premium y sistemas digitales de crecimiento.",
+    description: "Casos reales de estrategia, diseño web premium y sistemas digitales de crecimiento.",
     alternates: {
       canonical,
     },
     openGraph: {
       title: `Proyectos | ${site.brandName}`,
       description:
-        "Casos reales de estrategia, diseno web premium y sistemas digitales de crecimiento.",
+        "Casos reales de estrategia, diseño web premium y sistemas digitales de crecimiento.",
       images: [site.seo.ogImage],
       url: canonical,
     },
@@ -78,7 +78,7 @@ export default async function ProyectosPage() {
             <p className="editorial-kicker">Casos</p>
             <h1 className="hero-title font-display">Proyectos</h1>
             <p className="section-copy">
-              Proyectos lanzados y proyectos en desarrollo, con enfoque en ejecucion premium,
+              Proyectos lanzados y proyectos en desarrollo, con enfoque en ejecución premium,
               claridad comercial y detalle de producto digital.
             </p>
           </Reveal>

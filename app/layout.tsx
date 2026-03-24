@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { CookieConsentManager } from "@/components/cookies/CookieConsentManager";
+import { CookieControlledScripts } from "@/components/cookies/CookieControlledScripts";
 import "./globals.css";
 import { brandConfig, getSiteUrl } from "@/content/brand";
 import { getPublicSiteContext } from "@/src/lib/domain/public-site";
@@ -63,7 +65,9 @@ export default function RootLayout({
     <html lang="es">
       <body className="font-sans">
         <AnalyticsTracker />
+        <CookieControlledScripts />
         {children}
+        <CookieConsentManager />
       </body>
     </html>
   );

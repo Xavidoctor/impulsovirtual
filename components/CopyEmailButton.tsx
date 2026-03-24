@@ -23,7 +23,7 @@ export function CopyEmailButton({ email, label, className }: CopyEmailButtonProp
 
   return (
     <button type="button" onClick={handleCopy} className={className}>
-      {copied ? "Email Copied" : label}
+      {copied ? "Correo copiado" : label}
     </button>
   );
 }

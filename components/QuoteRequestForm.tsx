@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PrivacyConsentCheckbox } from "@/components/legal/PrivacyConsentCheckbox";
 
 type QuoteRequestFormProps = {
   serviceOptions: string[];
@@ -16,6 +17,7 @@ type FormState = {
   deadline: string;
   projectSummary: string;
   references: string;
+  privacyAccepted: boolean;
   website: string;
 };
 
@@ -29,6 +31,7 @@ const initialState: FormState = {
   deadline: "",
   projectSummary: "",
   references: "",
+  privacyAccepted: false,
   website: "",
 };
 
@@ -39,7 +42,7 @@ export function QuoteRequestForm({ serviceOptions }: QuoteRequestFormProps) {
   const [message, setMessage] = useState("");
   const isSubmitting = status === "loading";
 
-  const update = (field: keyof FormState, value: string) => {
+  const update = (field: Exclude<keyof FormState, "privacyAccepted">, value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }));
     if (status !== "idle") {
       setStatus("idle");
@@ -72,6 +75,12 @@ export function QuoteRequestForm({ serviceOptions }: QuoteRequestFormProps) {
       return;
     }
 
+    if (!values.privacyAccepted) {
+      setStatus("error");
+      setMessage("Debes aceptar la política de privacidad para continuar.");
+      return;
+    }
+
     setStatus("loading");
 
     try {
@@ -89,6 +98,7 @@ export function QuoteRequestForm({ serviceOptions }: QuoteRequestFormProps) {
           deadline: values.deadline,
           projectSummary: values.projectSummary,
           references: values.references,
+          privacyAccepted: values.privacyAccepted,
           website: values.website,
         }),
       });
@@ -109,7 +119,7 @@ export function QuoteRequestForm({ serviceOptions }: QuoteRequestFormProps) {
       setSelectedServices([]);
     } catch {
       setStatus("error");
-      setMessage("Error de red. Intentalo de nuevo.");
+      setMessage("Error de red. Inténtalo de nuevo.");
     }
   };
 
@@ -130,7 +140,7 @@ export function QuoteRequestForm({ serviceOptions }: QuoteRequestFormProps) {
         </label>
 
         <label className="space-y-2">
-          <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Email</span>
+          <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Correo electrónico</span>
           <input
             type="email"
             required
@@ -144,7 +154,7 @@ export function QuoteRequestForm({ serviceOptions }: QuoteRequestFormProps) {
         </label>
 
         <label className="space-y-2">
-          <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Telefono</span>
+          <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Teléfono</span>
           <input
             disabled={isSubmitting}
             autoComplete="tel"
@@ -193,7 +203,7 @@ export function QuoteRequestForm({ serviceOptions }: QuoteRequestFormProps) {
       </div>
 
       <label className="space-y-2 block">
-        <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Deadline objetivo</span>
+        <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Fecha objetivo</span>
         <input
           disabled={isSubmitting}
           value={values.deadline}
@@ -257,6 +267,18 @@ export function QuoteRequestForm({ serviceOptions }: QuoteRequestFormProps) {
         />
       </label>
 
+      <PrivacyConsentCheckbox
+        checked={values.privacyAccepted}
+        onChange={(checked) => {
+          setValues((prev) => ({ ...prev, privacyAccepted: checked }));
+          if (status !== "idle") {
+            setStatus("idle");
+            setMessage("");
+          }
+        }}
+        disabled={isSubmitting}
+      />
+
       <label className="hidden" aria-hidden="true">
         <span>Website</span>
         <input
@@ -271,7 +293,7 @@ export function QuoteRequestForm({ serviceOptions }: QuoteRequestFormProps) {
         <button type="submit" disabled={isSubmitting} className="focus-ring btn-primary disabled:opacity-55">
           {isSubmitting ? "Enviando solicitud..." : "Enviar solicitud"}
         </button>
-        <p className="text-xs text-muted">La informacion se usa solo para preparar la propuesta.</p>
+        <p className="text-xs text-muted">La información se usa solo para preparar la propuesta.</p>
       </div>
 
       {message ? (

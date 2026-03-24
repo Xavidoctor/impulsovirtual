@@ -11,13 +11,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const site = await getPublicSiteContext();
   const canonical = getCanonicalUrl("/solicitar-propuesta");
   return {
-    title: "Solicitar Propuesta",
+    title: "Solicitar propuesta",
     description: "Formulario de briefing para preparar una propuesta comercial adaptada a tu proyecto.",
     alternates: {
       canonical,
     },
     openGraph: {
-      title: `Solicitar Propuesta | ${site.brandName}`,
+      title: `Solicitar propuesta | ${site.brandName}`,
       description:
         "Formulario de briefing para preparar una propuesta comercial adaptada a tu proyecto.",
       images: [site.seo.ogImage],
@@ -31,7 +31,7 @@ export default async function SolicitarPropuestaPage() {
   const serviceOptions =
     services.length > 0
       ? services.map((service) => service.title)
-      : ["Estrategia digital", "Diseno web premium", "Automatizaciones"];
+      : ["Estrategia digital", "Diseño web premium", "Automatizaciones"];
 
   return (
     <PublicPageShell>
@@ -59,18 +59,18 @@ export default async function SolicitarPropuestaPage() {
             <Reveal delay={0.07}>
               <aside className="space-y-5">
                 <article className="premium-card p-6">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-accent">Que evaluamos</p>
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-accent">Qué evaluamos</p>
                   <ul className="mt-4 space-y-2 text-sm leading-relaxed text-muted">
                     <li>1. Objetivo comercial prioritario.</li>
-                    <li>2. Alcance funcional y tecnico inicial.</li>
-                    <li>3. Orden recomendado de ejecucion.</li>
+                    <li>2. Alcance funcional y técnico inicial.</li>
+                    <li>3. Orden recomendado de ejecución.</li>
                   </ul>
                 </article>
 
                 <article className="premium-card p-6">
                   <p className="text-[11px] uppercase tracking-[0.2em] text-accent">Entregable inicial</p>
                   <p className="mt-3 text-sm leading-relaxed text-muted">
-                    Recibiras una orientacion de alcance y un planteamiento de trabajo con timing,
+                    Recibirás una orientación de alcance y un planteamiento de trabajo con timing,
                     fases y enfoque recomendado.
                   </p>
                 </article>
@@ -78,7 +78,7 @@ export default async function SolicitarPropuestaPage() {
                 <article className="premium-card p-6">
                   <p className="text-[11px] uppercase tracking-[0.2em] text-accent">Prefieres contacto breve</p>
                   <p className="mt-3 text-sm leading-relaxed text-muted">
-                    Si todavia no tienes todos los detalles, puedes usar el canal de contacto y te
+                    Si todavía no tienes todos los detalles, puedes usar el canal de contacto y te
                     ayudamos a definir el briefing.
                   </p>
                   <Link href="/contacto" className="focus-ring btn-secondary mt-5">

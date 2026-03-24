@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { LEGAL_PAGE_LINKS } from "@/content/legal/shared";
 import { getPublicSiteContext } from "@/src/lib/domain/public-site";
 
 type PublicPageShellProps = {
@@ -23,7 +24,8 @@ export async function PublicPageShell({ children }: PublicPageShellProps) {
         brandLine={site.footer.brandLine}
         copyright={site.footer.copyright}
         socials={site.contact.socials}
-        links={site.navLinks}
+        navigationLinks={site.navLinks}
+        legalLinks={LEGAL_PAGE_LINKS}
       />
     </div>
   );

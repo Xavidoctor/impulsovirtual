@@ -52,7 +52,7 @@ export function BlogManager({
               : "border-white/20 text-neutral-300 hover:bg-white/10"
           }`}
         >
-          Posts
+          Entradas
         </button>
         <button
           type="button"

@@ -12,7 +12,7 @@ type MotionShowreelSectionProps = {
 
 export function MotionShowreelSection({ heading, caption, videoSrc, posterSrc, overlayOpacity = 0.24 }: MotionShowreelSectionProps) {
   return (
-    <section className="section-padding pt-16 md:pt-20" aria-label="Showreel">
+    <section className="section-padding pt-16 md:pt-20" aria-label="Vídeo de resultados">
       <motion.div
         className="container-width"
         initial={{ opacity: 0, y: 20 }}

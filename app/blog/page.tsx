@@ -12,13 +12,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const canonical = getCanonicalUrl("/blog");
   return {
     title: "Blog",
-    description: "Ideas, guias y estrategia digital para empresas y marcas premium.",
+    description: "Ideas, guías y estrategia digital para empresas y marcas premium.",
     alternates: {
       canonical,
     },
     openGraph: {
       title: `Blog | ${site.brandName}`,
-      description: "Ideas, guias y estrategia digital para empresas y marcas premium.",
+      description: "Ideas, guías y estrategia digital para empresas y marcas premium.",
       images: [site.seo.ogImage],
       url: canonical,
     },
@@ -34,7 +34,7 @@ export default async function BlogPage() {
           slug: post.slug,
           title: post.title,
           excerpt: post.excerpt,
-          category: post.category?.name ?? "Insights",
+          category: post.category?.name ?? "Análisis",
           coverImage: post.cover_image_url,
           author: post.author_name ?? "Impulso Virtual",
           publishedAt: (post.published_at ?? post.created_at).slice(0, 10),
@@ -44,7 +44,7 @@ export default async function BlogPage() {
           ...post,
           coverImage: null,
           author: "Impulso Virtual",
-          category: "Insights",
+          category: "Análisis",
         }));
 
   const featuredPost = posts[0] ?? null;
@@ -56,10 +56,10 @@ export default async function BlogPage() {
         <div className="container-width space-y-10">
           <Reveal className="page-intro">
             <p className="editorial-kicker">Editorial</p>
-            <h1 className="hero-title font-display">Insights y criterio digital</h1>
+            <h1 className="hero-title font-display">Análisis y criterio digital</h1>
             <p className="section-copy">
-              Ideas practicas sobre estrategia, web premium y posicionamiento para negocios que
-              quieren captar mejor y vender con mas claridad.
+              Ideas prácticas sobre estrategia, web premium y posicionamiento para negocios que
+              quieren captar mejor y vender con más claridad.
             </p>
           </Reveal>
 
@@ -70,7 +70,7 @@ export default async function BlogPage() {
                 <div className="relative z-[1] grid gap-6 md:grid-cols-[1.05fr_0.95fr] md:items-center">
                   <div className="space-y-4">
                     <p className="text-[11px] uppercase tracking-[0.22em] text-accent">
-                      Articulo destacado
+                      Artículo destacado
                     </p>
                     <h2 className="text-3xl font-display text-foreground md:text-5xl">
                       {featuredPost.title}
@@ -82,7 +82,7 @@ export default async function BlogPage() {
                       <span>{featuredPost.author}</span>
                     </div>
                     <Link href={`/blog/${featuredPost.slug}`} className="focus-ring btn-primary">
-                      Leer articulo
+                      Leer artículo
                     </Link>
                   </div>
 
@@ -99,7 +99,7 @@ export default async function BlogPage() {
                       />
                     ) : (
                       <div className="flex h-64 items-center justify-center rounded-lg border border-white/10 bg-white/[0.02] text-xs uppercase tracking-[0.16em] text-muted md:h-72">
-                        Impulso Virtual Journal
+                        Editorial Impulso Virtual
                       </div>
                     )}
                   </div>
@@ -123,7 +123,7 @@ export default async function BlogPage() {
                   <h2 className="mt-4 text-2xl font-display text-foreground">{post.title}</h2>
                   <p className="mt-3 text-sm leading-relaxed text-muted">{post.excerpt}</p>
                   <Link href={`/blog/${post.slug}`} className="focus-ring mt-6 lift-link">
-                    Leer articulo
+                    Leer artículo
                   </Link>
                 </article>
               </Reveal>
@@ -139,7 +139,7 @@ export default async function BlogPage() {
                   </p>
                   <p className="text-sm leading-relaxed text-muted">
                     Si quieres llevar estas ideas a tu negocio, podemos traducirlas en un plan de
-                    accion concreto.
+                    acción concreto.
                   </p>
                 </div>
                 <Link href="/solicitar-propuesta" className="focus-ring btn-secondary">

@@ -322,7 +322,7 @@ export function ServicesManager({ initialServices }: { initialServices: ServiceE
             </label>
 
             <label className="space-y-1 text-sm md:col-span-2">
-              <span className="text-neutral-300">Cover image URL</span>
+              <span className="text-neutral-300">URL de imagen de portada</span>
               <input
                 value={form.cover_image_url}
                 onChange={(event) =>
@@ -366,7 +366,7 @@ export function ServicesManager({ initialServices }: { initialServices: ServiceE
               />
             </label>
             <label className="space-y-1 text-sm">
-              <span className="text-neutral-300">Sort order</span>
+              <span className="text-neutral-300">Orden</span>
               <input
                 type="number"
                 value={form.sort_order}
@@ -378,7 +378,7 @@ export function ServicesManager({ initialServices }: { initialServices: ServiceE
             </label>
 
             <label className="space-y-1 text-sm md:col-span-2">
-              <span className="text-neutral-300">SEO title</span>
+              <span className="text-neutral-300">Título SEO</span>
               <input
                 value={form.seo_title}
                 onChange={(event) => setForm((prev) => ({ ...prev, seo_title: event.target.value }))}
@@ -386,7 +386,7 @@ export function ServicesManager({ initialServices }: { initialServices: ServiceE
               />
             </label>
             <label className="space-y-1 text-sm md:col-span-2">
-              <span className="text-neutral-300">SEO description</span>
+              <span className="text-neutral-300">Descripción SEO</span>
               <textarea
                 rows={2}
                 value={form.seo_description}

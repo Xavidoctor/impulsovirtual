@@ -170,7 +170,7 @@ async function uploadAssetViaSupabaseRoute(params: {
 
   const payload = await response.json();
   if (!response.ok) {
-    throw new Error(payload.error ?? "No se pudo subir el recurso en modo fallback.");
+    throw new Error(payload.error ?? "No se pudo subir el recurso en modo alternativo.");
   }
 
   return payload.data as Tables<"cms_assets">;

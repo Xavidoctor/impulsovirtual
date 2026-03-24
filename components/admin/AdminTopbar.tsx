@@ -27,7 +27,7 @@ export function AdminTopbar({ email, role }: AdminTopbarProps) {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload.error ?? "No se pudo cambiar el modo vista previa.");
+        throw new Error(payload.error ?? "No se pudo cambiar el modo de vista previa.");
       }
 
       if (enabled) {

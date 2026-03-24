@@ -197,7 +197,7 @@ export function FaqsManager({ initialItems }: { initialItems: FAQEntity[] }) {
               />
             </label>
             <label className="space-y-1 text-sm">
-              <span className="text-neutral-300">Sort order</span>
+              <span className="text-neutral-300">Orden</span>
               <input
                 type="number"
                 value={form.sort_order}

@@ -13,14 +13,14 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Servicios",
     description:
-      "Servicios digitales premium de estrategia, diseno web y automatizacion para empresas en crecimiento.",
+      "Servicios digitales premium de estrategia, diseño web y automatización para empresas en crecimiento.",
     alternates: {
       canonical,
     },
     openGraph: {
       title: `Servicios | ${site.brandName}`,
       description:
-        "Servicios digitales premium de estrategia, diseno web y automatizacion para empresas en crecimiento.",
+        "Servicios digitales premium de estrategia, diseño web y automatización para empresas en crecimiento.",
       images: [site.seo.ogImage],
       url: canonical,
     },
@@ -46,8 +46,8 @@ export default async function ServiciosPage() {
             <p className="editorial-kicker">Servicios</p>
             <h1 className="hero-title font-display">Servicios</h1>
             <p className="section-copy">
-              Soluciones premium de estrategia, diseno web y sistemas digitales para transformar
-              captacion y conversion.
+              Soluciones premium de estrategia, diseño web y sistemas digitales para transformar
+              captación y conversión.
             </p>
           </Reveal>
 
@@ -63,7 +63,7 @@ export default async function ServiciosPage() {
                   </h2>
                   <p className="mt-3 text-sm leading-relaxed text-muted">{service.excerpt}</p>
                   <Link href={`/servicios/${service.slug}`} className="focus-ring mt-6 lift-link">
-                    Ver detalle
+                    Ver servicio
                   </Link>
                 </article>
               </Reveal>

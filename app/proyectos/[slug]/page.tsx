@@ -126,7 +126,7 @@ export default async function ProyectoDetallePage({ params }: ProjectPageProps) 
               href="/proyectos"
               className="focus-ring lift-link"
             >
-              ← Volver a Proyectos
+              ← Volver a proyectos
             </Link>
 
             <div className="page-intro">
@@ -208,7 +208,7 @@ export default async function ProyectoDetallePage({ params }: ProjectPageProps) 
             href="/proyectos"
             className="focus-ring lift-link"
           >
-            ← Volver a Proyectos
+            ← Volver a proyectos
           </Link>
 
           <Reveal className="page-intro">
@@ -252,7 +252,7 @@ export default async function ProyectoDetallePage({ params }: ProjectPageProps) 
             {project.challenge ? (
               <Reveal>
                 <article className="premium-card h-full p-5">
-                <h2 className="text-xs uppercase tracking-[0.2em] text-accent">Challenge</h2>
+                <h2 className="text-xs uppercase tracking-[0.2em] text-accent">Reto</h2>
                 <p className="mt-3 text-sm leading-relaxed text-muted">{project.challenge}</p>
                 </article>
               </Reveal>
@@ -260,7 +260,7 @@ export default async function ProyectoDetallePage({ params }: ProjectPageProps) 
             {project.solution ? (
               <Reveal delay={0.05}>
                 <article className="premium-card h-full p-5">
-                <h2 className="text-xs uppercase tracking-[0.2em] text-accent">Solution</h2>
+                <h2 className="text-xs uppercase tracking-[0.2em] text-accent">Solución</h2>
                 <p className="mt-3 text-sm leading-relaxed text-muted">{project.solution}</p>
                 </article>
               </Reveal>
@@ -268,7 +268,7 @@ export default async function ProyectoDetallePage({ params }: ProjectPageProps) 
             {project.results ? (
               <Reveal delay={0.1}>
                 <article className="premium-card h-full p-5">
-                <h2 className="text-xs uppercase tracking-[0.2em] text-accent">Results</h2>
+                <h2 className="text-xs uppercase tracking-[0.2em] text-accent">Resultados</h2>
                 <p className="mt-3 text-sm leading-relaxed text-muted">{project.results}</p>
                 </article>
               </Reveal>
@@ -301,7 +301,7 @@ export default async function ProyectoDetallePage({ params }: ProjectPageProps) 
           {media.length > 0 ? (
             <div className="space-y-5 border-t border-border pt-8">
               <h2 className="text-4xl font-display text-foreground md:text-5xl">
-                Galeria
+                Galería
               </h2>
               <div className="grid gap-5 md:grid-cols-2">
                 {media.map((item, index) => (

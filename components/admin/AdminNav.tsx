@@ -6,15 +6,15 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { href: "/admin", label: "Panel de control" },
   { href: "/admin/leads", label: "Leads" },
-  { href: "/admin/quote-requests", label: "Quote requests" },
+  { href: "/admin/quote-requests", label: "Solicitudes de propuesta" },
   { href: "/admin/services", label: "Servicios" },
   { href: "/admin/projects", label: "Proyectos" },
   { href: "/admin/blog", label: "Blog" },
-  { href: "/admin/testimonials", label: "Testimonials" },
+  { href: "/admin/testimonials", label: "Testimonios" },
   { href: "/admin/faqs", label: "FAQs" },
   { href: "/admin/settings", label: "Ajustes" },
   { href: "/admin/users", label: "Usuarios" },
-  { href: "/admin/guia", label: "Guia" },
+  { href: "/admin/guia", label: "Guía" },
 ];
 
 export function AdminNav() {

@@ -31,14 +31,14 @@ function ProjectInfoContent({
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        <p className="editorial-kicker">Project Viewer</p>
+        <p className="editorial-kicker">Visor del proyecto</p>
         <h3 className="text-3xl font-display leading-[0.95] text-foreground">{project.title}</h3>
         <p className="text-sm leading-relaxed text-muted">{project.excerpt}</p>
       </div>
 
       <div className="grid gap-3 text-sm">
         <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-accent">Categoria</p>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-accent">Categoría</p>
           <p className="mt-1 text-foreground/90">{resolveCategory(project)}</p>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
@@ -62,13 +62,13 @@ function ProjectInfoContent({
           ) : null}
         </div>
         <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-accent">Orientacion</p>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-accent">Orientación</p>
           <p className="mt-1 text-foreground/90">
             {project.project_orientation || "Proyecto digital premium"}
           </p>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-accent">Que se ha hecho</p>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-accent">Qué se ha hecho</p>
           <p className="mt-1 text-sm leading-relaxed text-muted">
             {project.what_was_done || project.description || project.excerpt}
           </p>
@@ -222,7 +222,7 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
                   }
                   className="focus-ring rounded-full border border-white/20 bg-black/55 px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-neutral-200 transition-colors hover:bg-black/75"
                 >
-                  {previewViewport === "desktop" ? "Modo movil" : "Modo PC"}
+                  {previewViewport === "desktop" ? "Modo móvil" : "Modo escritorio"}
                 </button>
               ) : null}
             </div>
@@ -232,7 +232,7 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
                 <div className="w-full max-w-4xl overflow-hidden rounded-xl border border-white/10 bg-black/40 p-3">
                   <img
                     src={project.preview_image_url || project.cover_image_url || "/og-cover.svg"}
-                    alt={`Preview de ${project.title}`}
+                    alt={`Vista previa de ${project.title}`}
                     className="h-[52vh] w-full rounded-lg object-cover"
                   />
                 </div>
@@ -271,7 +271,7 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
                     <iframe
                       key={`${project.id}-${liveUrl}`}
                       src={liveUrl ?? undefined}
-                      title={`Preview ${project.title}`}
+                      title={`Vista previa de ${project.title}`}
                       className={`border-0 [touch-action:pan-x_pan-y_pinch-zoom] ${
                         previewViewport === "mobile"
                           ? "h-full w-[390px] max-w-full"
@@ -285,7 +285,7 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
                 {previewState === "loading" ? (
                   <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#070b0d]/75">
                     <div className="space-y-2 text-center">
-                      <p className="text-sm uppercase tracking-[0.16em] text-accent">Cargando preview</p>
+                      <p className="text-sm uppercase tracking-[0.16em] text-accent">Cargando vista previa</p>
                       <p className="text-xs text-muted">Preparando visor del proyecto...</p>
                     </div>
                   </div>
@@ -299,7 +299,7 @@ export function ProjectViewerModal({ project, onClose }: ProjectViewerModalProps
                 onClick={() => setManualFallback(true)}
                 className="focus-ring absolute bottom-4 right-4 rounded-full border border-white/20 bg-black/55 px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-neutral-200 transition-colors hover:bg-black/75"
               >
-                Mostrar fallback
+                Mostrar alternativa
               </button>
             ) : null}
           </div>
