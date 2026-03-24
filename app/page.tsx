@@ -67,6 +67,81 @@ function ProcessStepIcon({ index }: { index: number }) {
   }
 }
 
+type ServiceVisualKey = "strategy" | "web" | "automation";
+
+function normalizeSpanishCopy(value: string) {
+  return value
+    .replace(/\bDiagnostico\b/g, "Diagnóstico")
+    .replace(/\bdiagnostico\b/g, "diagnóstico")
+    .replace(/\bconversion\b/g, "conversión")
+    .replace(/\bConversion\b/g, "Conversión")
+    .replace(/\bAutomatizacion\b/g, "Automatización")
+    .replace(/\bautomatizacion\b/g, "automatización")
+    .replace(/\bDiseno\b/g, "Diseño")
+    .replace(/\bdiseno\b/g, "diseño");
+}
+
+function normalizeServiceTitle(title: string) {
+  const normalized = title.trim().toLowerCase();
+
+  if (normalized.includes("estrategia")) return "Estrategia digital";
+  if (normalized.includes("diseño") || normalized.includes("diseno")) return "Diseño web premium";
+  if (normalized.includes("automat")) return "Automatizaciones";
+
+  return normalizeSpanishCopy(title);
+}
+
+function resolveServiceVisualKey(slug: string, title: string): ServiceVisualKey {
+  const source = `${slug} ${title}`.toLowerCase();
+  if (source.includes("estrategia")) return "strategy";
+  if (source.includes("dise") || source.includes("web")) return "web";
+  return "automation";
+}
+
+function resolveServiceMiniLabel(key: ServiceVisualKey) {
+  switch (key) {
+    case "strategy":
+      return "Dirección";
+    case "web":
+      return "Experiencia";
+    default:
+      return "Sistemas";
+  }
+}
+
+function ServiceOfferIcon({ variant }: { variant: ServiceVisualKey }) {
+  const baseClass = "h-[18px] w-[18px]";
+
+  if (variant === "strategy") {
+    return (
+      <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+        <circle cx="12" cy="12" r="8" />
+        <path d="m12 8.2 2.7 5.3-5.6-2.2 2.9-3.1Z" />
+      </svg>
+    );
+  }
+
+  if (variant === "web") {
+    return (
+      <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+        <rect x="4.5" y="6" width="15" height="12" rx="2" />
+        <path d="M4.5 10h15M9 18V10" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <path d="M4 7h6l2 3h8" />
+      <path d="M4 17h6l2-3h8" />
+      <circle cx="7" cy="7" r="1.4" />
+      <circle cx="7" cy="17" r="1.4" />
+      <circle cx="20" cy="10" r="1.4" />
+      <circle cx="20" cy="14" r="1.4" />
+    </svg>
+  );
+}
+
 export default async function HomePage() {
   const [site, servicesData, projectsData, testimonialsData, faqsData, blogData] =
     await Promise.all([
@@ -271,45 +346,73 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-padding py-14">
-        <div className="container-width space-y-8">
-          <Reveal className="flex items-end justify-between gap-4">
-            <h2 className="section-title font-display">Servicios estratégicos</h2>
-            <Link href="/servicios" className="focus-ring lift-link">
-              Ver servicios
-            </Link>
+      <section className="section-padding services-architecture-section py-14 md:py-16">
+        <div className="container-width space-y-8 md:space-y-10">
+          <Reveal>
+            <div className="services-architecture-header gap-5">
+              <div className="space-y-4">
+                <p className="editorial-kicker text-accent/90">SERVICIOS</p>
+                <h2 className="section-title font-display">Servicios estratégicos</h2>
+                <p className="section-copy max-w-3xl text-foreground/78">
+                  No diseñamos piezas aisladas. Construimos sistemas digitales para posicionar,
+                  convertir y escalar.
+                </p>
+              </div>
+              <Link href="/servicios" className="focus-ring services-architecture-cta">
+                Ver servicios
+              </Link>
+            </div>
           </Reveal>
-          <div className="grid gap-5 md:grid-cols-3">
-            {featuredServices.map((service, index) => (
-              <Reveal key={service.slug} delay={index * 0.06}>
-                <article className="premium-card elevate-hover flex h-full flex-col p-6">
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-accent">
-                    0{index + 1}
-                  </p>
-                  <h3 className="mt-3 text-2xl font-display text-foreground">{service.title}</h3>
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-muted">
-                    {service.short_description}
-                  </p>
-                  <Link href={`/servicios/${service.slug}`} className="focus-ring mt-6 lift-link">
-                    Ver servicio
-                  </Link>
-                </article>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      <section className="section-padding py-14">
-        <div className="container-width grid gap-5 md:grid-cols-3">
-          {homeSupportContent.valueProps.map((item, index) => (
-            <Reveal key={item.title} delay={index * 0.07}>
-              <article className="premium-card elevate-hover h-full p-6">
-                <h3 className="text-2xl font-display text-foreground">{item.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-muted">{item.description}</p>
-              </article>
-            </Reveal>
-          ))}
+          <div className="services-offer-grid">
+            {featuredServices.map((service, index) => {
+              const visualKey = resolveServiceVisualKey(service.slug, service.title);
+              const normalizedTitle = normalizeServiceTitle(service.title);
+              const normalizedDescription = normalizeSpanishCopy(
+                service.short_description ||
+                  "Servicio diseñado para construir una base digital sólida y orientada a resultados.",
+              );
+
+              return (
+                <Reveal key={service.slug} delay={index * 0.07}>
+                  <article className="service-offer-card flex h-full flex-col p-6 md:p-7">
+                    <div className="service-offer-top">
+                      <p className="service-offer-number">0{index + 1}</p>
+                      <span className="service-offer-icon">
+                        <ServiceOfferIcon variant={visualKey} />
+                      </span>
+                    </div>
+                    <p className="service-offer-kicker">{resolveServiceMiniLabel(visualKey)}</p>
+                    <h3 className="mt-4 text-[1.75rem] font-display leading-[1.02] text-foreground">
+                      {normalizedTitle}
+                    </h3>
+                    <p className="mt-3 flex-1 text-sm leading-relaxed text-foreground/72 md:text-[15px]">
+                      {normalizedDescription}
+                    </p>
+                    <Link href={`/servicios/${service.slug}`} className="focus-ring service-offer-link mt-6">
+                      Ver servicio
+                    </Link>
+                  </article>
+                </Reveal>
+              );
+            })}
+          </div>
+
+          <Reveal delay={0.08}>
+            <div className="services-principles-grid">
+              {homeSupportContent.valueProps.map((item, index) => (
+                <article key={item.title} className="service-principle-card">
+                  <p className="service-principle-index">Capacidad 0{index + 1}</p>
+                  <h3 className="mt-2 text-[1.45rem] font-display leading-[1.06] text-foreground md:text-[1.65rem]">
+                    {normalizeSpanishCopy(item.title)}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-foreground/66 md:text-[15px]">
+                    {normalizeSpanishCopy(item.description)}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </Reveal>
         </div>
       </section>
 

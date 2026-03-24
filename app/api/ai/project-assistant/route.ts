@@ -54,7 +54,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = await generateProjectAssistantResponse(parsed.data.messages);
+  const result = await generateProjectAssistantResponse(
+    parsed.data.messages,
+    parsed.data.conversation_state,
+  );
   if (!result.ok) {
     return NextResponse.json(
       {

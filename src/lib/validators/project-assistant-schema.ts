@@ -4,6 +4,7 @@ import {
   CONVERSATION_PHASE_VALUES,
   CURRENT_SITUATION_VALUES,
   PROJECT_TYPE_VALUES,
+  QUESTION_KEY_VALUES,
   QUALIFICATION_VALUES,
   SLOT_STATUS_VALUES,
   TARGET_PLATFORM_VALUES,
@@ -13,10 +14,6 @@ import {
 const chatMessageSchema = z.object({
   role: z.enum(["assistant", "user"]),
   content: z.string().trim().min(1).max(2000),
-});
-
-export const projectAssistantRequestSchema = z.object({
-  messages: z.array(chatMessageSchema).min(1).max(24),
 });
 
 const nullableBoolean = z.boolean().nullable();
@@ -50,6 +47,27 @@ const slotStatusSchema = z.object({
   automationInterest: z.enum(SLOT_STATUS_VALUES),
 });
 
+const conversationStateSchema = z.object({
+  project_type: z.enum(PROJECT_TYPE_VALUES).nullable().optional(),
+  detected_needs: z.array(z.string().trim().min(1).max(120)).max(12).optional(),
+  goal: z.string().trim().min(1).max(300).nullable().optional(),
+  current_situation: z.enum(CURRENT_SITUATION_VALUES).nullable().optional(),
+  urgency: z.enum(URGENCY_VALUES).nullable().optional(),
+  target_platform: z.enum(TARGET_PLATFORM_VALUES).nullable().optional(),
+  needs_backend: nullableBoolean.optional(),
+  needs_admin_panel: nullableBoolean.optional(),
+  integrations: z.array(z.string().trim().min(1).max(120)).max(12).optional(),
+  interest_in_ai: nullableBoolean.optional(),
+  interest_in_automation: nullableBoolean.optional(),
+  answered_steps: z.array(z.enum(QUESTION_KEY_VALUES)).max(24).optional(),
+  last_question_key: z.enum(QUESTION_KEY_VALUES).nullable().optional(),
+});
+
+export const projectAssistantRequestSchema = z.object({
+  messages: z.array(chatMessageSchema).min(1).max(24),
+  conversation_state: conversationStateSchema.optional(),
+});
+
 export const projectAssistantOutputSchema = z.object({
   message: z.string().trim().min(1).max(1200),
   project_type: z.enum(PROJECT_TYPE_VALUES).nullable(),
@@ -73,6 +91,8 @@ export const projectAssistantOutputSchema = z.object({
   should_ask_follow_up: z.boolean(),
   follow_up_questions: z.array(z.string().trim().min(1).max(220)).max(4),
   cta_label: z.string().trim().min(1).max(80).nullable(),
+  answered_steps: z.array(z.enum(QUESTION_KEY_VALUES)).max(24),
+  last_question_key: z.enum(QUESTION_KEY_VALUES).nullable(),
 });
 
 export const projectAssistantApiResponseSchema = z.object({

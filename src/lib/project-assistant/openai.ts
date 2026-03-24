@@ -4,10 +4,14 @@ import type {
   ProjectAssistantChatMessage,
   ProjectAssistantOutput,
   ProjectType,
+  QuestionKey,
   TargetPlatform,
   Urgency,
 } from "@/src/lib/project-assistant/types";
-import { DEFAULT_PROJECT_ASSISTANT_OUTPUT } from "@/src/lib/project-assistant/types";
+import {
+  DEFAULT_PROJECT_ASSISTANT_OUTPUT,
+  QUESTION_KEY_VALUES,
+} from "@/src/lib/project-assistant/types";
 import {
   buildProjectAssistantSystemPrompt,
   buildProjectAssistantUserPrompt,
@@ -88,6 +92,8 @@ const responseJsonSchema = {
       "should_ask_follow_up",
       "follow_up_questions",
       "cta_label",
+      "answered_steps",
+      "last_question_key",
     ],
     properties: {
       message: { type: "string" },
@@ -155,6 +161,22 @@ const responseJsonSchema = {
       should_ask_follow_up: { type: "boolean" },
       follow_up_questions: { type: "array", items: { type: "string" } },
       cta_label: { anyOf: [{ type: "string" }, { type: "null" }] },
+      answered_steps: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: [...QUESTION_KEY_VALUES],
+        },
+      },
+      last_question_key: {
+        anyOf: [
+          { type: "null" },
+          {
+            type: "string",
+            enum: [...QUESTION_KEY_VALUES],
+          },
+        ],
+      },
     },
   },
 };
@@ -418,6 +440,28 @@ function inferExplicitTriState(
   return true;
 }
 
+function resolveTriStateValue(params: {
+  text: string;
+  keywords: readonly string[];
+  explicitNegativePatterns: RegExp[];
+  previousValue: boolean | null | undefined;
+  modelValue: boolean | null | undefined;
+}) {
+  const explicit = inferExplicitTriState(
+    params.text,
+    params.keywords,
+    params.explicitNegativePatterns,
+  );
+  if (explicit !== null) return explicit;
+  if (params.previousValue !== null && params.previousValue !== undefined) {
+    return params.previousValue;
+  }
+  if (params.modelValue === true && includesAny(params.text, params.keywords)) {
+    return true;
+  }
+  return null;
+}
+
 function normalizeNeeds(needs: string[]) {
   const unique = new Map<string, string>();
 
@@ -467,8 +511,20 @@ function inferGoalFromMessages(messages: ProjectAssistantChatMessage[], fallback
   const lastUser = [...messages].reverse().find((message) => message.role === "user");
   if (!lastUser) return fallback;
   const text = cleanText(lastUser.content);
-  if (text.length < 12) return fallback;
+  if (text.length < 18) return fallback;
   const normalized = normalizeText(text);
+  const mentionsOnlyProjectType =
+    inferProjectTypeFromTranscript(normalized, null) !== null &&
+    !normalized.includes("captar") &&
+    !normalized.includes("convert") &&
+    !normalized.includes("vender") &&
+    !normalized.includes("reserva") &&
+    !normalized.includes("tiempo") &&
+    !normalized.includes("coste") &&
+    !normalized.includes("eficiencia") &&
+    !normalized.includes("automat") &&
+    !normalized.includes("escalar");
+  if (mentionsOnlyProjectType) return fallback;
   if (
     !normalized.includes("quiero") &&
     !normalized.includes("necesito") &&
@@ -548,6 +604,177 @@ function buildTechnicalQuestion() {
 
 function buildAutomationAiQuestion() {
   return "¿Te interesa incorporar automatización o IA en esta fase, o prefieres dejarlo para después?";
+}
+
+function normalizeAnsweredSteps(steps: unknown): QuestionKey[] {
+  if (!Array.isArray(steps)) return [];
+  const allowed = new Set<string>(QUESTION_KEY_VALUES);
+  const unique: QuestionKey[] = [];
+
+  for (const step of steps) {
+    if (typeof step !== "string") continue;
+    if (!allowed.has(step)) continue;
+    const typed = step as QuestionKey;
+    if (!unique.includes(typed)) {
+      unique.push(typed);
+    }
+  }
+  return unique;
+}
+
+function addAnsweredStep(steps: QuestionKey[], key: QuestionKey | null) {
+  if (!key) return;
+  if (!steps.includes(key)) {
+    steps.push(key);
+  }
+}
+
+function getLastMessage(messages: ProjectAssistantChatMessage[]) {
+  return messages[messages.length - 1] ?? null;
+}
+
+function mergeWithPreviousState(
+  output: ProjectAssistantOutput,
+  previousState?: Partial<ProjectAssistantOutput> | null,
+) {
+  const previous = previousState ?? null;
+  const merged: ProjectAssistantOutput = {
+    ...output,
+    project_type: output.project_type ?? previous?.project_type ?? null,
+    goal: output.goal ?? previous?.goal ?? null,
+    current_situation: output.current_situation ?? previous?.current_situation ?? null,
+    urgency: output.urgency ?? previous?.urgency ?? null,
+    target_platform: output.target_platform ?? previous?.target_platform ?? null,
+    needs_backend: output.needs_backend ?? previous?.needs_backend ?? null,
+    needs_admin_panel: output.needs_admin_panel ?? previous?.needs_admin_panel ?? null,
+    interest_in_ai: output.interest_in_ai ?? previous?.interest_in_ai ?? null,
+    interest_in_automation: output.interest_in_automation ?? previous?.interest_in_automation ?? null,
+    detected_needs: normalizeNeeds([
+      ...(previous?.detected_needs ?? []),
+      ...(output.detected_needs ?? []),
+    ]),
+    integrations: normalizeNeeds([
+      ...(previous?.integrations ?? []),
+      ...(output.integrations ?? []),
+    ]),
+    answered_steps: normalizeAnsweredSteps(previous?.answered_steps),
+    last_question_key: previous?.last_question_key ?? null,
+  };
+
+  return merged;
+}
+
+function shouldAskQuestionKey(
+  key: QuestionKey,
+  output: ProjectAssistantOutput,
+  text: string,
+) {
+  switch (key) {
+    case "ask_project_type":
+      return !output.project_type || hasAmbiguousWebVsApp(text);
+    case "ask_project_goal":
+      return !output.goal;
+    case "ask_conversion_focus":
+      return output.detected_needs.length < 2;
+    case "ask_existing_site":
+      return !output.current_situation;
+    case "ask_platform":
+      return !output.target_platform;
+    case "ask_budget_or_urgency":
+      return !output.urgency;
+    case "ask_backend_or_panel":
+      return output.needs_backend === null && output.needs_admin_panel === null;
+    case "ask_integrations":
+      return output.integrations.length === 0;
+    case "ask_automation_or_ai":
+      return output.interest_in_ai === null && output.interest_in_automation === null;
+    default:
+      return false;
+  }
+}
+
+function buildQuestionByKey(
+  key: QuestionKey,
+  output: ProjectAssistantOutput,
+  text: string,
+) {
+  switch (key) {
+    case "ask_project_type":
+      return buildStrategicQuestion(output.project_type, text, output.target_platform);
+    case "ask_project_goal":
+      return "¿Cuál es el objetivo principal que quieres conseguir con este proyecto?";
+    case "ask_conversion_focus":
+      return buildStrategicQuestion(output.project_type, text, output.target_platform);
+    case "ask_existing_site":
+      return buildSituationQuestion();
+    case "ask_platform":
+      return output.project_type === "videojuego 2D"
+        ? "¿Dónde quieres lanzar primero el juego 2D: web, móvil o campaña?"
+        : "¿Qué plataforma prefieres para esta primera fase: web, móvil, ambas o escritorio?";
+    case "ask_budget_or_urgency":
+      return buildUrgencyQuestion();
+    case "ask_backend_or_panel":
+      return buildTechnicalQuestion();
+    case "ask_integrations":
+      return "¿Necesitas integrar herramientas externas (pagos, WhatsApp, CRM u otras plataformas)?";
+    case "ask_automation_or_ai":
+      return buildAutomationAiQuestion();
+    default:
+      return buildStrategicQuestion(output.project_type, text, output.target_platform);
+  }
+}
+
+function computeNextQuestionKey(
+  output: ProjectAssistantOutput,
+  text: string,
+  answeredSteps: QuestionKey[],
+): QuestionKey | null {
+  const answered = new Set<QuestionKey>(answeredSteps);
+
+  const candidateKeys: QuestionKey[] = [
+    "ask_project_type",
+    "ask_project_goal",
+    "ask_conversion_focus",
+    "ask_existing_site",
+    "ask_platform",
+    "ask_budget_or_urgency",
+    "ask_backend_or_panel",
+    "ask_integrations",
+    "ask_automation_or_ai",
+  ];
+
+  for (const candidate of candidateKeys) {
+    if (!shouldAskQuestionKey(candidate, output, text)) continue;
+    if (answered.has(candidate)) continue;
+    return candidate;
+  }
+
+  return null;
+}
+
+function computeFallbackQuestionKey(
+  output: ProjectAssistantOutput,
+  text: string,
+  previousQuestionKey: QuestionKey | null,
+) {
+  const candidateKeys: QuestionKey[] = [
+    "ask_project_type",
+    "ask_project_goal",
+    "ask_conversion_focus",
+    "ask_existing_site",
+    "ask_platform",
+    "ask_budget_or_urgency",
+    "ask_backend_or_panel",
+    "ask_integrations",
+    "ask_automation_or_ai",
+  ];
+
+  for (const key of candidateKeys) {
+    if (!shouldAskQuestionKey(key, output, text)) continue;
+    if (previousQuestionKey && key === previousQuestionKey) continue;
+    return key;
+  }
+  return null;
 }
 
 function isInternalMessage(value: string) {
@@ -750,72 +977,117 @@ function buildNextQuestion(output: ProjectAssistantOutput, text: string) {
   return buildStrategicQuestion(output.project_type, text, output.target_platform);
 }
 
-function sanitizeOutput(output: ProjectAssistantOutput, messages: ProjectAssistantChatMessage[]): ProjectAssistantOutput {
+function sanitizeOutput(
+  output: ProjectAssistantOutput,
+  messages: ProjectAssistantChatMessage[],
+  previousState?: Partial<ProjectAssistantOutput> | null,
+): ProjectAssistantOutput {
   const transcriptText = aggregateUserText(messages);
   const turns = countUserTurns(messages);
-  const inferredType = inferProjectTypeFromTranscript(transcriptText, output.project_type);
-  const inferredPlatform = inferTargetPlatform(transcriptText, output.target_platform);
-  const inferredUrgency = inferUrgency(transcriptText, output.urgency);
+  const mergedState = mergeWithPreviousState(output, previousState);
+  const inferredType = inferProjectTypeFromTranscript(
+    transcriptText,
+    previousState?.project_type ?? mergedState.project_type,
+  );
+  const inferredPlatform = inferTargetPlatform(
+    transcriptText,
+    previousState?.target_platform ?? mergedState.target_platform,
+  );
+  const inferredUrgency = inferUrgency(
+    transcriptText,
+    previousState?.urgency ?? mergedState.urgency,
+  );
   const inferredCurrentSituation = inferCurrentSituation(transcriptText);
   const inferredIntegrations = inferIntegrationsFromText(transcriptText);
-  const explicitBackend = inferExplicitTriState(
-    transcriptText,
-    ["backend", "api", "base de datos", "servidor"],
-    [/no necesito.*backend/, /sin backend/, /no queremos.*backend/],
-  );
-  const explicitAdminPanel = inferExplicitTriState(
-    transcriptText,
-    ["panel", "dashboard", "admin", "administración", "administracion"],
-    [/no necesito.*panel/, /sin panel/, /no queremos.*panel/],
-  );
-  const explicitAi = inferExplicitTriState(
-    transcriptText,
-    ["ia", "ai", "inteligencia artificial"],
-    [/no quiero.*ia/, /sin ia/, /no necesito.*ia/],
-  );
-  const explicitAutomation = inferExplicitTriState(
-    transcriptText,
-    ["automatización", "automatizacion", "automatizar", "n8n", "zapier"],
-    [/no quiero.*automat/, /sin automat/, /no necesito.*automat/],
-  );
+  const explicitBackend = resolveTriStateValue({
+    text: transcriptText,
+    keywords: ["backend", "api", "base de datos", "servidor"],
+    explicitNegativePatterns: [/no necesito.*backend/, /sin backend/, /no queremos.*backend/],
+    previousValue: previousState?.needs_backend,
+    modelValue: output.needs_backend,
+  });
+  const explicitAdminPanel = resolveTriStateValue({
+    text: transcriptText,
+    keywords: ["panel", "dashboard", "admin", "administración", "administracion"],
+    explicitNegativePatterns: [/no necesito.*panel/, /sin panel/, /no queremos.*panel/],
+    previousValue: previousState?.needs_admin_panel,
+    modelValue: output.needs_admin_panel,
+  });
+  const explicitAi = resolveTriStateValue({
+    text: transcriptText,
+    keywords: ["ia", "ai", "inteligencia artificial"],
+    explicitNegativePatterns: [/no quiero.*ia/, /sin ia/, /no necesito.*ia/],
+    previousValue: previousState?.interest_in_ai,
+    modelValue: output.interest_in_ai,
+  });
+  const explicitAutomation = resolveTriStateValue({
+    text: transcriptText,
+    keywords: ["automatización", "automatizacion", "automatizar", "n8n", "zapier"],
+    explicitNegativePatterns: [/no quiero.*automat/, /sin automat/, /no necesito.*automat/],
+    previousValue: previousState?.interest_in_automation,
+    modelValue: output.interest_in_automation,
+  });
 
   const nextOutput: ProjectAssistantOutput = {
-    ...output,
+    ...mergedState,
     project_type: inferredType,
     target_platform: inferredPlatform === "desconocida" ? null : inferredPlatform,
     urgency: inferredUrgency === "desconocida" ? null : inferredUrgency,
     message: cleanText(output.message),
-    goal: inferGoalFromMessages(messages, output.goal),
-    current_situation: output.current_situation ?? inferredCurrentSituation,
+    goal: inferGoalFromMessages(messages, previousState?.goal ?? mergedState.goal),
+    current_situation: previousState?.current_situation ?? mergedState.current_situation ?? inferredCurrentSituation,
     lead_summary: output.lead_summary ? cleanText(output.lead_summary) : null,
-    detected_needs: inferNeedsFromText(transcriptText, output.detected_needs),
-    needs_backend: output.needs_backend ?? explicitBackend,
-    needs_admin_panel: output.needs_admin_panel ?? explicitAdminPanel,
-    integrations: normalizeNeeds([...output.integrations, ...inferredIntegrations]).slice(0, 12),
-    interest_in_ai: output.interest_in_ai ?? explicitAi,
-    interest_in_automation: output.interest_in_automation ?? explicitAutomation,
+    detected_needs: inferNeedsFromText(transcriptText, previousState?.detected_needs ?? []),
+    needs_backend: explicitBackend,
+    needs_admin_panel: explicitAdminPanel,
+    integrations: normalizeNeeds([...(previousState?.integrations ?? []), ...inferredIntegrations]).slice(0, 12),
+    interest_in_ai: explicitAi,
+    interest_in_automation: explicitAutomation,
   };
 
   if (nextOutput.project_type === "videojuego 2D") {
     addNeed(nextOutput.detected_needs, "juego 2D para web, móvil o campaña");
   }
 
-  const fallbackQuestion = buildNextQuestion(nextOutput, transcriptText);
+  const answeredSteps = normalizeAnsweredSteps(previousState?.answered_steps);
+  const previousQuestionKey = previousState?.last_question_key ?? null;
+  const lastMessage = getLastMessage(messages);
+  if (lastMessage?.role === "user") {
+    addAnsweredStep(answeredSteps, previousQuestionKey);
+  }
+  if (nextOutput.project_type) addAnsweredStep(answeredSteps, "ask_project_type");
+  if (nextOutput.goal) addAnsweredStep(answeredSteps, "ask_project_goal");
+  if (nextOutput.detected_needs.length >= 2) addAnsweredStep(answeredSteps, "ask_conversion_focus");
+  if (nextOutput.current_situation) addAnsweredStep(answeredSteps, "ask_existing_site");
+  if (nextOutput.target_platform) addAnsweredStep(answeredSteps, "ask_platform");
+  if (nextOutput.urgency) addAnsweredStep(answeredSteps, "ask_budget_or_urgency");
+  if (nextOutput.needs_backend !== null || nextOutput.needs_admin_panel !== null) {
+    addAnsweredStep(answeredSteps, "ask_backend_or_panel");
+  }
+  if (nextOutput.integrations.length > 0) addAnsweredStep(answeredSteps, "ask_integrations");
+  if (nextOutput.interest_in_ai !== null || nextOutput.interest_in_automation !== null) {
+    addAnsweredStep(answeredSteps, "ask_automation_or_ai");
+  }
+
   nextOutput.ready_for_cta = isReadyForCta(nextOutput, transcriptText, turns);
-  nextOutput.message = sanitizeUserFacingMessage(
-    nextOutput.message,
-    fallbackQuestion,
-    nextOutput.ready_for_cta,
-  );
-  nextOutput.message = ensureSingleQuestion(nextOutput.message, fallbackQuestion, nextOutput.ready_for_cta);
+  let nextQuestionKey: QuestionKey | null = null;
   if (!nextOutput.ready_for_cta) {
-    nextOutput.message = avoidConsecutiveDuplicateQuestion(
-      nextOutput.message,
-      messages,
-      nextOutput.project_type,
-      transcriptText,
-      nextOutput.target_platform,
-    );
+    const modelSuggestedKey =
+      output.last_question_key && QUESTION_KEY_VALUES.includes(output.last_question_key)
+        ? output.last_question_key
+        : null;
+    if (
+      modelSuggestedKey &&
+      !answeredSteps.includes(modelSuggestedKey) &&
+      shouldAskQuestionKey(modelSuggestedKey, nextOutput, transcriptText)
+    ) {
+      nextQuestionKey = modelSuggestedKey;
+    } else {
+      nextQuestionKey = computeNextQuestionKey(nextOutput, transcriptText, answeredSteps);
+    }
+    if (!nextQuestionKey) {
+      nextQuestionKey = computeFallbackQuestionKey(nextOutput, transcriptText, previousQuestionKey);
+    }
   }
 
   if (nextOutput.ready_for_cta) {
@@ -825,6 +1097,21 @@ function sanitizeOutput(output: ProjectAssistantOutput, messages: ProjectAssista
       nextOutput.detected_needs.length >= 3 ? "high" : "medium";
   } else {
     nextOutput.qualification_level = null;
+    const fallbackQuestion = nextQuestionKey
+      ? buildQuestionByKey(nextQuestionKey, nextOutput, transcriptText)
+      : buildNextQuestion(nextOutput, transcriptText);
+    const safeMessage = sanitizeUserFacingMessage(nextOutput.message, fallbackQuestion, false);
+    const singleQuestionMessage = ensureSingleQuestion(safeMessage, fallbackQuestion, false);
+    const normalizedSingle = normalizeText(singleQuestionMessage);
+    const normalizedFallback = normalizeText(fallbackQuestion);
+    nextOutput.message = normalizedSingle === normalizedFallback ? singleQuestionMessage : fallbackQuestion;
+    nextOutput.message = avoidConsecutiveDuplicateQuestion(
+      nextOutput.message,
+      messages,
+      nextOutput.project_type,
+      transcriptText,
+      nextOutput.target_platform,
+    );
   }
 
   if (nextOutput.ready_for_cta && (!nextOutput.lead_summary || nextOutput.lead_summary.length < 25)) {
@@ -842,6 +1129,8 @@ function sanitizeOutput(output: ProjectAssistantOutput, messages: ProjectAssista
   nextOutput.should_ask_follow_up = !nextOutput.ready_for_cta;
   nextOutput.follow_up_questions = nextOutput.ready_for_cta ? [] : [nextOutput.message];
   nextOutput.cta_label = nextOutput.ready_for_cta ? "Quiero esto en mi web" : null;
+  nextOutput.answered_steps = answeredSteps;
+  nextOutput.last_question_key = nextOutput.ready_for_cta ? null : nextQuestionKey;
   nextOutput.slot_status = buildSlotStatus(messages, nextOutput);
   nextOutput.collected_data = {
     projectType: nextOutput.project_type,
@@ -898,101 +1187,76 @@ function buildProviderErrorMessage(payload: OpenAIChatCompletionResponse, status
   return `El proveedor de IA devolvió un error (${status}).`;
 }
 
-export function buildDeterministicFallbackOutput(messages: ProjectAssistantChatMessage[]) {
+export function buildDeterministicFallbackOutput(
+  messages: ProjectAssistantChatMessage[],
+  previousState?: Partial<ProjectAssistantOutput> | null,
+) {
   const userText = aggregateUserText(messages);
-  const turns = countUserTurns(messages);
 
   const detectedType = inferProjectTypeFromTranscript(userText, null);
-  const targetPlatform = inferTargetPlatform(userText, null);
-  const urgency = inferUrgency(userText, null);
+  const targetPlatform = inferTargetPlatform(userText, previousState?.target_platform ?? null);
+  const urgency = inferUrgency(userText, previousState?.urgency ?? null);
   const needs = inferNeedsFromText(userText, []);
-  const currentSituation = inferCurrentSituation(userText);
+  const currentSituation = inferCurrentSituation(userText) ?? previousState?.current_situation ?? null;
   const integrations = inferIntegrationsFromText(userText);
-  const explicitBackend = inferExplicitTriState(
-    userText,
-    ["backend", "api", "base de datos", "servidor"],
-    [/no necesito.*backend/, /sin backend/, /no queremos.*backend/],
-  );
-  const explicitAdminPanel = inferExplicitTriState(
-    userText,
-    ["panel", "dashboard", "admin", "administración", "administracion"],
-    [/no necesito.*panel/, /sin panel/, /no queremos.*panel/],
-  );
-  const explicitAi = inferExplicitTriState(
-    userText,
-    ["ia", "ai", "inteligencia artificial"],
-    [/no quiero.*ia/, /sin ia/, /no necesito.*ia/],
-  );
-  const explicitAutomation = inferExplicitTriState(
-    userText,
-    ["automatización", "automatizacion", "automatizar", "n8n", "zapier"],
-    [/no quiero.*automat/, /sin automat/, /no necesito.*automat/],
-  );
+  const explicitBackend = resolveTriStateValue({
+    text: userText,
+    keywords: ["backend", "api", "base de datos", "servidor"],
+    explicitNegativePatterns: [/no necesito.*backend/, /sin backend/, /no queremos.*backend/],
+    previousValue: previousState?.needs_backend,
+    modelValue: null,
+  });
+  const explicitAdminPanel = resolveTriStateValue({
+    text: userText,
+    keywords: ["panel", "dashboard", "admin", "administración", "administracion"],
+    explicitNegativePatterns: [/no necesito.*panel/, /sin panel/, /no queremos.*panel/],
+    previousValue: previousState?.needs_admin_panel,
+    modelValue: null,
+  });
+  const explicitAi = resolveTriStateValue({
+    text: userText,
+    keywords: ["ia", "ai", "inteligencia artificial"],
+    explicitNegativePatterns: [/no quiero.*ia/, /sin ia/, /no necesito.*ia/],
+    previousValue: previousState?.interest_in_ai,
+    modelValue: null,
+  });
+  const explicitAutomation = resolveTriStateValue({
+    text: userText,
+    keywords: ["automatización", "automatizacion", "automatizar", "n8n", "zapier"],
+    explicitNegativePatterns: [/no quiero.*automat/, /sin automat/, /no necesito.*automat/],
+    previousValue: previousState?.interest_in_automation,
+    modelValue: null,
+  });
 
   const fallback: ProjectAssistantOutput = {
     ...DEFAULT_PROJECT_ASSISTANT_OUTPUT,
-    project_type: detectedType,
+    project_type: detectedType ?? previousState?.project_type ?? null,
     detected_needs: needs,
-    goal: inferGoalFromMessages(messages, null),
+    goal: inferGoalFromMessages(messages, previousState?.goal ?? null),
     current_situation: currentSituation,
     urgency,
     target_platform: targetPlatform,
     needs_backend: explicitBackend,
     needs_admin_panel: explicitAdminPanel,
-    integrations,
+    integrations: normalizeNeeds([...(previousState?.integrations ?? []), ...integrations]),
     qualification_level: null,
     interest_in_ai: explicitAi,
     interest_in_automation: explicitAutomation,
     ready_for_cta: false,
     lead_summary: null,
     message: "",
+    answered_steps: normalizeAnsweredSteps(previousState?.answered_steps),
+    last_question_key: previousState?.last_question_key ?? null,
   };
 
-  fallback.ready_for_cta = isReadyForCta(fallback, userText, turns);
-  fallback.message = fallback.ready_for_cta
-    ? "Perfecto, ya tengo contexto suficiente para preparar una propuesta inicial útil. Si te encaja, pulsa “Quiero esto en mi web” y seguimos por contacto."
-    : buildNextQuestion(fallback, userText);
-  if (!fallback.ready_for_cta) {
-    fallback.message = avoidConsecutiveDuplicateQuestion(
-      fallback.message,
-      messages,
-      fallback.project_type,
-      userText,
-      fallback.target_platform,
-    );
-  }
-  fallback.qualification_level = fallback.ready_for_cta ? (needs.length >= 3 ? "high" : "medium") : null;
-  fallback.lead_summary = fallback.ready_for_cta ? buildLeadSummary(fallback) : null;
-  fallback.conversation_phase = fallback.ready_for_cta
-    ? "ready_for_cta"
-    : turns <= 1
-      ? "discovering"
-      : "qualifying";
-  fallback.missing_critical_fields = buildMissingCriticalFields(fallback);
-  fallback.should_ask_follow_up = !fallback.ready_for_cta;
-  fallback.follow_up_questions = fallback.ready_for_cta ? [] : [fallback.message];
-  fallback.cta_label = fallback.ready_for_cta ? "Quiero esto en mi web" : null;
-  fallback.slot_status = buildSlotStatus(messages, fallback);
-  fallback.collected_data = {
-    projectType: fallback.project_type,
-    mainGoal: fallback.goal,
-    featuresNeeded: fallback.detected_needs,
-    currentSituation: fallback.current_situation,
-    targetPlatform: fallback.target_platform,
-    urgency: fallback.urgency,
-    needsBackend: fallback.needs_backend,
-    needsAdminPanel: fallback.needs_admin_panel,
-    integrations: fallback.integrations,
-    aiInterest: fallback.interest_in_ai,
-    automationInterest: fallback.interest_in_automation,
-  };
-  return fallback;
+  return sanitizeOutput(fallback, messages, previousState);
 }
 
 export async function generateProjectAssistantResponse(
   messages: ProjectAssistantChatMessage[],
+  previousState?: Partial<ProjectAssistantOutput> | null,
 ): Promise<GenerateResult> {
-  const deterministicFallback = buildDeterministicFallbackOutput(messages);
+  const deterministicFallback = buildDeterministicFallbackOutput(messages, previousState);
   const apiKey = process.env.OPENAI_API_KEY?.trim();
 
   if (!apiKey) {
@@ -1005,7 +1269,7 @@ export async function generateProjectAssistantResponse(
   }
 
   const systemPrompt = buildProjectAssistantSystemPrompt();
-  const userPrompt = buildProjectAssistantUserPrompt(messages);
+  const userPrompt = buildProjectAssistantUserPrompt(messages, previousState);
 
   const candidateModels = Array.from(
     new Set([DEFAULT_MODEL, "gpt-4o-mini", "gpt-4.1-mini"]),
@@ -1080,7 +1344,7 @@ export async function generateProjectAssistantResponse(
         return { ok: true, data: deterministicFallback, source: "openai" };
       }
 
-      const safeOutput = sanitizeOutput(parsed.data, messages);
+      const safeOutput = sanitizeOutput(parsed.data, messages, previousState);
       return { ok: true, data: safeOutput, source: "openai" };
     }
   }
@@ -1093,9 +1357,12 @@ export async function generateProjectAssistantResponse(
   };
 }
 
-export function fallbackAssistantOutput(messages: ProjectAssistantChatMessage[] = []) {
+export function fallbackAssistantOutput(
+  messages: ProjectAssistantChatMessage[] = [],
+  previousState?: Partial<ProjectAssistantOutput> | null,
+) {
   if (messages.length === 0) {
     return DEFAULT_PROJECT_ASSISTANT_OUTPUT;
   }
-  return buildDeterministicFallbackOutput(messages);
+  return buildDeterministicFallbackOutput(messages, previousState);
 }

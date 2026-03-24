@@ -1,4 +1,7 @@
-import type { ProjectAssistantChatMessage } from "@/src/lib/project-assistant/types";
+import type {
+  ProjectAssistantChatMessage,
+  ProjectAssistantOutput,
+} from "@/src/lib/project-assistant/types";
 
 export function buildProjectAssistantSystemPrompt() {
   return [
@@ -34,15 +37,43 @@ export function buildProjectAssistantSystemPrompt() {
   ].join("\n");
 }
 
-export function buildProjectAssistantUserPrompt(messages: ProjectAssistantChatMessage[]) {
+export function buildProjectAssistantUserPrompt(
+  messages: ProjectAssistantChatMessage[],
+  conversationState?: Partial<ProjectAssistantOutput> | null,
+) {
   const transcript = messages
-    .slice(-20)
+    .slice(-24)
     .map((message, index) => `${index + 1}. ${message.role.toUpperCase()}: ${message.content}`)
     .join("\n");
+
+  const compactConversationState = conversationState
+    ? JSON.stringify(
+        {
+          project_type: conversationState.project_type ?? null,
+          goal: conversationState.goal ?? null,
+          detected_needs: conversationState.detected_needs ?? [],
+          current_situation: conversationState.current_situation ?? null,
+          target_platform: conversationState.target_platform ?? null,
+          urgency: conversationState.urgency ?? null,
+          needs_backend: conversationState.needs_backend ?? null,
+          needs_admin_panel: conversationState.needs_admin_panel ?? null,
+          integrations: conversationState.integrations ?? [],
+          interest_in_ai: conversationState.interest_in_ai ?? null,
+          interest_in_automation: conversationState.interest_in_automation ?? null,
+          answered_steps: conversationState.answered_steps ?? [],
+          last_question_key: conversationState.last_question_key ?? null,
+        },
+        null,
+        2,
+      )
+    : "null";
 
   return [
     "Historial de conversación (más reciente al final):",
     transcript,
+    "",
+    "Estado conversacional estructurado actual (usar como fuente de verdad junto al historial):",
+    compactConversationState,
     "",
     "Genera el siguiente turno del asistente y la clasificación estructurada actualizada.",
   ].join("\n");

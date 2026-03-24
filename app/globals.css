@@ -343,6 +343,256 @@ summary {
   transition: opacity 320ms ease, transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.services-architecture-section {
+  position: relative;
+  isolation: isolate;
+}
+
+.services-architecture-section::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 4% 0 8%;
+  z-index: -1;
+  background:
+    radial-gradient(52% 44% at 86% 18%, rgba(126, 230, 219, 0.12), transparent 72%),
+    radial-gradient(46% 52% at 12% 84%, rgba(121, 196, 230, 0.1), transparent 75%);
+}
+
+.services-architecture-header {
+  display: grid;
+  align-items: end;
+}
+
+.services-architecture-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 2.5rem;
+  padding: 0.62rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(150, 235, 221, 0.26);
+  background:
+    linear-gradient(160deg, rgba(20, 33, 36, 0.84), rgba(11, 18, 20, 0.94)),
+    radial-gradient(80% 120% at 20% 10%, rgba(133, 228, 213, 0.18), transparent 70%);
+  color: rgba(227, 247, 243, 0.92);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition:
+    border-color 240ms ease,
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 280ms ease;
+}
+
+.services-architecture-cta:hover {
+  transform: translate3d(0, -2px, 0);
+  border-color: rgba(165, 242, 229, 0.46);
+  box-shadow:
+    0 16px 34px -24px rgba(0, 0, 0, 0.95),
+    0 0 18px rgba(135, 216, 201, 0.16);
+}
+
+.services-offer-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.service-offer-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    linear-gradient(158deg, rgba(19, 24, 29, 0.97), rgba(8, 12, 16, 0.95)),
+    radial-gradient(70% 120% at 14% 0%, rgba(146, 240, 226, 0.14), transparent 72%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 26px 58px -40px rgba(0, 0, 0, 0.96);
+  transition:
+    transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 280ms ease,
+    box-shadow 320ms ease;
+}
+
+.service-offer-card::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(122deg, rgba(164, 247, 234, 0.22), transparent 36%),
+    radial-gradient(68% 86% at 84% 16%, rgba(113, 203, 226, 0.14), transparent 70%);
+  opacity: 0.74;
+  transition: opacity 280ms ease;
+}
+
+.service-offer-card::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  left: 1.3rem;
+  right: 1.3rem;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(136, 228, 213, 0.06),
+    rgba(155, 239, 224, 0.52),
+    rgba(136, 228, 213, 0.06)
+  );
+}
+
+.service-offer-card:hover {
+  transform: translate3d(0, -6px, 0);
+  border-color: rgba(165, 242, 229, 0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 36px 74px -42px rgba(0, 0, 0, 0.98);
+}
+
+.service-offer-card:hover::before {
+  opacity: 0.94;
+}
+
+.service-offer-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.service-offer-number {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(224, 245, 240, 0.76);
+}
+
+.service-offer-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(160, 238, 225, 0.3);
+  background: linear-gradient(180deg, rgba(16, 30, 33, 0.78), rgba(8, 14, 18, 0.92));
+  color: rgba(190, 249, 238, 0.94);
+  box-shadow: inset 0 0 18px rgba(149, 238, 224, 0.12);
+}
+
+.service-offer-kicker {
+  position: relative;
+  z-index: 1;
+  margin-top: 1.05rem;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(146, 232, 217, 0.88);
+}
+
+.service-offer-link {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(221, 245, 239, 0.84);
+}
+
+.service-offer-link::after {
+  content: "↗";
+  font-size: 0.78rem;
+  opacity: 0.84;
+}
+
+.service-offer-link:hover {
+  color: rgba(232, 250, 246, 0.98);
+}
+
+.services-principles-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.service-principle-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(160deg, rgba(14, 18, 22, 0.86), rgba(9, 12, 15, 0.9)),
+    radial-gradient(120% 120% at 0% 0%, rgba(146, 240, 226, 0.06), transparent 74%);
+  padding: 1.05rem 1rem 1.1rem;
+  transition:
+    border-color 260ms ease,
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 260ms ease;
+}
+
+.service-principle-card::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  top: 18%;
+  bottom: 18%;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    rgba(149, 238, 224, 0.08),
+    rgba(149, 238, 224, 0.34),
+    rgba(149, 238, 224, 0.08)
+  );
+}
+
+.service-principle-card:hover {
+  transform: translate3d(0, -2px, 0);
+  border-color: rgba(162, 241, 228, 0.2);
+}
+
+.service-principle-index {
+  font-size: 0.64rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(200, 230, 224, 0.68);
+}
+
+@media (min-width: 768px) {
+  .services-offer-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.1rem;
+  }
+
+  .services-principles-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.95rem;
+  }
+
+  .service-principle-card {
+    padding: 1.15rem 1.15rem 1.2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .services-architecture-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+  }
+}
+
 .process-section {
   position: relative;
   isolation: isolate;
@@ -679,6 +929,18 @@ summary {
   .process-card::before {
     transition: none;
   }
+
+  .service-offer-card,
+  .service-offer-card:hover,
+  .service-principle-card,
+  .service-principle-card:hover,
+  .services-architecture-cta,
+  .services-architecture-cta:hover {
+    transform: none;
+    transition:
+      border-color 200ms ease,
+      box-shadow 200ms ease;
+  }
 }
 
 .btn-primary {
@@ -710,6 +972,46 @@ summary {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
 }
 
+.assistant-fab-neon {
+  animation: assistant-neon-pulse 4.8s ease-in-out infinite;
+  box-shadow:
+    0 16px 36px -18px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(135, 216, 201, 0.14),
+    0 0 16px rgba(135, 216, 201, 0.2),
+    0 0 34px rgba(135, 216, 201, 0.1);
+}
+
+@keyframes assistant-neon-pulse {
+  0%,
+  100% {
+    border-color: rgba(135, 216, 201, 0.34);
+    box-shadow:
+      0 16px 36px -18px rgba(0, 0, 0, 0.8),
+      0 0 0 1px rgba(135, 216, 201, 0.14),
+      0 0 16px rgba(135, 216, 201, 0.2),
+      0 0 34px rgba(135, 216, 201, 0.1);
+    filter: brightness(1);
+  }
+  42% {
+    border-color: rgba(149, 234, 218, 0.56);
+    box-shadow:
+      0 18px 40px -20px rgba(0, 0, 0, 0.86),
+      0 0 0 1px rgba(155, 237, 223, 0.3),
+      0 0 22px rgba(155, 237, 223, 0.33),
+      0 0 52px rgba(122, 230, 214, 0.16);
+    filter: brightness(1.06);
+  }
+  58% {
+    border-color: rgba(142, 227, 212, 0.44);
+    box-shadow:
+      0 17px 38px -19px rgba(0, 0, 0, 0.82),
+      0 0 0 1px rgba(150, 235, 220, 0.23),
+      0 0 19px rgba(150, 235, 220, 0.26),
+      0 0 42px rgba(130, 231, 217, 0.13);
+    filter: brightness(1.03);
+  }
+}
+
 @media (max-width: 768px) {
   .hero-media-layer img {
     opacity: 0.42;
@@ -724,5 +1026,11 @@ summary {
 
   .landing-image-card:hover .landing-image-frame img {
     transform: scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-fab-neon {
+    animation: none;
   }
 }

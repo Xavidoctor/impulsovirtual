@@ -222,7 +222,8 @@ export function ProjectAssistantWidget() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: toChatMessages(nextMessages).slice(-20),
+          messages: toChatMessages(nextMessages).slice(-24),
+          conversation_state: assistantState,
         }),
       });
 
@@ -331,7 +332,7 @@ export function ProjectAssistantWidget() {
             onClick={() => setOpen((prev) => !prev)}
             aria-expanded={open}
             aria-controls="assistant-panel"
-            className="focus-ring inline-flex h-14 items-center gap-2 rounded-full border border-accent/35 bg-[#0b1618]/96 px-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground shadow-[0_16px_36px_-18px_rgba(0,0,0,0.8)] transition-all hover:border-accent/60 hover:brightness-110"
+            className="assistant-fab-neon focus-ring inline-flex h-14 items-center gap-2 rounded-full border border-accent/35 bg-[#0b1618]/96 px-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground shadow-[0_16px_36px_-18px_rgba(0,0,0,0.8)] transition-all hover:border-accent/60 hover:brightness-110"
           >
             <span className="inline-block h-2 w-2 rounded-full bg-accent" />
             <span className="hidden md:inline">Asistente IA</span>

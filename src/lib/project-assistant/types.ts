@@ -36,6 +36,17 @@ export const SLOT_STATUS_VALUES = [
   "explicitly_negative",
   "not_asked",
 ] as const;
+export const QUESTION_KEY_VALUES = [
+  "ask_project_type",
+  "ask_project_goal",
+  "ask_conversion_focus",
+  "ask_existing_site",
+  "ask_platform",
+  "ask_budget_or_urgency",
+  "ask_backend_or_panel",
+  "ask_integrations",
+  "ask_automation_or_ai",
+] as const;
 
 export const COMMON_NEEDS = [
   "captación de leads",
@@ -68,6 +79,7 @@ export type CommonNeed = (typeof COMMON_NEEDS)[number];
 export type ConversationPhase = (typeof CONVERSATION_PHASE_VALUES)[number];
 export type CurrentSituation = (typeof CURRENT_SITUATION_VALUES)[number];
 export type SlotStatus = (typeof SLOT_STATUS_VALUES)[number];
+export type QuestionKey = (typeof QUESTION_KEY_VALUES)[number];
 
 export type ProjectAssistantChatMessage = {
   role: "assistant" | "user";
@@ -125,6 +137,8 @@ export type ProjectAssistantOutput = {
   should_ask_follow_up: boolean;
   follow_up_questions: string[];
   cta_label: string | null;
+  answered_steps: QuestionKey[];
+  last_question_key: QuestionKey | null;
 };
 
 export const DEFAULT_PROJECT_ASSISTANT_OUTPUT: ProjectAssistantOutput = {
@@ -180,6 +194,8 @@ export const DEFAULT_PROJECT_ASSISTANT_OUTPUT: ProjectAssistantOutput = {
   should_ask_follow_up: true,
   follow_up_questions: [],
   cta_label: null,
+  answered_steps: [],
+  last_question_key: null,
 };
 
 export function projectTypeToService(projectType: ProjectType | null) {
