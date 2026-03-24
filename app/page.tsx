@@ -105,7 +105,7 @@ export default async function HomePage() {
   const featuredLaunchedProjects = [...normalizedProjects]
     .filter((project) => project.status === "completed")
     .sort((a, b) => Number(b.featured) - Number(a.featured))
-    .slice(0, 2);
+    .slice(0, 3);
 
   const featuredInProgressProjects = [...normalizedProjects]
     .filter((project) => project.status === "in_progress")
@@ -304,15 +304,15 @@ export default async function HomePage() {
             </Link>
           </Reveal>
 
-          <div className="grid gap-5 lg:grid-cols-[1.3fr_0.7fr]">
-            <div className="grid gap-5 md:grid-cols-2">
+          <div className="space-y-5">
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {featuredLaunchedProjects.map((project, index) => {
                 const image = project.cover_image_url || project.media?.[0]?.file_url || null;
                 return (
                   <Reveal key={project.id} delay={index * 0.07}>
-                    <article className="premium-card elevate-hover overflow-hidden">
-                      {image ? (
-                        <div className="h-52 overflow-hidden">
+                    <article className="premium-card elevate-hover flex h-full flex-col overflow-hidden">
+                      <div className="h-52 overflow-hidden bg-gradient-to-br from-[#0f1519] to-[#0b1013]">
+                        {image ? (
                           <img
                             src={image}
                             alt={project.title}
@@ -321,9 +321,13 @@ export default async function HomePage() {
                             sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 95vw"
                             className="h-full w-full object-cover transition-transform duration-500 hover:scale-[1.03]"
                           />
-                        </div>
-                      ) : null}
-                      <div className="space-y-3 p-6">
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.14em] text-muted">
+                            Vista previa no disponible
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-1 flex-col gap-3 p-6">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           {project.company_logo_url ? (
                             <div className="flex h-9 w-[132px] items-center">
@@ -344,9 +348,13 @@ export default async function HomePage() {
                             Completado
                           </span>
                         </div>
-                        <h3 className="text-3xl font-display text-foreground">{project.title}</h3>
-                        <p className="text-sm leading-relaxed text-muted">{project.excerpt}</p>
-                        <div className="flex flex-wrap items-center gap-4 text-xs uppercase tracking-[0.14em]">
+                        <div className="flex-1 space-y-3">
+                          <h3 className="text-3xl font-display text-foreground">{project.title}</h3>
+                          <p className="text-sm leading-relaxed text-muted">
+                            {project.excerpt || "Proyecto completado con foco en resultado de negocio."}
+                          </p>
+                        </div>
+                        <div className="mt-auto flex flex-wrap items-center gap-4 text-xs uppercase tracking-[0.14em]">
                           <Link href={`/proyectos/${project.slug}`} className="focus-ring lift-link">
                             Ver caso completo
                           </Link>
@@ -364,17 +372,28 @@ export default async function HomePage() {
             </div>
 
             <Reveal delay={0.08}>
-              <aside className="premium-card h-full space-y-4 p-6">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-accent">
-                  En desarrollo
-                </p>
-                <h3 className="text-2xl font-display text-foreground">
-                  Proyectos en curso
-                </h3>
-                <div className="space-y-4">
-                  {featuredInProgressProjects.length > 0 ? (
-                    featuredInProgressProjects.map((project) => (
-                      <div key={project.id} className="space-y-2 rounded-lg border border-white/10 bg-white/[0.01] p-3">
+              <div className="premium-card p-6 md:p-7">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div className="space-y-2">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-accent">
+                      En desarrollo
+                    </p>
+                    <h3 className="text-2xl font-display text-foreground">
+                      Proyectos en curso
+                    </h3>
+                  </div>
+                  <Link href="/proyectos" className="focus-ring lift-link">
+                    Ver todos los proyectos
+                  </Link>
+                </div>
+
+                {featuredInProgressProjects.length > 0 ? (
+                  <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {featuredInProgressProjects.map((project) => (
+                      <article
+                        key={project.id}
+                        className="flex h-full flex-col space-y-3 rounded-xl border border-white/10 bg-white/[0.01] p-4"
+                      >
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-sm font-medium text-foreground">{project.title}</p>
                           <span className="text-xs text-foreground/80">{project.progress_percentage ?? 0}%</span>
@@ -385,21 +404,18 @@ export default async function HomePage() {
                             style={{ width: `${project.progress_percentage ?? 0}%` }}
                           />
                         </div>
-                        <p className="text-xs leading-relaxed text-muted">
+                        <p className="flex-1 text-xs leading-relaxed text-muted">
                           {project.progress_note || "Ejecución activa con avance continuo."}
                         </p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted">
-                      Actualmente no hay proyectos en desarrollo destacados.
-                    </p>
-                  )}
-                </div>
-                <Link href="/proyectos" className="focus-ring lift-link">
-                  Ver todos los proyectos
-                </Link>
-              </aside>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-5 text-sm text-muted">
+                    Actualmente no hay proyectos en desarrollo destacados.
+                  </p>
+                )}
+              </div>
             </Reveal>
           </div>
         </div>

@@ -85,13 +85,13 @@ export function CookiePreferencesModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-[#06090c]/78 p-4 md:items-center" role="presentation">
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-[#05080b]/86 p-4 md:items-center" role="presentation">
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="cookie-preferences-title"
-        className="w-full max-w-2xl premium-panel p-5 md:p-7"
+        className="w-full max-w-2xl premium-panel bg-[#0b1115]/94 backdrop-blur-xl p-5 md:p-7"
       >
         <div className="noise-overlay" />
         <div className="relative z-[1] space-y-5">

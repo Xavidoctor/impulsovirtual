@@ -70,7 +70,7 @@ export function Footer({
                     {link.label}
                   </Link>
                 ))}
-                <CookiePreferencesButton className="focus-ring hover:text-foreground" />
+                <CookiePreferencesButton className="focus-ring rounded-full border border-white/18 bg-[#0c1216]/78 px-3 py-1.5 text-foreground hover:border-accent/35 hover:bg-[#10191f]/88" />
               </div>
             </div>
           </div>
