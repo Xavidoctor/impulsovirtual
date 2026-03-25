@@ -165,7 +165,16 @@ export default async function HomePage() {
 
   return (
     <PublicPageShell>
-      <section className="section-padding pb-8 pt-8 md:pb-10 md:pt-11">
+      <div className="relative isolate">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(8,13,16,0.3)_0%,rgba(8,13,16,0.18)_38%,rgba(8,13,16,0.12)_68%,rgba(8,13,16,0.24)_100%),radial-gradient(68%_36%_at_14%_10%,rgba(127,225,208,0.14),transparent_74%),radial-gradient(52%_34%_at_84%_44%,rgba(122,198,229,0.1),transparent_76%),radial-gradient(64%_38%_at_22%_72%,rgba(123,214,196,0.11),transparent_78%),radial-gradient(60%_34%_at_86%_92%,rgba(118,206,227,0.08),transparent_80%)]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(90deg,transparent_0%,rgba(137,224,207,0.018)_24%,transparent_50%,rgba(124,206,227,0.015)_76%,transparent_100%),linear-gradient(180deg,transparent_0%,rgba(137,224,207,0.01)_20%,transparent_38%,rgba(137,224,207,0.01)_58%,transparent_78%,rgba(124,206,227,0.008)_100%)] mix-blend-screen"
+      />
+      <section className="section-padding pb-5 pt-8 md:pb-7 md:pt-10">
         <div className="container-width">
           <Reveal>
             <div className="premium-panel hero-glow-panel p-7 md:p-10 lg:p-12">
@@ -231,7 +240,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-padding pb-12 pt-7 md:pb-14 md:pt-9">
+      <section className="section-padding pb-11 pt-4 md:pb-14 md:pt-6">
         <div className="container-width">
           <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
             <Reveal>
@@ -281,7 +290,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-padding services-architecture-section py-14 md:py-16">
+      <section className="section-padding py-14 md:py-16">
         <div className="container-width space-y-8 md:space-y-10">
           <Reveal>
             <div className="services-architecture-header gap-5">
@@ -327,7 +336,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-padding process-section py-14">
+      <section className="section-padding py-14">
         <div className="container-width space-y-8">
           <Reveal>
             <div className="process-heading space-y-4">
@@ -610,6 +619,7 @@ export default async function HomePage() {
           </Reveal>
         </div>
       </section>
+      </div>
     </PublicPageShell>
   );
 }
