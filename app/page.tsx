@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { FeaturedServicesInteractive } from "@/components/FeaturedServicesInteractive";
 import { PublicPageShell } from "@/components/PublicPageShell";
-import { ProjectViewerTrigger } from "@/components/projects/ProjectViewerTrigger";
-import { CmsServiceIcon } from "@/components/services/CmsServiceIcon";
 import { Reveal } from "@/components/ui/Reveal";
 import { getCanonicalUrl } from "@/content/brand";
 import { homeSupportContent } from "@/content/home";
@@ -79,6 +78,28 @@ function normalizeSpanishCopy(value: string) {
     .replace(/\bdiseno\b/g, "diseño");
 }
 
+function getInitials(name: string) {
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2);
+
+  return parts.map((part) => part.charAt(0).toUpperCase()).join("") || "IV";
+}
+
+function TestimonialStars() {
+  return (
+    <div className="testimonial-stars" aria-hidden>
+      {Array.from({ length: 5 }).map((_, index) => (
+        <svg key={index} viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current">
+          <path d="m12 3.8 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.5 2.9 1.1-6.1-4.5-4.3 6.2-.9L12 3.8Z" />
+        </svg>
+      ))}
+    </div>
+  );
+}
+
 export default async function HomePage() {
   const [site, featuredServices, projectsData, testimonialsData, faqsData, blogData] =
     await Promise.all([
@@ -139,12 +160,12 @@ export default async function HomePage() {
     .slice(0, 3);
 
   const faqs = faqsData.slice(0, 5);
-  const testimonials = testimonialsData.slice(0, 3);
+  const testimonials = testimonialsData.slice(0, 6);
   const posts = blogData.slice(0, 2);
 
   return (
     <PublicPageShell>
-      <section className="section-padding pb-14 pt-8 md:pt-12">
+      <section className="section-padding pb-8 pt-8 md:pb-10 md:pt-11">
         <div className="container-width">
           <Reveal>
             <div className="premium-panel hero-glow-panel p-7 md:p-10 lg:p-12">
@@ -210,7 +231,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-padding py-12 md:py-16">
+      <section className="section-padding pb-12 pt-7 md:pb-14 md:pt-9">
         <div className="container-width">
           <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
             <Reveal>
@@ -279,55 +300,7 @@ export default async function HomePage() {
           </Reveal>
 
           {featuredServices.length > 0 ? (
-            <div className="services-power-grid">
-              {featuredServices.map((service, index) => {
-                const description = normalizeSpanishCopy(
-                  service.short_description ||
-                    "Servicio diseñado para construir una base digital sólida y orientada a resultados.",
-                );
-
-                return (
-                  <Reveal key={service.id} delay={index * 0.07}>
-                    <article className="service-power-card h-full">
-                      <div className="service-power-image-wrap">
-                        {service.cover_image_url ? (
-                          <img
-                            src={service.cover_image_url}
-                            alt={`Preview visual del servicio ${service.title}`}
-                            loading="lazy"
-                            decoding="async"
-                            sizes="(min-width: 1280px) 31vw, (min-width: 768px) 47vw, 94vw"
-                            className="service-power-image"
-                          />
-                        ) : (
-                          <div className="service-power-placeholder" aria-hidden>
-                            <span className="service-power-placeholder-label">Imagen de servicio</span>
-                          </div>
-                        )}
-                        <div className="service-power-image-overlay" aria-hidden />
-                        <div className="service-power-meta" aria-hidden>
-                          <p className="service-power-number">0{index + 1}</p>
-                          <span className="service-power-icon">
-                            <CmsServiceIcon iconName={service.icon_name} className="h-[18px] w-[18px]" />
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="service-power-body">
-                        <p className="service-power-kicker">
-                          {service.subtitle ? normalizeSpanishCopy(service.subtitle) : "Servicio premium"}
-                        </p>
-                        <h3 className="service-power-title font-display">{normalizeSpanishCopy(service.title)}</h3>
-                        <p className="service-power-description">{description}</p>
-                        <Link href={`/servicios/${service.slug}`} className="focus-ring service-power-link">
-                          Ver servicio
-                        </Link>
-                      </div>
-                    </article>
-                  </Reveal>
-                );
-              })}
-            </div>
+            <FeaturedServicesInteractive services={featuredServices} />
           ) : (
             <Reveal>
               <div className="service-power-empty">
@@ -407,62 +380,57 @@ export default async function HomePage() {
                 const image = project.cover_image_url || project.media?.[0]?.file_url || null;
                 return (
                   <Reveal key={project.id} delay={index * 0.07}>
-                    <article className="premium-card elevate-hover flex h-full flex-col overflow-hidden">
-                      <div className="h-52 overflow-hidden bg-gradient-to-br from-[#0f1519] to-[#0b1013]">
-                        {image ? (
-                          <img
-                            src={image}
-                            alt={project.title}
-                            loading="lazy"
-                            decoding="async"
-                            sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 95vw"
-                            className="h-full w-full object-cover transition-transform duration-500 hover:scale-[1.03]"
-                          />
-                        ) : (
-                          <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.14em] text-muted">
-                            Vista previa no disponible
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-1 flex-col gap-3 p-6">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          {project.company_logo_url ? (
-                            <div className="flex h-9 w-[132px] items-center">
-                              <img
-                                src={project.company_logo_url}
-                                alt={`Logo de ${project.title}`}
-                                loading="lazy"
-                                decoding="async"
-                                className="max-h-8 w-auto max-w-full object-contain"
-                              />
-                            </div>
+                    <Link href={`/proyectos/${project.slug}`} className="focus-ring group block h-full">
+                      <article className="premium-card case-feature-card flex h-full flex-col overflow-hidden">
+                        <div className="h-52 overflow-hidden bg-gradient-to-br from-[#0f1519] to-[#0b1013]">
+                          {image ? (
+                            <img
+                              src={image}
+                              alt={project.title}
+                              loading="lazy"
+                              decoding="async"
+                              sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 95vw"
+                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                            />
                           ) : (
-                            <p className="text-[11px] uppercase tracking-[0.2em] text-accent">
-                              {project.client_name || "Proyecto"}
-                            </p>
+                            <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.14em] text-muted">
+                              Vista previa no disponible
+                            </div>
                           )}
-                          <span className="rounded-full border border-emerald-300/35 bg-emerald-500/10 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-emerald-200">
-                            Completado
-                          </span>
                         </div>
-                        <div className="flex-1 space-y-3">
-                          <h3 className="text-3xl font-display text-foreground">{project.title}</h3>
-                          <p className="text-sm leading-relaxed text-muted">
-                            {project.excerpt || "Proyecto completado con foco en resultado de negocio."}
+                        <div className="flex flex-1 flex-col gap-3 p-6">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            {project.company_logo_url ? (
+                              <div className="flex h-9 w-[132px] items-center">
+                                <img
+                                  src={project.company_logo_url}
+                                  alt={`Logo de ${project.title}`}
+                                  loading="lazy"
+                                  decoding="async"
+                                  className="max-h-8 w-auto max-w-full object-contain"
+                                />
+                              </div>
+                            ) : (
+                              <p className="text-[11px] uppercase tracking-[0.2em] text-accent">
+                                {project.client_name || "Proyecto"}
+                              </p>
+                            )}
+                            <span className="rounded-full border border-emerald-300/35 bg-emerald-500/10 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-emerald-200">
+                              Completado
+                            </span>
+                          </div>
+                          <div className="flex-1 space-y-3">
+                            <h3 className="text-3xl font-display text-foreground">{project.title}</h3>
+                            <p className="text-sm leading-relaxed text-muted">
+                              {project.excerpt || "Proyecto completado con foco en resultado de negocio."}
+                            </p>
+                          </div>
+                          <p className="case-feature-link mt-auto text-xs uppercase tracking-[0.16em]">
+                            Abrir caso completo
                           </p>
                         </div>
-                        <div className="mt-auto flex flex-wrap items-center gap-4 text-xs uppercase tracking-[0.14em]">
-                          <Link href={`/proyectos/${project.slug}`} className="focus-ring lift-link">
-                            Ver caso completo
-                          </Link>
-                          <ProjectViewerTrigger
-                            project={project}
-                            label="Visualizar web"
-                            className="focus-ring lift-link"
-                          />
-                        </div>
-                      </div>
-                    </article>
+                      </article>
+                    </Link>
                   </Reveal>
                 );
               })}
@@ -522,19 +490,43 @@ export default async function HomePage() {
         <section className="section-padding py-14">
           <div className="container-width space-y-8">
             <Reveal>
-              <h2 className="section-title font-display">Testimonios</h2>
+              <div className="space-y-4">
+                <p className="editorial-kicker text-accent/90">TESTIMONIOS</p>
+                <h2 className="section-title font-display">Confianza real de clientes reales</h2>
+              </div>
             </Reveal>
-            <div className="grid gap-5 md:grid-cols-3">
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {testimonials.map((testimonial, index) => (
                 <Reveal key={testimonial.id} delay={index * 0.07}>
-                  <article className="premium-card elevate-hover h-full p-6">
-                    <p className="text-lg leading-relaxed text-foreground/95">
+                  <article className="premium-card testimonial-premium-card h-full p-6">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        {testimonial.avatar_url ? (
+                          <img
+                            src={testimonial.avatar_url}
+                            alt={`Avatar de ${testimonial.name}`}
+                            loading="lazy"
+                            decoding="async"
+                            className="h-12 w-12 rounded-full border border-white/20 object-cover"
+                          />
+                        ) : (
+                          <span className="testimonial-avatar-fallback">
+                            {getInitials(testimonial.name)}
+                          </span>
+                        )}
+                        <div className="space-y-0.5">
+                          <p className="text-sm font-medium text-foreground">{testimonial.name}</p>
+                          {(testimonial.role || testimonial.company) ? (
+                            <p className="text-xs text-muted">
+                              {[testimonial.role, testimonial.company].filter(Boolean).join(" · ")}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                      <TestimonialStars />
+                    </div>
+                    <p className="mt-5 text-lg leading-relaxed text-foreground/95 md:text-[1.1rem]">
                       “{testimonial.quote}”
-                    </p>
-                    <p className="mt-5 text-xs uppercase tracking-[0.16em] text-muted">
-                      {testimonial.name}
-                      {testimonial.role ? ` · ${testimonial.role}` : ""}
-                      {testimonial.company ? ` · ${testimonial.company}` : ""}
                     </p>
                   </article>
                 </Reveal>

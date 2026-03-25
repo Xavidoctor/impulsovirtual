@@ -14,13 +14,15 @@ export async function PublicPageShell({ children }: PublicPageShellProps) {
 
   return (
     <div className="relative min-h-screen overflow-x-clip">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(620px_380px_at_80%_12%,rgba(135,216,201,0.1),transparent_70%)]" />
-      <div className="noise-overlay fixed inset-0 -z-10" />
+      <div aria-hidden className="site-backdrop site-backdrop-base" />
+      <div aria-hidden className="site-backdrop site-backdrop-grid" />
+      <div aria-hidden className="site-backdrop site-backdrop-glow" />
+      <div aria-hidden className="site-backdrop site-backdrop-noise noise-overlay" />
       <Navbar
         links={site.navLinks}
         primaryCta={site.primaryCta}
       />
-      <main className="pt-12 md:pt-20">{children}</main>
+      <main className="relative z-[1] pt-12 md:pt-20">{children}</main>
       <ProjectAssistantWidget />
       <Footer
         brandLine={site.footer.brandLine}
