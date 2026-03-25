@@ -1,3 +1,4 @@
+import { revalidatePath, revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 
@@ -14,6 +15,11 @@ import {
   testimonialDeleteSchema,
   testimonialUpdateSchema,
 } from "@/src/lib/validators/testimonials-schema";
+
+function revalidateTestimonialViews() {
+  revalidateTag("testimonials");
+  revalidatePath("/");
+}
 
 export async function GET() {
   const auth = await requireEditorApi();
@@ -61,6 +67,8 @@ export async function POST(request: NextRequest) {
       before_json: null,
       after_json: data,
     });
+
+    revalidateTestimonialViews();
 
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {
@@ -115,6 +123,8 @@ export async function PUT(request: NextRequest) {
       after_json: data,
     });
 
+    revalidateTestimonialViews();
+
     return NextResponse.json({ data });
   } catch (error) {
     if (error instanceof ZodError) {
@@ -153,6 +163,8 @@ export async function DELETE(request: NextRequest) {
       before_json: before,
       after_json: null,
     });
+
+    revalidateTestimonialViews();
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { FeaturedServicesInteractive } from "@/components/FeaturedServicesInteractive";
 import { PublicPageShell } from "@/components/PublicPageShell";
+import { TestimonialsCarousel } from "@/components/TestimonialsCarousel";
 import { Reveal } from "@/components/ui/Reveal";
 import { getCanonicalUrl } from "@/content/brand";
 import { homeSupportContent } from "@/content/home";
@@ -13,7 +14,7 @@ import { listFaqs } from "@/src/lib/domain/faqs";
 import { listProjects } from "@/src/lib/domain/projects";
 import { getPublicSiteContext } from "@/src/lib/domain/public-site";
 import { listFeaturedPublishedServices } from "@/src/lib/domain/services";
-import { listTestimonials } from "@/src/lib/domain/testimonials";
+import { listPublishedTestimonials } from "@/src/lib/domain/testimonials";
 
 export async function generateMetadata(): Promise<Metadata> {
   const site = await getPublicSiteContext();
@@ -78,35 +79,13 @@ function normalizeSpanishCopy(value: string) {
     .replace(/\bdiseno\b/g, "diseño");
 }
 
-function getInitials(name: string) {
-  const parts = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2);
-
-  return parts.map((part) => part.charAt(0).toUpperCase()).join("") || "IV";
-}
-
-function TestimonialStars() {
-  return (
-    <div className="testimonial-stars" aria-hidden>
-      {Array.from({ length: 5 }).map((_, index) => (
-        <svg key={index} viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current">
-          <path d="m12 3.8 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.5 2.9 1.1-6.1-4.5-4.3 6.2-.9L12 3.8Z" />
-        </svg>
-      ))}
-    </div>
-  );
-}
-
 export default async function HomePage() {
   const [site, featuredServices, projectsData, testimonialsData, faqsData, blogData] =
     await Promise.all([
       getPublicSiteContext(),
       listFeaturedPublishedServices(),
       listProjects({ includeUnpublished: false, includeMedia: true }),
-      listTestimonials({ includeUnpublished: false }),
+      listPublishedTestimonials(),
       listFaqs({ includeUnpublished: false }),
       listBlogPosts({ includeUnpublished: false, limit: 3 }),
     ]);
@@ -160,7 +139,7 @@ export default async function HomePage() {
     .slice(0, 3);
 
   const faqs = faqsData.slice(0, 5);
-  const testimonials = testimonialsData.slice(0, 6);
+  const testimonials = testimonialsData;
   const posts = blogData.slice(0, 2);
 
   return (
@@ -495,43 +474,9 @@ export default async function HomePage() {
                 <h2 className="section-title font-display">Confianza real de clientes reales</h2>
               </div>
             </Reveal>
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {testimonials.map((testimonial, index) => (
-                <Reveal key={testimonial.id} delay={index * 0.07}>
-                  <article className="premium-card testimonial-premium-card h-full p-6">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        {testimonial.avatar_url ? (
-                          <img
-                            src={testimonial.avatar_url}
-                            alt={`Avatar de ${testimonial.name}`}
-                            loading="lazy"
-                            decoding="async"
-                            className="h-12 w-12 rounded-full border border-white/20 object-cover"
-                          />
-                        ) : (
-                          <span className="testimonial-avatar-fallback">
-                            {getInitials(testimonial.name)}
-                          </span>
-                        )}
-                        <div className="space-y-0.5">
-                          <p className="text-sm font-medium text-foreground">{testimonial.name}</p>
-                          {(testimonial.role || testimonial.company) ? (
-                            <p className="text-xs text-muted">
-                              {[testimonial.role, testimonial.company].filter(Boolean).join(" · ")}
-                            </p>
-                          ) : null}
-                        </div>
-                      </div>
-                      <TestimonialStars />
-                    </div>
-                    <p className="mt-5 text-lg leading-relaxed text-foreground/95 md:text-[1.1rem]">
-                      “{testimonial.quote}”
-                    </p>
-                  </article>
-                </Reveal>
-              ))}
-            </div>
+            <Reveal>
+              <TestimonialsCarousel testimonials={testimonials} />
+            </Reveal>
           </div>
         </section>
       ) : null}

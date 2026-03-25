@@ -1292,6 +1292,17 @@ summary {
     box-shadow 300ms ease;
 }
 
+.testimonial-carousel-track {
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.testimonial-carousel-track::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
 .testimonial-premium-card:hover {
   transform: translate3d(0, -4px, 0);
   border-color: rgba(167, 240, 228, 0.26);

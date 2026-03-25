@@ -1,5 +1,7 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
+
 import type { TestimonialEntity } from "@/src/types/entities";
 import type { Tables, TablesInsert, TablesUpdate } from "@/src/types/database.types";
 
@@ -12,6 +14,15 @@ type TestimonialUpdate = TablesUpdate<"testimonials">;
 
 export type CreateTestimonialInput = Omit<TestimonialInsert, "id" | "created_at">;
 export type UpdateTestimonialInput = Omit<TestimonialUpdate, "id" | "created_at">;
+
+function dedupeTestimonials(testimonials: TestimonialEntity[]): TestimonialEntity[] {
+  const seen = new Set<string>();
+  return testimonials.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+}
 
 function mapTestimonialRow(row: TestimonialRow): TestimonialEntity {
   return {
@@ -50,7 +61,29 @@ export async function listTestimonials(
   const { data, error } = await query;
   if (error) return [];
 
-  return (data ?? []).map(mapTestimonialRow);
+  return dedupeTestimonials((data ?? []).map(mapTestimonialRow));
+}
+
+async function listPublishedTestimonialsFromDb(
+  supabase?: DomainSupabaseClient,
+): Promise<TestimonialEntity[]> {
+  return listTestimonials({ includeUnpublished: false }, supabase);
+}
+
+const listPublishedTestimonialsCached = unstable_cache(
+  async () => listPublishedTestimonialsFromDb(),
+  ["testimonials-published"],
+  { tags: ["testimonials"] },
+);
+
+export async function listPublishedTestimonials(
+  supabase?: DomainSupabaseClient,
+): Promise<TestimonialEntity[]> {
+  if (supabase) {
+    return listPublishedTestimonialsFromDb(supabase);
+  }
+
+  return listPublishedTestimonialsCached();
 }
 
 export async function createTestimonial(
