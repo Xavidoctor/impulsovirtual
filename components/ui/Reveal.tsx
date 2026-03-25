@@ -21,8 +21,7 @@ export function Reveal({
     if (!element) return;
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const isCompactViewport = window.matchMedia("(max-width: 900px)").matches;
-    if (prefersReducedMotion || isCompactViewport) {
+    if (prefersReducedMotion) {
       setIsVisible(true);
       return;
     }
@@ -31,6 +30,10 @@ export function Reveal({
       setIsVisible(true);
       return;
     }
+
+    const isMobileViewport = window.matchMedia("(max-width: 900px)").matches;
+    const rootMargin = isMobileViewport ? "0px 0px -10% 0px" : "-6% 0px -12% 0px";
+    const threshold = isMobileViewport ? 0.08 : 0.12;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -44,8 +47,8 @@ export function Reveal({
       },
       {
         root: null,
-        rootMargin: "-8% 0px -12% 0px",
-        threshold: 0.12,
+        rootMargin,
+        threshold,
       },
     );
 

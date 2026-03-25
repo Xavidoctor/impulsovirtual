@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FeaturedServicesInteractive } from "@/components/FeaturedServicesInteractive";
 import { PublicPageShell } from "@/components/PublicPageShell";
 import { TestimonialsCarousel } from "@/components/TestimonialsCarousel";
+import { ProjectViewerTrigger } from "@/components/projects/ProjectViewerTrigger";
 import { Reveal } from "@/components/ui/Reveal";
 import { getCanonicalUrl } from "@/content/brand";
 import { homeSupportContent } from "@/content/home";
@@ -288,10 +289,10 @@ export default async function HomePage() {
             </Reveal>
           )}
 
-          <Reveal delay={0.08}>
-            <div className="services-principles-grid">
-              {homeSupportContent.valueProps.map((item, index) => (
-                <article key={item.title} className="service-principle-card">
+          <div className="services-principles-grid">
+            {homeSupportContent.valueProps.map((item, index) => (
+              <Reveal key={item.title} delay={0.06 + index * 0.05} y={14}>
+                <article className="service-principle-card">
                   <p className="service-principle-index">Capacidad 0{index + 1}</p>
                   <h3 className="mt-2 text-[1.45rem] font-display leading-[1.06] text-foreground md:text-[1.65rem]">
                     {normalizeSpanishCopy(item.title)}
@@ -300,9 +301,9 @@ export default async function HomePage() {
                     {normalizeSpanishCopy(item.description)}
                   </p>
                 </article>
-              ))}
-            </div>
-          </Reveal>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -359,57 +360,64 @@ export default async function HomePage() {
                 const image = project.cover_image_url || project.media?.[0]?.file_url || null;
                 return (
                   <Reveal key={project.id} delay={index * 0.07}>
-                    <Link href={`/proyectos/${project.slug}`} className="focus-ring group block h-full">
-                      <article className="premium-card case-feature-card flex h-full flex-col overflow-hidden">
-                        <div className="h-52 overflow-hidden bg-gradient-to-br from-[#0f1519] to-[#0b1013]">
-                          {image ? (
-                            <img
-                              src={image}
-                              alt={project.title}
-                              loading="lazy"
-                              decoding="async"
-                              sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 95vw"
-                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                            />
-                          ) : (
-                            <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.14em] text-muted">
-                              Vista previa no disponible
+                    <article className="premium-card case-feature-card tap-feedback group relative flex h-full flex-col overflow-hidden">
+                      <Link
+                        href={`/proyectos/${project.slug}`}
+                        aria-label={`Abrir caso completo de ${project.title}`}
+                        className="focus-ring absolute inset-0 z-10 rounded-xl"
+                      />
+                      <div className="relative z-[1] h-52 overflow-hidden bg-gradient-to-br from-[#0f1519] to-[#0b1013]">
+                        {image ? (
+                          <img
+                            src={image}
+                            alt={project.title}
+                            loading="lazy"
+                            decoding="async"
+                            sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 95vw"
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.14em] text-muted">
+                            Vista previa no disponible
+                          </div>
+                        )}
+                      </div>
+                      <div className="relative z-[1] flex flex-1 flex-col gap-3 p-6">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          {project.company_logo_url ? (
+                            <div className="flex h-9 w-[132px] items-center">
+                              <img
+                                src={project.company_logo_url}
+                                alt={`Logo de ${project.title}`}
+                                loading="lazy"
+                                decoding="async"
+                                className="max-h-8 w-auto max-w-full object-contain"
+                              />
                             </div>
-                          )}
-                        </div>
-                        <div className="flex flex-1 flex-col gap-3 p-6">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            {project.company_logo_url ? (
-                              <div className="flex h-9 w-[132px] items-center">
-                                <img
-                                  src={project.company_logo_url}
-                                  alt={`Logo de ${project.title}`}
-                                  loading="lazy"
-                                  decoding="async"
-                                  className="max-h-8 w-auto max-w-full object-contain"
-                                />
-                              </div>
-                            ) : (
-                              <p className="text-[11px] uppercase tracking-[0.2em] text-accent">
-                                {project.client_name || "Proyecto"}
-                              </p>
-                            )}
-                            <span className="rounded-full border border-emerald-300/35 bg-emerald-500/10 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-emerald-200">
-                              Completado
-                            </span>
-                          </div>
-                          <div className="flex-1 space-y-3">
-                            <h3 className="text-3xl font-display text-foreground">{project.title}</h3>
-                            <p className="text-sm leading-relaxed text-muted">
-                              {project.excerpt || "Proyecto completado con foco en resultado de negocio."}
+                          ) : (
+                            <p className="text-[11px] uppercase tracking-[0.2em] text-accent">
+                              {project.client_name || "Proyecto"}
                             </p>
-                          </div>
-                          <p className="case-feature-link mt-auto text-xs uppercase tracking-[0.16em]">
-                            Abrir caso completo
+                          )}
+                          <span className="rounded-full border border-emerald-300/35 bg-emerald-500/10 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-emerald-200">
+                            Completado
+                          </span>
+                        </div>
+                        <div className="flex-1 space-y-3">
+                          <h3 className="text-3xl font-display text-foreground">{project.title}</h3>
+                          <p className="text-sm leading-relaxed text-muted">
+                            {project.excerpt || "Proyecto completado con foco en resultado de negocio."}
                           </p>
                         </div>
-                      </article>
-                    </Link>
+                        <div className="mt-auto flex items-center justify-end">
+                          <ProjectViewerTrigger
+                            project={project}
+                            label="Abrir web"
+                            className="focus-ring relative z-20 inline-flex min-h-9 items-center justify-center rounded-full border border-accent/35 bg-accentSoft px-3.5 py-1.5 text-[10px] uppercase tracking-[0.16em] text-accent tap-feedback hover:border-accent/55"
+                          />
+                        </div>
+                      </div>
+                    </article>
                   </Reveal>
                 );
               })}
@@ -433,25 +441,30 @@ export default async function HomePage() {
 
                 {featuredInProgressProjects.length > 0 ? (
                   <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {featuredInProgressProjects.map((project) => (
-                      <article
-                        key={project.id}
-                        className="flex h-full flex-col space-y-3 rounded-xl border border-white/10 bg-white/[0.01] p-4"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-medium text-foreground">{project.title}</p>
-                          <span className="text-xs text-foreground/80">{project.progress_percentage ?? 0}%</span>
-                        </div>
-                        <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-accent/75 via-accent to-emerald-200/80"
-                            style={{ width: `${project.progress_percentage ?? 0}%` }}
-                          />
-                        </div>
-                        <p className="flex-1 text-xs leading-relaxed text-muted">
-                          {project.progress_note || "Ejecución activa con avance continuo."}
-                        </p>
-                      </article>
+                    {featuredInProgressProjects.map((project, index) => (
+                      <Reveal key={project.id} delay={0.04 * index} y={14}>
+                        <Link
+                          href={`/proyectos/${project.slug}`}
+                          aria-label={`Ver caso completo de ${project.title}`}
+                          className="focus-ring tap-feedback group block h-full"
+                        >
+                          <article className="flex h-full flex-col space-y-3 rounded-xl border border-white/10 bg-white/[0.01] p-4 transition-colors duration-200 group-hover:border-white/20">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-medium text-foreground">{project.title}</p>
+                              <span className="text-xs text-foreground/80">{project.progress_percentage ?? 0}%</span>
+                            </div>
+                            <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-accent/75 via-accent to-emerald-200/80"
+                                style={{ width: `${project.progress_percentage ?? 0}%` }}
+                              />
+                            </div>
+                            <p className="flex-1 text-xs leading-relaxed text-muted">
+                              {project.progress_note || "Ejecución activa con avance continuo."}
+                            </p>
+                          </article>
+                        </Link>
+                      </Reveal>
                     ))}
                   </div>
                 ) : (
@@ -515,7 +528,7 @@ export default async function HomePage() {
             <div className="grid gap-5 md:grid-cols-2">
               {posts.map((post, index) => (
                 <Reveal key={post.id} delay={index * 0.07}>
-                  <article className="premium-card elevate-hover h-full p-6">
+                  <article className="premium-card elevate-hover tap-feedback h-full p-6">
                     <p className="text-xs uppercase tracking-[0.16em] text-muted">
                       {new Date(post.published_at ?? post.created_at).toLocaleDateString("es-ES")}
                     </p>

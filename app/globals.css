@@ -1311,6 +1311,19 @@ summary {
     0 30px 64px -42px rgba(0, 0, 0, 0.95);
 }
 
+.testimonial-card-reveal {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition:
+    opacity 520ms cubic-bezier(0.22, 1, 0.36, 1) var(--testimonial-delay, 0s),
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1) var(--testimonial-delay, 0s);
+}
+
+.testimonial-card-reveal.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
 .testimonial-avatar-fallback {
   display: inline-flex;
   height: 3rem;
@@ -1590,12 +1603,21 @@ summary {
   transform: translate3d(0, -4px, 0);
 }
 
+.tap-feedback {
+  transition:
+    transform 170ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 170ms ease,
+    border-color 200ms ease,
+    box-shadow 220ms ease;
+}
+
 .reveal-block {
+  --reveal-duration: 560ms;
   opacity: 0;
   transform: translate3d(0, var(--reveal-y, 18px), 0);
   transition:
-    opacity 560ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s),
-    transform 560ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s);
+    opacity var(--reveal-duration) cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s),
+    transform var(--reveal-duration) cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s);
 }
 
 .reveal-block.is-visible {
@@ -1605,9 +1627,18 @@ summary {
 
 @media (max-width: 900px) {
   .reveal-block {
-    opacity: 1;
-    transform: none;
-    transition: none;
+    --reveal-duration: 500ms;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .tap-feedback:active,
+  .btn-primary:active,
+  .btn-secondary:active,
+  .services-architecture-cta:active,
+  .service-power-trigger:active {
+    transform: scale(0.985);
+    filter: brightness(1.04);
   }
 }
 
@@ -1625,6 +1656,12 @@ summary {
     transform: none;
     transition: none;
     will-change: auto;
+  }
+
+  .tap-feedback {
+    transition: border-color 200ms ease;
+    transform: none;
+    filter: none;
   }
 
   .elevate-hover,
@@ -1683,6 +1720,13 @@ summary {
     transition:
       border-color 200ms ease,
       box-shadow 200ms ease;
+  }
+
+  .testimonial-card-reveal,
+  .testimonial-card-reveal.is-visible {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 
   .studio-aside-card,

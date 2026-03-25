@@ -68,6 +68,7 @@ export function TestimonialsCarousel({ testimonials }: { testimonials: Testimoni
   const [visibleCount, setVisibleCount] = useState(1);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
+  const [hasEntered, setHasEntered] = useState(false);
 
   const showControls = testimonials.length > visibleCount;
 
@@ -108,6 +109,42 @@ export function TestimonialsCarousel({ testimonials }: { testimonials: Testimoni
     track.scrollTo({ left: 0 });
     updateScrollState();
   }, [visibleCount, testimonials.length]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+      setHasEntered(true);
+      return;
+    }
+
+    if (!("IntersectionObserver" in window)) {
+      setHasEntered(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setHasEntered(true);
+            observer.disconnect();
+            break;
+          }
+        }
+      },
+      {
+        root: null,
+        rootMargin: "0px 0px -10% 0px",
+        threshold: 0.08,
+      },
+    );
+
+    observer.observe(track);
+    return () => observer.disconnect();
+  }, []);
 
   const scrollByOne = (direction: 1 | -1) => {
     const track = trackRef.current;
@@ -158,11 +195,12 @@ export function TestimonialsCarousel({ testimonials }: { testimonials: Testimoni
         role="region"
         aria-label="Listado de testimonios"
       >
-        {testimonials.map((testimonial) => (
+        {testimonials.map((testimonial, index) => (
           <article
             key={testimonial.id}
             data-testimonial-card="true"
-            className="premium-card testimonial-premium-card h-full shrink-0 basis-full p-6 md:basis-[calc(50%-0.625rem)] xl:basis-[calc((100%-2.5rem)/3)]"
+            className={`premium-card testimonial-premium-card tap-feedback testimonial-card-reveal h-full shrink-0 basis-full p-6 md:basis-[calc(50%-0.625rem)] xl:basis-[calc((100%-2.5rem)/3)] ${hasEntered ? "is-visible" : ""}`}
+            style={{ ["--testimonial-delay" as string]: `${Math.min(index, 8) * 0.05}s` }}
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
