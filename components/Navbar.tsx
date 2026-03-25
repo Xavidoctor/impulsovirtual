@@ -33,13 +33,13 @@ export function Navbar({ links, primaryCta }: NavbarProps) {
   }, [open]);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
-      <div className="container-width pt-3.5 md:pt-5">
+    <header className="site-header-shell fixed inset-x-0 top-0 z-50">
+      <div className="container-width pt-3 md:pt-4">
         <nav
-          className={`relative flex h-[62px] items-center justify-between rounded-full border px-4 md:h-[66px] md:px-6 transition-all duration-300 ${
+          className={`site-navbar-panel relative flex h-[62px] items-center justify-between rounded-full border px-4 md:h-[66px] md:px-6 transition-all duration-300 ${
             scrolled
-              ? "border-white/15 bg-[#090f11]/88 shadow-[0_14px_42px_-28px_rgba(0,0,0,0.9)] backdrop-blur-xl"
-              : "border-white/10 bg-[#0c1215]/58 backdrop-blur-lg"
+              ? "border-white/15 bg-[#070d10]/72 shadow-[0_14px_42px_-28px_rgba(0,0,0,0.9)] backdrop-blur-2xl"
+              : "border-white/10 bg-[#0a1114]/44 backdrop-blur-xl"
           }`}
           aria-label="Navegación principal"
         >

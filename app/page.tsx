@@ -165,16 +165,7 @@ export default async function HomePage() {
 
   return (
     <PublicPageShell>
-      <div className="relative isolate">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(8,13,16,0.3)_0%,rgba(8,13,16,0.18)_38%,rgba(8,13,16,0.12)_68%,rgba(8,13,16,0.24)_100%),radial-gradient(68%_36%_at_14%_10%,rgba(127,225,208,0.14),transparent_74%),radial-gradient(52%_34%_at_84%_44%,rgba(122,198,229,0.1),transparent_76%),radial-gradient(64%_38%_at_22%_72%,rgba(123,214,196,0.11),transparent_78%),radial-gradient(60%_34%_at_86%_92%,rgba(118,206,227,0.08),transparent_80%)]"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(90deg,transparent_0%,rgba(137,224,207,0.018)_24%,transparent_50%,rgba(124,206,227,0.015)_76%,transparent_100%),linear-gradient(180deg,transparent_0%,rgba(137,224,207,0.01)_20%,transparent_38%,rgba(137,224,207,0.01)_58%,transparent_78%,rgba(124,206,227,0.008)_100%)] mix-blend-screen"
-      />
-      <section className="section-padding pb-5 pt-8 md:pb-7 md:pt-10">
+      <section className="home-hero-section section-padding pb-5 pt-5 md:pb-7 md:pt-7">
         <div className="container-width">
           <Reveal>
             <div className="premium-panel hero-glow-panel p-7 md:p-10 lg:p-12">
@@ -619,7 +610,6 @@ export default async function HomePage() {
           </Reveal>
         </div>
       </section>
-      </div>
     </PublicPageShell>
   );
 }

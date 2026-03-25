@@ -13,16 +13,20 @@ export async function PublicPageShell({ children }: PublicPageShellProps) {
   const site = await getPublicSiteContext();
 
   return (
-    <div className="relative min-h-screen overflow-x-clip">
+    <div className="site-shell relative min-h-screen overflow-x-clip">
       <div aria-hidden className="site-backdrop site-backdrop-base" />
       <div aria-hidden className="site-backdrop site-backdrop-grid" />
       <div aria-hidden className="site-backdrop site-backdrop-glow" />
+      <div aria-hidden className="site-backdrop site-backdrop-top" />
+      <div aria-hidden className="site-backdrop site-backdrop-flow" />
+      <div aria-hidden className="site-backdrop site-backdrop-haze site-backdrop-motion-a" />
+      <div aria-hidden className="site-backdrop site-backdrop-haze site-backdrop-motion-b" />
       <div aria-hidden className="site-backdrop site-backdrop-noise noise-overlay" />
       <Navbar
         links={site.navLinks}
         primaryCta={site.primaryCta}
       />
-      <main className="relative z-[1] pt-12 md:pt-20">{children}</main>
+      <main className="relative z-[1] pt-[74px] md:pt-[92px]">{children}</main>
       <ProjectAssistantWidget />
       <Footer
         brandLine={site.footer.brandLine}

@@ -22,6 +22,7 @@
 
 html {
   scroll-behavior: auto;
+  background-color: #04070a;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -33,7 +34,8 @@ html {
 body {
   @apply text-foreground antialiased;
   font-family: "Switzer", sans-serif;
-  background: linear-gradient(180deg, #06090c 0%, #04070a 100%);
+  background-color: #04070a;
+  background: linear-gradient(180deg, #05080b 0%, #030509 100%);
 }
 
 body::before {
@@ -63,10 +65,15 @@ body::before {
   z-index: -20;
 }
 
+.site-shell {
+  isolation: isolate;
+}
+
 .site-backdrop-base {
   background:
-    radial-gradient(190% 84% at 50% -20%, rgba(20, 45, 43, 0.24), transparent 54%),
-    linear-gradient(180deg, #05090d 0%, #05080b 45%, #04070a 100%);
+    radial-gradient(184% 82% at 50% -22%, rgba(13, 32, 34, 0.17), transparent 58%),
+    radial-gradient(140% 120% at 50% 112%, rgba(0, 0, 0, 0.46), transparent 62%),
+    linear-gradient(180deg, #04070a 0%, #030509 48%, #020408 100%);
 }
 
 .site-backdrop-grid {
@@ -80,15 +87,215 @@ body::before {
 
 .site-backdrop-glow {
   background:
-    radial-gradient(46% 34% at 9% 14%, rgba(123, 220, 201, 0.15), transparent 74%),
-    radial-gradient(44% 34% at 92% 30%, rgba(124, 197, 228, 0.12), transparent 76%),
-    radial-gradient(54% 40% at 48% 66%, rgba(126, 218, 196, 0.1), transparent 76%),
-    radial-gradient(48% 36% at 82% 90%, rgba(111, 194, 225, 0.07), transparent 78%);
+    radial-gradient(48% 34% at 8% 12%, rgba(114, 170, 180, 0.12), transparent 76%),
+    radial-gradient(46% 34% at 92% 28%, rgba(114, 170, 180, 0.09), transparent 78%),
+    radial-gradient(56% 42% at 44% 64%, rgba(108, 162, 172, 0.075), transparent 79%),
+    radial-gradient(52% 38% at 84% 90%, rgba(106, 154, 164, 0.058), transparent 82%);
+  animation: backdrop-glow-breathe 38s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.site-backdrop-top {
+  background:
+    radial-gradient(88% 74% at 50% -10%, rgba(112, 172, 182, 0.18), transparent 66%),
+    radial-gradient(58% 52% at 6% 12%, rgba(112, 172, 182, 0.11), transparent 72%),
+    radial-gradient(56% 52% at 94% 18%, rgba(112, 172, 182, 0.09), transparent 74%);
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.98) 0%,
+    rgba(0, 0, 0, 0.72) 56%,
+    transparent 100%
+  );
+  opacity: 0.82;
+}
+
+.site-backdrop-flow {
+  background:
+    radial-gradient(96% 76% at 50% -18%, rgba(114, 170, 180, 0.08), transparent 70%),
+    radial-gradient(70% 58% at 10% 38%, rgba(114, 170, 180, 0.05), transparent 76%),
+    radial-gradient(68% 60% at 90% 42%, rgba(108, 162, 172, 0.045), transparent 78%),
+    linear-gradient(118deg, transparent 28%, rgba(188, 220, 228, 0.072) 50%, transparent 72%);
+  mix-blend-mode: screen;
+  opacity: 0.72;
+  animation: backdrop-flow-drift 58s cubic-bezier(0.33, 0.01, 0.17, 1) infinite alternate;
+  will-change: transform, opacity;
+}
+
+.site-backdrop-haze {
+  background:
+    radial-gradient(64% 56% at 14% 18%, rgba(110, 166, 176, 0.068), transparent 74%),
+    radial-gradient(56% 50% at 86% 22%, rgba(110, 166, 176, 0.056), transparent 76%),
+    radial-gradient(72% 62% at 48% 72%, rgba(106, 158, 168, 0.05), transparent 78%);
+  mix-blend-mode: screen;
+  opacity: 0.52;
+  filter: blur(3px);
+}
+
+.site-backdrop-motion-a {
+  transform: translate3d(0, 0, 0) scale(1.02);
+  transform-origin: 50% 40%;
+  animation: backdrop-haze-drift-a 74s cubic-bezier(0.25, 0.1, 0.24, 1) infinite alternate;
+  will-change: transform, opacity;
+}
+
+.site-backdrop-motion-b {
+  transform: translate3d(0, 0, 0) scale(1.04);
+  transform-origin: 50% 56%;
+  animation: backdrop-haze-drift-b 96s cubic-bezier(0.24, 0.08, 0.2, 1) infinite alternate;
+  opacity: 0.42;
+  will-change: transform, opacity;
 }
 
 .site-backdrop-noise {
   opacity: 0.18;
   mix-blend-mode: soft-light;
+}
+
+.site-header-shell {
+  isolation: isolate;
+}
+
+.site-header-shell::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: clamp(120px, 16vh, 176px);
+  z-index: -1;
+  background: linear-gradient(to bottom, rgba(5, 8, 10, 0.46), rgba(5, 8, 10, 0));
+}
+
+.site-header-shell::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: -58px;
+  height: 230px;
+  z-index: -1;
+  background: radial-gradient(66% 82% at 50% 44%, rgba(112, 172, 182, 0.16), transparent 76%);
+  filter: blur(16px);
+  opacity: 0.82;
+}
+
+@keyframes backdrop-glow-breathe {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.84;
+  }
+  50% {
+    transform: translate3d(-1.1%, 0.8%, 0) scale(1.04);
+    opacity: 0.96;
+  }
+}
+
+@keyframes backdrop-flow-drift {
+  0% {
+    transform: translate3d(-1.6%, -0.6%, 0) scale(1.02);
+    opacity: 0.62;
+  }
+  100% {
+    transform: translate3d(1.8%, 1%, 0) scale(1.06);
+    opacity: 0.78;
+  }
+}
+
+@keyframes backdrop-haze-drift-a {
+  0% {
+    transform: translate3d(-2.2%, -1.6%, 0) scale(1.02);
+    opacity: 0.42;
+  }
+  50% {
+    transform: translate3d(1.1%, -0.6%, 0) scale(1.06);
+    opacity: 0.58;
+  }
+  100% {
+    transform: translate3d(2.4%, 1.8%, 0) scale(1.09);
+    opacity: 0.46;
+  }
+}
+
+@keyframes backdrop-haze-drift-b {
+  0% {
+    transform: translate3d(1.9%, -1.5%, 0) scale(1.03);
+    opacity: 0.32;
+  }
+  50% {
+    transform: translate3d(-1.3%, 0.8%, 0) scale(1.09);
+    opacity: 0.48;
+  }
+  100% {
+    transform: translate3d(-2.3%, 1.9%, 0) scale(1.07);
+    opacity: 0.36;
+  }
+}
+
+.site-navbar-panel::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(165deg, rgba(118, 178, 188, 0.11), transparent 30%),
+    radial-gradient(82% 110% at 84% 20%, rgba(112, 172, 182, 0.074), transparent 72%);
+  opacity: 0.62;
+}
+
+.home-hero-section {
+  position: relative;
+  isolation: isolate;
+}
+
+.home-hero-section::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -140px;
+  height: clamp(220px, 36vh, 360px);
+  z-index: -1;
+  background:
+    radial-gradient(86% 120% at 50% 0%, rgba(114, 170, 180, 0.12), transparent 72%),
+    linear-gradient(to bottom, rgba(7, 11, 13, 0.18), rgba(7, 11, 13, 0));
+  opacity: 0.84;
+}
+
+@media (max-width: 900px) {
+  .site-backdrop-top {
+    opacity: 0.88;
+  }
+
+  .site-backdrop-flow {
+    opacity: 0.78;
+  }
+
+  .site-backdrop-haze {
+    opacity: 0.45;
+    filter: blur(2px);
+  }
+
+  .site-header-shell::after {
+    left: 4%;
+    right: 4%;
+    top: -44px;
+    height: 210px;
+    opacity: 0.84;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-backdrop-glow,
+  .site-backdrop-flow,
+  .site-backdrop-motion-a,
+  .site-backdrop-motion-b {
+    animation: none;
+    transform: none;
+    opacity: inherit;
+  }
 }
 
 h1,
@@ -214,7 +421,7 @@ summary {
   opacity: 0.52;
   background:
     radial-gradient(46% 64% at 14% 20%, rgba(118, 232, 219, 0.34), transparent 74%),
-    radial-gradient(40% 48% at 84% 72%, rgba(102, 212, 231, 0.22), transparent 75%),
+    radial-gradient(40% 48% at 84% 72%, rgba(135, 216, 201, 0.22), transparent 75%),
     radial-gradient(58% 50% at 62% 16%, rgba(145, 238, 222, 0.16), transparent 78%);
   transform: translate3d(0, 0, 0) scale(1);
   animation: hero-aura-float 14s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
@@ -250,7 +457,7 @@ summary {
   width: 36%;
   aspect-ratio: 1 / 1;
   opacity: 0.28;
-  background: radial-gradient(circle at 48% 50%, rgba(109, 214, 233, 0.3), rgba(109, 214, 233, 0));
+  background: radial-gradient(circle at 48% 50%, rgba(135, 216, 201, 0.3), rgba(135, 216, 201, 0));
 }
 
 .hero-glow-panel .hero-depth-lines {
@@ -389,7 +596,7 @@ summary {
   z-index: -1;
   background:
     radial-gradient(46% 44% at 88% 14%, rgba(131, 228, 214, 0.11), transparent 72%),
-    radial-gradient(38% 42% at 12% 86%, rgba(116, 194, 227, 0.09), transparent 74%);
+    radial-gradient(38% 42% at 12% 86%, rgba(135, 216, 201, 0.09), transparent 74%);
 }
 
 .studio-manifest-panel {
@@ -412,7 +619,7 @@ summary {
   inset: 0;
   background:
     linear-gradient(120deg, rgba(167, 248, 235, 0.18), transparent 34%),
-    radial-gradient(80% 90% at 86% 14%, rgba(118, 207, 229, 0.13), transparent 70%);
+    radial-gradient(80% 90% at 86% 14%, rgba(135, 216, 201, 0.13), transparent 70%);
   opacity: 0.82;
 }
 
@@ -486,7 +693,7 @@ summary {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background:
     linear-gradient(180deg, rgba(11, 15, 18, 0.86), rgba(9, 12, 15, 0.84)),
-    radial-gradient(84% 100% at 100% 0%, rgba(117, 210, 229, 0.09), transparent 72%);
+    radial-gradient(84% 100% at 100% 0%, rgba(135, 216, 201, 0.09), transparent 72%);
   padding: 1rem;
   transition:
     border-color 240ms ease,
@@ -558,7 +765,7 @@ summary {
   inset: 0;
   background:
     linear-gradient(120deg, rgba(164, 247, 233, 0.17), transparent 34%),
-    radial-gradient(76% 90% at 86% 12%, rgba(113, 204, 226, 0.13), transparent 70%);
+    radial-gradient(76% 90% at 86% 12%, rgba(135, 216, 201, 0.13), transparent 70%);
   opacity: 0.8;
 }
 
@@ -591,7 +798,7 @@ summary {
   z-index: -1;
   background:
     radial-gradient(52% 44% at 86% 18%, rgba(126, 230, 219, 0.12), transparent 72%),
-    radial-gradient(46% 52% at 12% 84%, rgba(121, 196, 230, 0.1), transparent 75%);
+    radial-gradient(46% 52% at 12% 84%, rgba(135, 216, 201, 0.1), transparent 75%);
 }
 
 .services-architecture-header {
@@ -642,7 +849,7 @@ summary {
   border: 1px solid rgba(255, 255, 255, 0.14);
   background:
     linear-gradient(160deg, rgba(15, 21, 26, 0.96), rgba(7, 11, 15, 0.97)),
-    radial-gradient(120% 92% at 100% 0%, rgba(129, 220, 232, 0.14), transparent 74%),
+    radial-gradient(120% 92% at 100% 0%, rgba(135, 216, 201, 0.14), transparent 74%),
     radial-gradient(82% 84% at 0% 100%, rgba(121, 228, 210, 0.09), transparent 74%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
@@ -660,7 +867,7 @@ summary {
   inset: 0;
   background:
     linear-gradient(120deg, rgba(168, 248, 234, 0.2), transparent 32%),
-    radial-gradient(64% 70% at 80% 14%, rgba(114, 210, 228, 0.13), transparent 76%);
+    radial-gradient(64% 70% at 80% 14%, rgba(135, 216, 201, 0.13), transparent 76%);
   opacity: 0.58;
   transition: opacity 280ms ease;
 }
@@ -706,7 +913,7 @@ summary {
   place-items: center;
   background:
     radial-gradient(54% 66% at 18% 10%, rgba(145, 236, 222, 0.17), transparent 72%),
-    radial-gradient(58% 62% at 84% 88%, rgba(121, 195, 230, 0.14), transparent 78%),
+    radial-gradient(58% 62% at 84% 88%, rgba(135, 216, 201, 0.14), transparent 78%),
     linear-gradient(140deg, rgba(19, 25, 31, 0.98), rgba(10, 14, 18, 0.96));
 }
 
@@ -836,7 +1043,7 @@ summary {
   border: 1px solid rgba(255, 255, 255, 0.16);
   background:
     linear-gradient(162deg, rgba(12, 18, 24, 0.97), rgba(7, 11, 15, 0.98)),
-    radial-gradient(88% 62% at 90% 12%, rgba(120, 214, 230, 0.17), transparent 72%),
+    radial-gradient(88% 62% at 90% 12%, rgba(135, 216, 201, 0.17), transparent 72%),
     radial-gradient(70% 70% at 10% 88%, rgba(134, 234, 218, 0.11), transparent 74%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
@@ -915,7 +1122,7 @@ summary {
   width: 0.42rem;
   height: 0.42rem;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(142, 239, 224, 0.9), rgba(124, 215, 233, 0.85));
+  background: linear-gradient(180deg, rgba(142, 239, 224, 0.9), rgba(135, 216, 201, 0.85));
   box-shadow: 0 0 12px rgba(139, 236, 221, 0.26);
 }
 
@@ -1131,7 +1338,7 @@ summary {
   z-index: -1;
   background:
     radial-gradient(52% 58% at 86% 18%, rgba(126, 230, 219, 0.09), transparent 78%),
-    radial-gradient(42% 44% at 10% 74%, rgba(124, 197, 228, 0.08), transparent 80%);
+    radial-gradient(42% 44% at 10% 74%, rgba(135, 216, 201, 0.08), transparent 80%);
 }
 
 .process-section::after {
@@ -1197,7 +1404,7 @@ summary {
   inset: 0;
   background:
     linear-gradient(125deg, rgba(158, 246, 232, 0.16), transparent 36%),
-    radial-gradient(76% 90% at 84% 10%, rgba(111, 206, 229, 0.11), transparent 68%);
+    radial-gradient(76% 90% at 84% 10%, rgba(135, 216, 201, 0.11), transparent 68%);
   opacity: 0.6;
   transition: opacity 300ms ease;
 }
