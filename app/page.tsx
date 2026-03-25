@@ -4,16 +4,16 @@ import Link from "next/link";
 
 import { PublicPageShell } from "@/components/PublicPageShell";
 import { ProjectViewerTrigger } from "@/components/projects/ProjectViewerTrigger";
+import { CmsServiceIcon } from "@/components/services/CmsServiceIcon";
 import { Reveal } from "@/components/ui/Reveal";
 import { getCanonicalUrl } from "@/content/brand";
 import { homeSupportContent } from "@/content/home";
 import { projects as fallbackProjects } from "@/content/projects";
-import { servicePreviews } from "@/content/services";
 import { listBlogPosts } from "@/src/lib/domain/blog";
 import { listFaqs } from "@/src/lib/domain/faqs";
 import { listProjects } from "@/src/lib/domain/projects";
 import { getPublicSiteContext } from "@/src/lib/domain/public-site";
-import { listPublishedServices } from "@/src/lib/domain/services";
+import { listFeaturedPublishedServices } from "@/src/lib/domain/services";
 import { listTestimonials } from "@/src/lib/domain/testimonials";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -67,8 +67,6 @@ function ProcessStepIcon({ index }: { index: number }) {
   }
 }
 
-type ServiceVisualKey = "strategy" | "web" | "automation";
-
 function normalizeSpanishCopy(value: string) {
   return value
     .replace(/\bDiagnostico\b/g, "Diagnóstico")
@@ -81,100 +79,16 @@ function normalizeSpanishCopy(value: string) {
     .replace(/\bdiseno\b/g, "diseño");
 }
 
-function normalizeServiceTitle(title: string) {
-  const normalized = title.trim().toLowerCase();
-
-  if (normalized.includes("estrategia")) return "Estrategia digital";
-  if (normalized.includes("diseño") || normalized.includes("diseno")) return "Diseño web premium";
-  if (normalized.includes("automat")) return "Automatizaciones";
-
-  return normalizeSpanishCopy(title);
-}
-
-function resolveServiceVisualKey(slug: string, title: string): ServiceVisualKey {
-  const source = `${slug} ${title}`.toLowerCase();
-  if (source.includes("estrategia")) return "strategy";
-  if (source.includes("dise") || source.includes("web")) return "web";
-  return "automation";
-}
-
-function resolveServiceMiniLabel(key: ServiceVisualKey) {
-  switch (key) {
-    case "strategy":
-      return "Dirección";
-    case "web":
-      return "Experiencia";
-    default:
-      return "Sistemas";
-  }
-}
-
-function ServiceOfferIcon({ variant }: { variant: ServiceVisualKey }) {
-  const baseClass = "h-[18px] w-[18px]";
-
-  if (variant === "strategy") {
-    return (
-      <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
-        <circle cx="12" cy="12" r="8" />
-        <path d="m12 8.2 2.7 5.3-5.6-2.2 2.9-3.1Z" />
-      </svg>
-    );
-  }
-
-  if (variant === "web") {
-    return (
-      <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
-        <rect x="4.5" y="6" width="15" height="12" rx="2" />
-        <path d="M4.5 10h15M9 18V10" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
-      <path d="M4 7h6l2 3h8" />
-      <path d="M4 17h6l2-3h8" />
-      <circle cx="7" cy="7" r="1.4" />
-      <circle cx="7" cy="17" r="1.4" />
-      <circle cx="20" cy="10" r="1.4" />
-      <circle cx="20" cy="14" r="1.4" />
-    </svg>
-  );
-}
-
 export default async function HomePage() {
-  const [site, servicesData, projectsData, testimonialsData, faqsData, blogData] =
+  const [site, featuredServices, projectsData, testimonialsData, faqsData, blogData] =
     await Promise.all([
       getPublicSiteContext(),
-      listPublishedServices(),
+      listFeaturedPublishedServices(),
       listProjects({ includeUnpublished: false, includeMedia: true }),
       listTestimonials({ includeUnpublished: false }),
       listFaqs({ includeUnpublished: false }),
       listBlogPosts({ includeUnpublished: false, limit: 3 }),
     ]);
-
-  const featuredServices =
-    servicesData.length > 0
-      ? [...servicesData]
-          .sort((a, b) => Number(b.featured) - Number(a.featured) || a.sort_order - b.sort_order)
-          .slice(0, 3)
-      : servicePreviews.map((service, index) => ({
-          id: service.slug,
-          slug: service.slug,
-          title: service.title,
-          subtitle: null,
-          short_description: service.excerpt,
-          full_description: service.excerpt,
-          cover_image_url: null,
-          icon_name: null,
-          featured: index < 2,
-          sort_order: index + 1,
-          is_published: true,
-          seo_title: null,
-          seo_description: null,
-          created_at: new Date(0).toISOString(),
-          updated_at: new Date(0).toISOString(),
-        }));
 
   const normalizedProjects =
     projectsData.length > 0
@@ -352,10 +266,10 @@ export default async function HomePage() {
             <div className="services-architecture-header gap-5">
               <div className="space-y-4">
                 <p className="editorial-kicker text-accent/90">SERVICIOS</p>
-                <h2 className="section-title font-display">Servicios estratégicos</h2>
+                <h2 className="section-title font-display">Servicios destacados</h2>
                 <p className="section-copy max-w-3xl text-foreground/78">
-                  No diseñamos piezas aisladas. Construimos sistemas digitales para posicionar,
-                  convertir y escalar.
+                  Cada servicio conecta estrategia, diseño y sistemas para aumentar valor percibido
+                  y rendimiento comercial.
                 </p>
               </div>
               <Link href="/servicios" className="focus-ring services-architecture-cta">
@@ -364,39 +278,63 @@ export default async function HomePage() {
             </div>
           </Reveal>
 
-          <div className="services-offer-grid">
-            {featuredServices.map((service, index) => {
-              const visualKey = resolveServiceVisualKey(service.slug, service.title);
-              const normalizedTitle = normalizeServiceTitle(service.title);
-              const normalizedDescription = normalizeSpanishCopy(
-                service.short_description ||
-                  "Servicio diseñado para construir una base digital sólida y orientada a resultados.",
-              );
+          {featuredServices.length > 0 ? (
+            <div className="services-power-grid">
+              {featuredServices.map((service, index) => {
+                const description = normalizeSpanishCopy(
+                  service.short_description ||
+                    "Servicio diseñado para construir una base digital sólida y orientada a resultados.",
+                );
 
-              return (
-                <Reveal key={service.slug} delay={index * 0.07}>
-                  <article className="service-offer-card flex h-full flex-col p-6 md:p-7">
-                    <div className="service-offer-top">
-                      <p className="service-offer-number">0{index + 1}</p>
-                      <span className="service-offer-icon">
-                        <ServiceOfferIcon variant={visualKey} />
-                      </span>
-                    </div>
-                    <p className="service-offer-kicker">{resolveServiceMiniLabel(visualKey)}</p>
-                    <h3 className="mt-4 text-[1.75rem] font-display leading-[1.02] text-foreground">
-                      {normalizedTitle}
-                    </h3>
-                    <p className="mt-3 flex-1 text-sm leading-relaxed text-foreground/72 md:text-[15px]">
-                      {normalizedDescription}
-                    </p>
-                    <Link href={`/servicios/${service.slug}`} className="focus-ring service-offer-link mt-6">
-                      Ver servicio
-                    </Link>
-                  </article>
-                </Reveal>
-              );
-            })}
-          </div>
+                return (
+                  <Reveal key={service.id} delay={index * 0.07}>
+                    <article className="service-power-card h-full">
+                      <div className="service-power-image-wrap">
+                        {service.cover_image_url ? (
+                          <img
+                            src={service.cover_image_url}
+                            alt={`Preview visual del servicio ${service.title}`}
+                            loading="lazy"
+                            decoding="async"
+                            sizes="(min-width: 1280px) 31vw, (min-width: 768px) 47vw, 94vw"
+                            className="service-power-image"
+                          />
+                        ) : (
+                          <div className="service-power-placeholder" aria-hidden>
+                            <span className="service-power-placeholder-label">Imagen de servicio</span>
+                          </div>
+                        )}
+                        <div className="service-power-image-overlay" aria-hidden />
+                        <div className="service-power-meta" aria-hidden>
+                          <p className="service-power-number">0{index + 1}</p>
+                          <span className="service-power-icon">
+                            <CmsServiceIcon iconName={service.icon_name} className="h-[18px] w-[18px]" />
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="service-power-body">
+                        <p className="service-power-kicker">
+                          {service.subtitle ? normalizeSpanishCopy(service.subtitle) : "Servicio premium"}
+                        </p>
+                        <h3 className="service-power-title font-display">{normalizeSpanishCopy(service.title)}</h3>
+                        <p className="service-power-description">{description}</p>
+                        <Link href={`/servicios/${service.slug}`} className="focus-ring service-power-link">
+                          Ver servicio
+                        </Link>
+                      </div>
+                    </article>
+                  </Reveal>
+                );
+              })}
+            </div>
+          ) : (
+            <Reveal>
+              <div className="service-power-empty">
+                Publica y marca servicios como destacados en el CMS para mostrarlos aquí.
+              </div>
+            </Reveal>
+          )}
 
           <Reveal delay={0.08}>
             <div className="services-principles-grid">

@@ -354,7 +354,7 @@ export function ProjectAssistantWidget() {
         <section className="premium-panel overflow-hidden border-white/12 bg-[#071015]/99">
           <div className="pointer-events-none absolute inset-0 bg-[#04090d]/58" />
           <div className="noise-overlay" />
-          <div className="relative z-[1] flex h-[min(74dvh,760px)] flex-col md:h-[min(78vh,760px)]">
+          <div className="relative z-[1] flex h-[min(86dvh,820px)] flex-col md:h-[min(78vh,760px)]">
             <header className="flex items-start justify-between gap-3 border-b border-white/10 px-4 py-4">
               <div className="space-y-1">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-accent">

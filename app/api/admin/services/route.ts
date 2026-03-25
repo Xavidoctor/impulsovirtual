@@ -1,3 +1,4 @@
+import { revalidatePath, revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 
@@ -15,6 +16,21 @@ import {
   serviceDeleteSchema,
   serviceUpdateSchema,
 } from "@/src/lib/validators/services-schema";
+
+function revalidateServiceViews(slugs: Array<string | null | undefined> = []) {
+  revalidateTag("services");
+  revalidatePath("/");
+  revalidatePath("/servicios");
+  revalidatePath("/servicios/[slug]", "page");
+
+  const uniqueSlugs = Array.from(
+    new Set(slugs.map((slug) => slug?.trim()).filter((slug): slug is string => Boolean(slug))),
+  );
+
+  for (const slug of uniqueSlugs) {
+    revalidatePath(`/servicios/${slug}`);
+  }
+}
 
 export async function GET() {
   const auth = await requireEditorApi();
@@ -52,6 +68,8 @@ export async function POST(request: NextRequest) {
       before_json: null,
       after_json: data,
     });
+
+    revalidateServiceViews([data.slug]);
 
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {
@@ -112,6 +130,8 @@ export async function PUT(request: NextRequest) {
       after_json: data,
     });
 
+    revalidateServiceViews([before.slug, data.slug]);
+
     return NextResponse.json({ data });
   } catch (error) {
     if (error instanceof ZodError) {
@@ -155,6 +175,8 @@ export async function DELETE(request: NextRequest) {
       before_json: before,
       after_json: null,
     });
+
+    revalidateServiceViews([before.slug]);
 
     return NextResponse.json({ success: true });
   } catch (error) {

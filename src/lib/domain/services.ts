@@ -1,5 +1,7 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
+
 import type { ServiceEntity } from "@/src/types/entities";
 import type { Tables, TablesInsert, TablesUpdate } from "@/src/types/database.types";
 
@@ -12,6 +14,10 @@ type ServiceUpdate = TablesUpdate<"services">;
 
 export type CreateServiceInput = Omit<ServiceInsert, "id" | "created_at" | "updated_at">;
 export type UpdateServiceInput = Omit<ServiceUpdate, "id" | "created_at" | "updated_at">;
+
+type FeaturedServicesOptions = {
+  limit?: number;
+};
 
 function mapServiceRow(row: ServiceRow): ServiceEntity {
   return {
@@ -36,6 +42,16 @@ function mapServiceRow(row: ServiceRow): ServiceEntity {
 type ListServicesOptions = {
   includeUnpublished?: boolean;
 };
+
+function dedupeServices(services: ServiceEntity[]): ServiceEntity[] {
+  const seen = new Set<string>();
+  return services.filter((service) => {
+    const key = service.id || service.slug;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 export async function listServices(
   options: ListServicesOptions = {},
@@ -62,18 +78,72 @@ export async function listServices(
   return (data ?? []).map(mapServiceRow);
 }
 
-export async function listPublishedServices(supabase?: DomainSupabaseClient): Promise<ServiceEntity[]> {
-  return listServices({ includeUnpublished: false }, supabase);
+async function listPublishedServicesFromDb(supabase?: DomainSupabaseClient): Promise<ServiceEntity[]> {
+  const services = await listServices({ includeUnpublished: false }, supabase);
+  return dedupeServices(services);
 }
 
-export async function getServiceBySlug(
+const listPublishedServicesCached = unstable_cache(
+  async () => listPublishedServicesFromDb(),
+  ["services-published"],
+  { tags: ["services"] },
+);
+
+export async function listPublishedServices(supabase?: DomainSupabaseClient): Promise<ServiceEntity[]> {
+  if (supabase) {
+    return listPublishedServicesFromDb(supabase);
+  }
+
+  return listPublishedServicesCached();
+}
+
+async function listFeaturedPublishedServicesFromDb(
+  supabase?: DomainSupabaseClient,
+): Promise<ServiceEntity[]> {
+  const db = getOptionalDomainClient(supabase);
+  if (!db) return [];
+
+  const { data, error } = await db
+    .from("services")
+    .select("*")
+    .eq("is_published", true)
+    .eq("featured", true)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  if (error) return [];
+
+  return dedupeServices((data ?? []).map(mapServiceRow));
+}
+
+const listFeaturedPublishedServicesCached = unstable_cache(
+  async () => listFeaturedPublishedServicesFromDb(),
+  ["services-featured-published"],
+  { tags: ["services"] },
+);
+
+export async function listFeaturedPublishedServices(
+  options: FeaturedServicesOptions = {},
+  supabase?: DomainSupabaseClient,
+): Promise<ServiceEntity[]> {
+  const services = supabase
+    ? await listFeaturedPublishedServicesFromDb(supabase)
+    : await listFeaturedPublishedServicesCached();
+
+  if (typeof options.limit === "number" && Number.isFinite(options.limit)) {
+    return services.slice(0, Math.max(0, options.limit));
+  }
+
+  return services;
+}
+
+async function getServiceBySlugFromDb(
   slug: string,
-  options: ListServicesOptions = {},
+  includeUnpublished: boolean,
   supabase?: DomainSupabaseClient,
 ): Promise<ServiceEntity | null> {
   const db = getOptionalDomainClient(supabase);
   if (!db) return null;
-  const includeUnpublished = options.includeUnpublished ?? false;
 
   let query = db.from("services").select("*").eq("slug", slug);
   if (!includeUnpublished) {
@@ -84,6 +154,26 @@ export async function getServiceBySlug(
   if (error || !data) return null;
 
   return mapServiceRow(data);
+}
+
+const getPublishedServiceBySlugCached = unstable_cache(
+  async (slug: string) => getServiceBySlugFromDb(slug, false),
+  ["services-by-slug"],
+  { tags: ["services"] },
+);
+
+export async function getServiceBySlug(
+  slug: string,
+  options: ListServicesOptions = {},
+  supabase?: DomainSupabaseClient,
+): Promise<ServiceEntity | null> {
+  const includeUnpublished = options.includeUnpublished ?? false;
+
+  if (!includeUnpublished && !supabase) {
+    return getPublishedServiceBySlugCached(slug);
+  }
+
+  return getServiceBySlugFromDb(slug, includeUnpublished, supabase);
 }
 
 export async function getServiceById(
