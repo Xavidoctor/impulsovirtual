@@ -131,12 +131,22 @@ export default async function HomePage() {
 
   const featuredLaunchedProjects = [...normalizedProjects]
     .filter((project) => project.status === "completed")
-    .sort((a, b) => Number(b.featured) - Number(a.featured))
+    .sort((a, b) => {
+      const byFeatured = Number(b.featured) - Number(a.featured);
+      if (byFeatured !== 0) return byFeatured;
+      return (b.published_at ?? b.updated_at).localeCompare(a.published_at ?? a.updated_at);
+    })
     .slice(0, 3);
 
   const featuredInProgressProjects = [...normalizedProjects]
     .filter((project) => project.status === "in_progress")
-    .sort((a, b) => (b.progress_percentage ?? 0) - (a.progress_percentage ?? 0))
+    .sort((a, b) => {
+      const byFeatured = Number(b.featured) - Number(a.featured);
+      if (byFeatured !== 0) return byFeatured;
+      const byProgress = (b.progress_percentage ?? 0) - (a.progress_percentage ?? 0);
+      if (byProgress !== 0) return byProgress;
+      return (b.published_at ?? b.updated_at).localeCompare(a.published_at ?? a.updated_at);
+    })
     .slice(0, 3);
 
   const faqs = faqsData.slice(0, 5);

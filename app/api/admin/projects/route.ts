@@ -1,3 +1,4 @@
+import { revalidatePath, revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 
@@ -16,6 +17,22 @@ import {
   projectUpdateSchema,
   projectDeleteSchema,
 } from "@/src/lib/validators/project-schema";
+
+function revalidateProjectViews(slugs: Array<string | null | undefined> = []) {
+  revalidateTag("projects");
+  revalidatePath("/");
+  revalidatePath("/proyectos");
+  revalidatePath("/proyectos/[slug]", "page");
+  revalidatePath("/sitemap.xml");
+
+  const uniqueSlugs = Array.from(
+    new Set(slugs.map((slug) => slug?.trim()).filter((slug): slug is string => Boolean(slug))),
+  );
+
+  for (const slug of uniqueSlugs) {
+    revalidatePath(`/proyectos/${slug}`);
+  }
+}
 
 function resolvePublishedAt(isPublished: boolean, publishedAt: string | null | undefined) {
   if (!isPublished) return null;
@@ -129,6 +146,8 @@ export async function POST(request: NextRequest) {
       after_json: data,
     });
 
+    revalidateProjectViews([data.slug]);
+
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) {
@@ -203,6 +222,8 @@ export async function PUT(request: NextRequest) {
       after_json: data,
     });
 
+    revalidateProjectViews([before.slug, data.slug]);
+
     return NextResponse.json({ data });
   } catch (error) {
     if (error instanceof ZodError) {
@@ -243,6 +264,8 @@ export async function DELETE(request: NextRequest) {
       before_json: before,
       after_json: null,
     });
+
+    revalidateProjectViews([before.slug]);
 
     return NextResponse.json({ success: true });
   } catch (error) {
